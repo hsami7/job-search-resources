@@ -65,6 +65,8 @@
 - `DESIGN-DECISION.md`: chosen direction, tokens (color/type/spacing), navigation model, accessibility notes.
 - Component inventory mapped to PRD screens.
 
+**Status: BUILT 2026-10-22 — awaiting user review.** Ten directions in `design/` (gallery at `design/index.html`), shared real fixtures, screenshots in `design/shots/`, decision record in `DESIGN-DECISION.md` (comparison matrix, recommended hybrid, tokens, 15-screen component inventory). 12 of 15 PRD screens drawn (the frozen P0 scope); job detail, employer preview and settings are specified as compositions and flagged for the sign-off call.
+
 **Exit criteria**
 - [ ] 10 variants genuinely distinct (review checklist).
 - [ ] User sign-off recorded in `DESIGN-DECISION.md`.
