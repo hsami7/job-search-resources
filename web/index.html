@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jobPilot · Profile</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Sections">
+    <div class="brand" title="jobPilot">jp</div>
+    <button type="button" class="is-active" aria-current="page" title="Profile">◉<span class="sr">Profile</span></button>
+    <button type="button" disabled title="Jobs — not built yet">≡<span class="sr">Jobs</span></button>
+    <button type="button" disabled title="Doctor — not built yet">+<span class="sr">Doctor</span></button>
+    <button type="button" disabled title="Logs — not built yet">»<span class="sr">Logs</span></button>
+    <button type="button" disabled title="Settings — not built yet">⚙<span class="sr">Settings</span></button>
+    <div class="rail-note">P1</div>
+  </nav>
+
+  <div class="main">
+    <header class="bar">
+      <div class="brandline">jobPilot <span>· P1 · profile</span></div>
+      <div class="hosts">
+        <span class="host"><i class="g" id="db-dot"></i><b id="db-pill">db …</b></span>
+        <span class="host"><i class="g" id="host-dot"></i><b id="host-pill">host …</b></span>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <h1>Profile <span>· the facts every letter is built from</span></h1>
+
+      <div id="banner" class="banner" hidden></div>
+
+      <form id="form" novalidate autocomplete="off">
+        <div class="grid c2">
+          <section class="panel" aria-labelledby="h-identity">
+            <h2 id="h-identity">Identity</h2>
+            <div class="body">
+              <div class="f2">
+                <div class="field">
+                  <label for="f-name">Full name <span class="req">*</span></label>
+                  <input id="f-name" name="name" maxlength="120" autocomplete="name" required>
+                  <span class="err" data-err="name" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-headline">Current role / headline</label>
+                  <input id="f-headline" name="headline" maxlength="120" autocomplete="organization-title">
+                  <span class="err" data-err="headline" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-email">Email</label>
+                  <input id="f-email" name="email" type="email" maxlength="160" autocomplete="email">
+                  <span class="err" data-err="email" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-phone">Phone</label>
+                  <input id="f-phone" name="phone" maxlength="40" autocomplete="tel">
+                  <span class="err" data-err="phone" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-city">City</label>
+                  <input id="f-city" name="city" maxlength="80" autocomplete="address-level2">
+                  <span class="err" data-err="city" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-country">Country</label>
+                  <input id="f-country" name="country" maxlength="80" autocomplete="country-name">
+                  <span class="err" data-err="country" aria-live="polite"></span>
+                </div>
+              </div>
+              <div class="mt10 field">
+                <label for="f-links">Links · one per line</label>
+                <textarea id="f-links" name="links" rows="2" maxlength="500" placeholder="linkedin.com/in/…&#10;github.com/…"></textarea>
+                <span class="err" data-err="links" aria-live="polite"></span>
+              </div>
+              <p class="muted small mt8">Fills forms. Only the facts a letter actually uses reach the model.</p>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="h-targets">
+            <h2 id="h-targets">What you are looking for</h2>
+            <div class="body">
+              <div class="chips" id="roles"></div>
+              <input class="chipin mt6" id="role-input" placeholder="+ job title" title="Type a title and press Enter" maxlength="60">
+              <span class="err" data-err="titles" aria-live="polite"></span>
+              <div class="f2 mt10">
+                <div class="field">
+                  <label for="f-contract">Contract</label>
+                  <select id="f-contract" name="contract">
+                    <option value="">no preference</option>
+                    <option value="CDI">CDI</option>
+                    <option value="CDD">CDD</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Any">Any</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-seniority">Seniority</label>
+                  <select id="f-seniority" name="seniority">
+                    <option value="">no preference</option>
+                    <option value="Intern">Intern</option>
+                    <option value="Junior, 1–3 years">Junior, 1–3 years</option>
+                    <option value="Mid, 3–5 years">Mid, 3–5 years</option>
+                    <option value="Senior">Senior</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="f-salary">Salary expectation · optional</label>
+                  <input id="f-salary" name="salary" maxlength="60" placeholder="blank skips the field">
+                </div>
+                <div class="field">
+                  <label for="f-remote">Remote / hybrid</label>
+                  <select id="f-remote" name="remote">
+                    <option value="">no preference</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Any">Any</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field mt10">
+                <label for="f-languages">Languages</label>
+                <input id="f-languages" name="languages" maxlength="160" placeholder="French, English, Arabic">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="grid c2 mt10">
+          <section class="panel" aria-labelledby="h-resume">
+            <h2 id="h-resume">Resume</h2>
+            <div class="body">
+              <div id="resume-current" class="resume muted">loading…</div>
+              <label class="drop mt10" for="resume-file" id="drop">
+                <input id="resume-file" type="file" accept=".pdf,.doc,.docx" class="file">
+                <span id="drop-text">Choose a PDF or DOCX · up to 8 MB</span>
+              </label>
+              <p class="muted small mt8" id="resume-note">Stored on this host under its SHA-256. Parsing is not implemented yet.</p>
+              <table class="mt10" aria-label="Resume versions">
+                <thead><tr><th>Stored</th><th>File</th><th class="col-hash">SHA-256</th><th></th></tr></thead>
+                <tbody id="resume-history"><tr><td colspan="4" class="muted">no uploads yet</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="h-facts">
+            <h2 id="h-facts">Facts used to fill forms</h2>
+            <div class="body">
+              <p class="muted small">Parsing is not implemented yet. These values come from the form; the resume parser arrives with the onboarding work and will land here with a side-by-side check.</p>
+              <table aria-label="Profile facts">
+                <tbody id="facts"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div class="savebar">
+          <button class="btn primary" id="save" type="submit" disabled>Save</button>
+          <button class="btn" id="revert" type="button">Revert</button>
+          <button class="btn" id="export" type="button">Export JSON</button>
+          <span class="muted" id="save-state" role="status" aria-live="polite">loading…</span>
+        </div>
+      </form>
+
+      <section class="panel mt10" aria-labelledby="h-events">
+        <h2 id="h-events">Event log <span id="chain" class="chip">chain …</span></h2>
+        <div class="body">
+          <table aria-label="Recent events">
+            <thead><tr><th>Time</th><th>Event</th><th>Detail</th><th class="col-hash">Hash</th></tr></thead>
+            <tbody id="events"><tr><td colspan="4" class="muted">loading…</td></tr></tbody>
+          </table>
+          <p class="muted small mt8">Every save and every resume is appended here. Nothing is updated without an event first, so a change cannot disappear without a trace.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
