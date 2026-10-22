@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le Dossier</title>
+<style>
+  :root{
+    --paper:#f2f3ef; --ink:#16180f; --dim:#5f6355; --rule:#c9cbbf;
+    --navy:#1e3a5f; --alert:#b23a2e; --wash:#e8eade;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 var(--serif)}
+  a{color:var(--navy)}
+  .frame{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}
+  aside{border-right:1px solid var(--rule);padding:26px 20px;position:sticky;top:0;height:100vh}
+  .wordmark{font-size:17px;letter-spacing:.01em;margin:0 0 2px}
+  .wordmark em{font-style:italic}
+  .tag{font-size:12.5px;color:var(--dim);margin-bottom:26px}
+  aside nav{display:grid;gap:1px}
+  aside nav a{display:block;padding:5px 0;text-decoration:none;color:var(--ink);font-size:15px;border-bottom:1px solid transparent}
+  aside nav a:hover{color:var(--navy)}
+  aside nav a.is-active{color:var(--navy);border-bottom-color:var(--navy)}
+  aside nav a.is-active::after{content:" ←"}
+  .side-foot{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--dim)}
+  .side-foot b{display:block;color:var(--ink);font-weight:400}
+  main{padding:34px 46px 90px;max-width:1180px}
+  .runhead{display:flex;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:26px;font-size:13px;color:var(--dim)}
+  .cols{display:grid;grid-template-columns:minmax(0,68ch) 220px;gap:54px;align-items:start}
+  h1{font-size:32px;line-height:1.2;font-weight:400;margin:0 0 8px;letter-spacing:-.01em}
+  .deck{font-size:17px;color:var(--dim);font-style:italic;margin:0 0 24px}
+  h2{font-size:15px;font-weight:400;font-style:italic;margin:30px 0 8px;color:var(--navy)}
+  p{margin:0 0 14px}
+  .note{font-size:13px;line-height:1.5;color:var(--dim);border-left:2px solid var(--rule);padding-left:10px;margin-bottom:14px}
+  .note b{display:block;color:var(--ink);font-weight:400;font-size:13.5px}
+  .entry{border-top:1px solid var(--rule);padding:13px 0;display:grid;grid-template-columns:1fr auto;gap:2px 16px}
+  .entry h3{margin:0;font-size:17px;font-weight:400}
+  .entry .by{font-size:13.5px;color:var(--dim);font-style:italic}
+  .entry .why{grid-column:1/-1;font-size:13.5px;color:var(--dim);margin-top:3px}
+  .verdict{font-size:13px;color:var(--dim);white-space:nowrap}
+  .verdict.up{color:var(--navy)}
+  .verdict.down{color:var(--alert)}
+  button{font:inherit;background:none;border:1px solid var(--ink);padding:5px 12px;cursor:pointer;color:var(--ink)}
+  button:hover{background:var(--wash)}
+  button.solid{background:var(--ink);color:var(--paper)}
+  button.warn{border-color:var(--alert);color:var(--alert)}
+  .letter{border:1px solid var(--rule);background:#fbfbf7;padding:18px 20px;margin-bottom:22px}
+  .letter .who{font-size:12.5px;color:var(--dim);margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-weight:400;font-style:italic;color:var(--dim);border-bottom:1px solid var(--ink);padding:5px 8px 5px 0}
+  td{border-bottom:1px solid var(--rule);padding:5px 8px 5px 0;vertical-align:top}
+  .st{font-size:12.5px;font-style:italic}
+  .st.ok{color:var(--navy)} .st.warn{color:#8a6a1f} .st.bad{color:var(--alert)}
+  .big{font-size:54px;line-height:1;font-variant-numeric:tabular-nums}
+  .meter{border:1px solid var(--ink);height:10px;position:relative;margin:6px 0 4px}
+  .meter i{position:absolute;inset:0 auto 0 0;background:var(--navy)}
+  .mono{font-family:var(--mono);font-size:12.5px}
+  .shot{border:1px dashed var(--rule);height:120px;display:grid;place-items:center;color:var(--dim);font-size:12.5px;margin:10px 0}
+  input[type=text]{font:16px var(--mono);border:1px solid var(--ink);background:#fff;padding:6px 8px;width:150px;letter-spacing:.3em}
+  .phone{width:340px;border:1px solid var(--ink);background:#fbfbf7;padding:0}
+  .phone .hd{border-bottom:1px solid var(--rule);padding:9px 12px;font-size:12.5px;display:flex;justify-content:space-between}
+  .phone .it{padding:11px 12px;border-bottom:1px solid var(--rule);font-size:14px}
+  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .mock-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);
+    color:var(--paper);padding:7px 14px;font-size:13px;z-index:99}
+  @media(max-width:900px){
+    .frame{grid-template-columns:1fr}
+    aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:16px}
+    aside nav{display:flex;flex-wrap:wrap;gap:4px 14px}
+    .cols{grid-template-columns:1fr;gap:0}
+    main{padding:22px 18px 60px}
+    h1{font-size:26px} .phone{width:100%}
+  }
+</style></head><body>
+<script src="../../shared/data.js"></script>
+<script>
+const D = window.JOBPILOT;
+const items = [['dashboard','The situation'],['jobs','Listings'],['triage','Queue'],['verification','Verification'],['doctor','Doctor'],['logs','Logbook'],['scope','Scope'],['agent','Browser'],['credentials','Vault'],['data','Archive'],['onboarding','First run'],['pwa','Phone']];
+
+const shell = (id, inner) => `
+<div class="frame">
+  <aside>
+    <p class="wordmark">job<em>Pilot</em></p>
+    <div class="tag">a job-search dossier, kept on your own machine</div>
+    <nav aria-label="sections">${items.map(([k,l])=>`<a href="#${k}" data-go="${k}">${l}</a>`).join('')}</nav>
+    <div class="side-foot">
+      <b>Run 41 · ${D.run.host}</b>
+      ${D.run.site}, ${D.run.action}<br>
+      PC ${D.hosts[0].label.toLowerCase()} · VPS ${D.hosts[1].label.toLowerCase()}<br>
+      trust ${D.trust.score}, ${D.trust.band.toLowerCase()}
+    </div>
+  </aside>
+  <main>
+    <div class="runhead"><span>${new Date('2026-10-22T14:06:00').toDateString()} · 14:06</span>
+      <span>${D.user.name} · ${D.user.city}</span></div>
+    ${inner}
+  </main>
+</div>`;
+
+const entry = (t, by, why, verdict, cls) => `
+  <div class="entry"><h3>${t}</h3><div class="verdict ${cls}">${verdict}</div>
+    <div class="by">${by}</div><div class="why">${why}</div></div>`;
+
+window.VARIANT = { id:'02-le-dossier', name:'Le Dossier', screens:{
+dashboard: () => `
+  <h1>Three to sign, one to unblock.</h1>
+  <p class="deck">The agent found six listings this morning and stopped twice: once for you, once for a security check.</p>
+  <div class="cols">
+    <div>
+      <div class="letter">
+        <div class="who">Verification · ${D.verification.host} · two minutes ago</div>
+        <p style="margin:0 0 10px">A security challenge appeared on <em>rekrute.com</em> while reading page two.
+        Nothing has moved since. The agent will not click anything until you say so.</p>
+        <button class="solid" data-go="verification">Look at it</button>
+      </div>
+
+      <h2>Ready for your signature</h2>
+      ${D.triage.ready.map(j=>entry(j.title, `${j.company}, ${j.city} · ${j.source}`, `${j.type}, match ${j.score}. ${j.honesty}.`, 'sign →', 'up')).join('')}
+
+      <h2>Waiting on a decision</h2>
+      ${D.triage.needsYou.map(j=>entry(j.title, `${j.company}, ${j.city}`, j.honesty, 'review →', '')).join('')}
+
+      <h2>Set aside</h2>
+      ${D.triage.skip.map(j=>entry(j.title, `${j.company ?? 'no employer'} · ${j.source}`, j.honesty, 'skip pile', 'down')).join('')}
+    </div>
+    <div>
+      <div class="note"><b>Trust score</b>76 of 100, caution. Two causes: no WebGL on this host, and the clock says UTC while the connection geolocates to Berlin.</div>
+      <div class="note"><b>Yesterday</b>Two replies arrived; one needs a human sentence about availability. The other is an acknowledgement.</div>
+      <div class="note"><b>Learned</b>“Drop listings with no named employer” came from your last two rejections.</div>
+      <div class="note"><b>Archive</b>${D.hosts[1].events} events on the VPS, ${D.hosts[0].events} on the laptop. Last merge four minutes ago.</div>
+    </div>
+  </div>`,
+
+jobs: () => `
+  <h1>Listings</h1>
+  <p class="deck">Seven after filters. Two classifieds were hidden as low signal; you can bring them back.</p>
+  <table>
+    <tr><th>Title</th><th>Employer</th><th>City</th><th>Source</th><th>Pay</th><th></th></tr>
+    ${D.jobs.filter(j=>j.signal!=='low').map(j=>`<tr>
+      <td>${j.title}</td><td>${j.company}</td><td>${j.city}</td>
+      <td style="color:var(--dim)">${j.source}</td><td>${j.salary ?? '—'}</td>
+      <td><button data-act="Tailor ${j.title}">tailor</button></td></tr>`).join('')}
+  </table>
+  <p style="margin-top:18px"><button data-act="Show low signal">Show the two hidden</button></p>`,
+
+triage: () => `
+  <h1>Queue</h1>
+  <p class="deck">Approve top three, or read each one. Nothing is sent until you press submit in the browser.</p>
+  <div class="flex" style="margin-bottom:18px"><button class="solid" data-act="Approve top 3">Approve top three</button>
+    <button data-act="Snooze rest">Snooze the rest</button></div>
+  ${D.triage.ready.map(j=>`<div class="entry"><h3>${j.title}</h3><div class="verdict up">${j.score}</div>
+    <div class="by">${j.company}, ${j.city} · ${j.type}</div>
+    <div class="why">${j.honesty}. <a href="#jobs" data-go="jobs">Read the letter and resume</a></div></div>`).join('')}
+  ${D.triage.needsYou.map(j=>`<div class="entry"><h3>${j.title}</h3><div class="verdict">${j.score}</div>
+    <div class="by">${j.company}, ${j.city}</div>
+    <div class="why">${j.honesty}. <button data-act="Open reviewer notes">Reviewer notes</button></div></div>`).join('')}`,
+
+verification: () => `
+  <h1>Verification</h1>
+  <p class="deck">A human check appeared. The agent is frozen and will stay frozen until you act.</p>
+  <div class="letter" style="border-color:var(--alert)">
+    <div class="who" style="color:var(--alert)">security challenge · ${D.verification.site} · ${D.verification.host} · ${D.verification.age}</div>
+    <p class="mono" style="margin:0 0 4px;word-break:break-all">${D.verification.url}</p>
+    <p style="color:var(--dim);font-size:13.5px;margin:0 0 10px">${D.verification.run}</p>
+    <div class="shot">the paused tab, as the agent sees it</div>
+    <div class="flex"><input type="text" placeholder="000000" aria-label="code">
+      <button class="solid" data-act="Submit code and resume">Submit and resume</button>
+      <button data-go="pwa">Take control in the browser</button></div>
+    <table style="margin-top:14px">
+      <tr><td style="color:var(--dim);width:110px">Sent to</td><td>${D.verification.guidance.account}</td></tr>
+      <tr><td style="color:var(--dim)">Search for</td><td class="mono">${D.verification.guidance.search}</td></tr>
+      <tr><td style="color:var(--dim)">Phone on file</td><td class="mono">${D.verification.guidance.phone}</td></tr>
+      <tr><td style="color:var(--dim)">Valid for</td><td>${D.verification.guidance.validFor}</td></tr>
+    </table>
+    <p style="font-size:13.5px;color:var(--dim);margin:12px 0 0">Finished in the browser instead?
+      <button data-act="I finished — resume">Resume the run</button>
+      <button class="warn" data-act="Abandon run">Abandon</button></p>
+  </div>
+  <h2>Earlier</h2>
+  <p style="font-size:14px;color:var(--dim)">Yesterday, an email code on linkedin.com was resolved in one minute twenty, on the PC. The run resumed where it stopped.</p>`,
+
+doctor: () => `
+  <h1>Doctor</h1>
+  <p class="deck">Eleven checks pass. Two will bite you eventually, and neither stops a run today.</p>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><th>Check</th><th>State</th><th>Why it matters</th></tr>
+        ${D.doctor.map(c=>`<tr><td>${c.name}</td>
+          <td class="st ${c.state==='PASS'?'ok':c.state==='WARN'?'warn':'bad'}">${c.state.toLowerCase()}</td>
+          <td style="color:var(--dim)">${c.why}${c.fix?` <button data-act="${c.fix}">${c.fix}</button>`:''}</td></tr>`).join('')}
+      </table>
+      <p style="margin-top:16px"><button data-act="Re-run checks">Re-run everything</button>
+        <button class="warn" data-act="Run anyway (logged)">Run anyway, and log it</button></p>
+    </div>
+    <div>
+      <div class="note"><b>Browser trust</b><span class="big" style="display:block">${D.trust.score}</span>
+        an estimate, never a guarantee. Bans remain possible at any score.</div>
+      <div class="meter"><i style="width:76%"></i></div>
+      <p style="font-size:12.5px;color:var(--dim)">Failed: no WebGL context; timezone UTC against a Berlin address.</p>
+    </div>
+  </div>`,
+
+logs: () => `
+  <h1>Logbook</h1>
+  <p class="deck">One run, in the order it happened. Secrets and codes are stripped before they reach this page.</p>
+  <table>
+    <tr><th style="width:70px">Time</th><th style="width:60px">Level</th><th style="width:80px">Agent</th><th>Entry</th><th style="width:60px">Took</th></tr>
+    ${D.logs.map(l=>`<tr><td class="mono">${l.t}</td>
+      <td class="st ${l.lvl==='INFO'?'ok':l.lvl==='WARN'?'warn':'bad'}">${l.lvl.toLowerCase()}</td>
+      <td>${l.agent}</td><td>${l.msg}</td><td class="mono">${l.dur}</td></tr>`).join('')}
+  </table>
+  <p style="margin-top:16px"><button data-act="Export bundle">Export a diagnostic bundle</button>
+    <button data-act="Explain last error">Explain the last error</button>
+    <span style="font-size:13px;color:var(--dim)">kept thirty days</span></p>`,
+
+scope: () => `
+  <h1>Scope</h1>
+  <p class="deck">Where the agent looks. A site without an adapter is read one link at a time, never crawled.</p>
+  <table>
+    <tr><th>Site</th><th>How</th><th>State</th><th>Last scan</th><th>Found</th><th></th></tr>
+    ${D.sites.map(s=>`<tr><td>${s.host}</td><td><em>${s.mode}</em></td>
+      <td class="st ${s.state==='working'?'ok':s.state==='planned'?'warn':''}">${s.state}</td>
+      <td style="color:var(--dim)">${s.lastScan}</td><td>${s.found}</td>
+      <td><button data-act="Edit ${s.host}">edit</button></td></tr>`).join('')}
+  </table>
+  <h2>Locations</h2>
+  ${D.locations.map(l=>`<p style="margin:0 0 8px"><strong style="font-weight:400">${l.country}</strong>
+    ${l.cities.length?`— ${l.cities.join(', ')}`:''} <span style="color:var(--dim)">(${l.count} found)</span></p>`).join('')}
+  <p><button data-act="Add location">Add a country or city</button></p>`,
+
+agent: () => `
+  <h1>Browser</h1>
+  <p class="deck">The agent drives its own Brave profile. Your everyday browser is never touched.</p>
+  <div class="cols">
+    <div>
+      <h2>Configuration</h2>
+      <table>
+        <tr><td style="color:var(--dim);width:150px">Browser</td><td>Brave 1.98.60, engine 156</td></tr>
+        <tr><td style="color:var(--dim)">Profile</td><td class="mono">spike/profile/brave · 124 MB</td></tr>
+        <tr><td style="color:var(--dim)">DevTools port</td><td class="mono">127.0.0.1:9222</td></tr>
+        <tr><td style="color:var(--dim)">Mode</td><td>headed, under Xvfb on this host</td></tr>
+      </table>
+      <h2>Session survival</h2>
+      <p style="font-size:14px;margin:0 0 10px">The plan called this “Forgetful Browsing”. On Brave desktop that
+      toggle does not exist globally; these three settings are what actually decide whether your logins survive a restart.</p>
+      <table>
+        <tr><td>Cookies survive close</td><td class="st ok">verified</td></tr>
+        <tr><td>History survives close</td><td class="st ok">verified</td></tr>
+        <tr><td>Session restore</td><td class="st ok">verified</td></tr>
+      </table>
+      <p style="margin-top:14px"><button class="solid" data-act="Re-check now">Verify again</button>
+        <button data-act="Switch to Chrome">Use Chrome instead</button></p>
+    </div>
+    <div>
+      <div class="note"><b>Logged out</b>rekrute.com and linkedin.com need a fresh sign-in. <a href="#credentials" data-go="credentials">Open the vault</a>.</div>
+      <div class="note"><b>Why Brave</b>Shields strip the ad frames that break the classifieds pages. It buys cleaner pages, not invisibility.</div>
+    </div>
+  </div>`,
+
+credentials: () => `
+  <h1>Vault</h1>
+  <p class="deck">Per-site sign-ins, encrypted with your passphrase. No model ever sees these values.</p>
+  <table>
+    <tr><th>Site</th><th>Account</th><th>Held</th><th>Last used</th><th>Times</th><th></th></tr>
+    ${D.credentials.map(c=>`<tr><td>${c.site}</td><td>${c.user}</td><td><em>${c.kind}</em></td>
+      <td style="color:var(--dim)">${c.lastUsed}</td><td>${c.uses}</td>
+      <td><button data-act="Reveal ${c.site}">reveal</button></td></tr>`).join('')}
+  </table>
+  <p style="margin-top:16px"><button data-act="Lock vault">Lock the vault</button>
+    <span style="font-size:13px;color:var(--dim)">every reveal is written to the logbook</span></p>
+  <h2>Last uses</h2>
+  <p style="font-size:14px;color:var(--dim)">14:04 — filled the rekrute.com form during run 41.<br>
+    09:12 — requested the Gmail code for an Outlook sign-in, then discarded it.</p>`,
+
+data: () => `
+  <h1>Archive</h1>
+  <p class="deck">Two copies, one history. The event log is the record; both machines replay it.</p>
+  <table>
+    <tr><th>Host</th><th>State</th><th>Heartbeat</th><th>Database</th><th>Events</th><th>Last merge</th></tr>
+    ${D.hosts.map(h=>`<tr><td>${h.id}</td>
+      <td class="st ${h.state==='green'?'ok':'warn'}">${h.label.toLowerCase()}</td>
+      <td>${h.heartbeat}</td><td class="mono">${h.db}</td><td>${h.events}</td><td style="color:var(--dim)">${h.lastSync}</td></tr>`).join('')}
+  </table>
+  <div class="letter" style="margin-top:20px;border-color:#c9a86a">
+    <div class="who" style="color:#8a6a1f">Conflict · ${D.sync.conflict.field}</div>
+    <p style="margin:0 0 10px">Both machines changed this while apart. It decides when the agent may act, so you choose.</p>
+    <table>
+      <tr><td style="width:70px">PC</td><td>${D.sync.conflict.pc}</td><td><button data-act="Keep PC value">keep this</button></td></tr>
+      <tr><td>VPS</td><td>${D.sync.conflict.vps}</td><td><button data-act="Keep VPS value">keep this</button></td></tr>
+    </table>
+  </div>
+  <p style="margin-top:18px"><button class="solid" data-act="Sync now">Merge now</button>
+    <button data-act="Export everything">Export everything</button>
+    <button class="warn" data-act="Delete everything on both hosts">Delete on both machines</button></p>`,
+
+onboarding: () => `
+  <h1>First run</h1>
+  <p class="deck">Five steps, most of them already done. Nothing starts until the last one.</p>
+  <div class="meter"><i style="width:60%"></i></div>
+  <p style="font-size:13px;color:var(--dim)">Step four of five · about two minutes left</p>
+  <div class="cols">
+    <div>
+      ${[['OpenRouter key','valid, default model chosen, 412 credits left'],
+         ['Resume','Resume v4 parsed; three fields want your eye'],
+         ['Type and places','internships and full-time; Casablanca, Rabat, Remote'],
+         ['The agent browser','Brave found. Confirm that logins survive a restart.'],
+         ['The honest warning','Automation can break site terms, and a ban can be permanent.']]
+        .map(([t,s],i)=>`<p style="margin:0 0 12px"><span style="color:var(--dim)">${i+1}.</span>
+          <strong style="font-weight:400">${t}</strong><br><span style="font-size:14px;color:var(--dim)">${s}</span></p>`).join('')}
+      <p><button class="solid" data-act="Run first scan">Run the first scan</button></p>
+    </div>
+    <div><div class="note"><b>Nothing is submitted</b>Every application is a form the agent fills and you send.</div>
+      <div class="note"><b>Change your mind later</b>All of this lives in the settings, and can move to a VPS without starting over.</div></div>
+  </div>`,
+
+pwa: () => `
+  <h1>Phone</h1>
+  <p class="deck">The two things you actually do from a phone: unblock the agent, sign off on a letter.</p>
+  <div class="phone">
+    <div class="hd"><span>VPS, synced</span><span>76</span></div>
+    <div class="it"><strong style="font-weight:400;color:var(--alert)">Frozen · rekrute.com</strong>
+      <div style="font-size:13px;color:var(--dim)">security challenge, two minutes ago</div>
+      <div class="flex" style="margin-top:8px"><button class="solid" data-go="verification">Take control</button>
+        <button data-act="Enter code">Enter code</button></div></div>
+    <div class="it"><strong style="font-weight:400">Auto Hall — Conseiller de service</strong>
+      <div style="font-size:13px;color:var(--dim)">Casablanca, CDI, match 88</div>
+      <div class="flex" style="margin-top:8px"><button class="solid" data-act="Approve">Approve</button>
+        <button data-act="Skip">Skip</button></div></div>
+    <div class="it"><strong style="font-weight:400">Alten Maroc — Business développeur</strong>
+      <div style="font-size:13px;color:var(--dim)">Rabat, CDI, match 84</div>
+      <div class="flex" style="margin-top:8px"><button class="solid" data-act="Approve">Approve</button>
+        <button data-act="Skip">Skip</button></div></div>
+  </div>`,
+
+}, render(id){ return shell(id, this.screens[id]()); } };
+</script>
+<script src="../../shared/app.js"></script>
+</body></html>

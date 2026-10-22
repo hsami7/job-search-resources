@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swiss Ledger</title>
+<style>
+  :root{
+    --ink:#000; --paper:#fff; --dim:#767676; --rule:#000; --hair:#d8d8d8; --red:#d7263d;
+    --sans:"Helvetica Neue",Helvetica,Arial,"Liberation Sans",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.45 var(--sans)}
+  a{color:inherit;text-decoration:none}
+  .mast{display:flex;align-items:baseline;gap:16px;padding:14px 20px 10px;border-bottom:3px solid var(--rule)}
+  .mark{font-size:20px;font-weight:700;letter-spacing:-.04em}
+  .mast .sub{font-size:12px;color:var(--dim);letter-spacing:.02em}
+  .mast .right{margin-left:auto;display:flex;gap:14px;font-size:12px;color:var(--dim)}
+  .mast .right b{color:var(--ink);font-weight:700}
+  nav.sec{border-bottom:1px solid var(--rule)}
+  nav.sec ol{display:grid;grid-template-columns:repeat(12,1fr);margin:0;padding:0;list-style:none}
+  nav.sec li{border-right:1px solid var(--hair)}
+  nav.sec li:last-child{border-right:0}
+  nav.sec a{display:block;padding:8px 10px 7px;font-size:11.5px;letter-spacing:.02em;height:100%}
+  nav.sec a b{display:block;font-size:10px;color:var(--dim);font-weight:400;margin-bottom:2px}
+  nav.sec a:hover{background:#f2f2f2}
+  nav.sec a.is-active{background:var(--red);color:#fff}
+  nav.sec a.is-active b{color:#fff}
+  main{padding:0 20px 80px;max-width:1360px}
+  .lede{display:grid;grid-template-columns:repeat(12,1fr);border-bottom:1px solid var(--rule);padding:26px 0 14px;gap:0 20px}
+  .lede h1{grid-column:1/9;font-size:46px;line-height:.98;letter-spacing:-.035em;margin:0;font-weight:700}
+  .lede .aside{grid-column:9/13;font-size:12.5px;color:var(--dim);border-left:1px solid var(--rule);padding-left:16px}
+  .lede .aside b{color:var(--ink);font-weight:700;display:block;margin-bottom:3px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--rule);padding:0 0 4px;margin:0 0 10px}
+  .sec-head h2{font-size:15px;margin:0;letter-spacing:-.01em;font-weight:700}
+  .sec-head .n{font-size:11px;color:var(--dim)}
+  .sec-head .r{margin-left:auto;font-size:11.5px;color:var(--dim)}
+  .figs{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+  .fig{padding:14px 14px 12px 0;border-right:1px solid var(--hair)}
+  .fig:last-child{border-right:0}
+  .fig .k{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+  .fig .v{font-size:52px;line-height:1;letter-spacing:-.045em;font-weight:700;font-variant-numeric:tabular-nums}
+  .fig .v.red{color:var(--red)}
+  .fig .d{font-size:11.5px;color:var(--dim);margin-top:3px}
+  .two{display:grid;grid-template-columns:repeat(12,1fr);gap:0 20px;margin-top:18px}
+  .c7{grid-column:1/8}.c5{grid-column:8/13}.c6{grid-column:1/7}.c6b{grid-column:7/13}
+  .c4{grid-column:1/5}.c4b{grid-column:5/9}.c4c{grid-column:9/13}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);
+    font-weight:400;border-bottom:1px solid var(--rule);padding:5px 8px 4px 0;white-space:nowrap}
+  td{border-bottom:1px solid var(--hair);padding:6px 8px 6px 0;vertical-align:top}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;padding-right:12px}
+  .flag{color:var(--red);font-weight:700}
+  .muted{color:var(--dim)}
+  .kicker{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .block{border:1px solid var(--rule);padding:12px 14px;margin-bottom:14px}
+  .block.red{border-color:var(--red)}
+  .block .t{font-size:13px;font-weight:700;margin-bottom:6px}
+  .block.red .t{color:var(--red)}
+  button{font:12px var(--sans);background:#fff;border:1px solid var(--ink);padding:4px 10px;cursor:pointer;letter-spacing:.01em}
+  button:hover{background:var(--ink);color:#fff}
+  button.solid{background:var(--ink);color:#fff}
+  button.solid:hover{background:var(--red);border-color:var(--red)}
+  button.red{border-color:var(--red);color:var(--red)}
+  button.red:hover{background:var(--red);color:#fff}
+  input{font:14px var(--sans);border:1px solid var(--ink);padding:5px 8px;width:160px;letter-spacing:.28em}
+  .bar{height:8px;border:1px solid var(--ink);margin:5px 0}
+  .bar i{display:block;height:100%;background:var(--ink)}
+  .bar.r i{background:var(--red)}
+  pre{margin:0;font:12px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+  .shot{border:1px dashed #999;height:120px;display:grid;place-items:center;color:var(--dim);font-size:12px;margin:10px 0}
+  .phone{width:330px;border:2px solid var(--ink);padding:0}
+  .phone .hd{border-bottom:2px solid var(--ink);padding:6px 10px;font-size:11px;display:flex;justify-content:space-between}
+  .phone .it{border-bottom:1px solid var(--hair);padding:10px}
+  .mock-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#000;color:#fff;
+    padding:6px 12px;font-size:12px;z-index:99}
+  @media(max-width:960px){
+    nav.sec ol{grid-template-columns:repeat(6,1fr)}
+    .mast .right{display:none}
+    .lede h1{grid-column:1/13;font-size:34px}
+    .lede .aside{grid-column:1/13;border-left:0;padding-left:0;margin-top:10px}
+    .figs{grid-template-columns:1fr 1fr}
+    .c7,.c5,.c6,.c6b,.c4,.c4b,.c4c{grid-column:1/13;margin-bottom:14px}
+    .phone{width:100%}
+  }
+</style></head><body>
+<script src="../../shared/data.js"></script>
+<script>
+const D = window.JOBPILOT;
+const secs = [['dashboard','01','Today'],['jobs','02','Listings'],['triage','03','Triage'],['verification','04','Verify'],
+  ['doctor','05','Doctor'],['logs','06','Log'],['scope','07','Scope'],['agent','08','Browser'],
+  ['credentials','09','Vault'],['data','10','Data'],['onboarding','11','Start'],['pwa','12','Phone']];
+
+const shell = (id, inner) => `
+<div class="mast">
+  <span class="mark">jobpilot</span><span class="sub">job-search ledger · local-first · ${D.user.city}</span>
+  <span class="right"><span>run 41 · <b>${D.run.host}</b></span><span>trust <b>${D.trust.score}</b></span><span>${D.hosts[1].label.toLowerCase()} 14:06</span></span>
+</div>
+<nav class="sec" aria-label="sections"><ol>
+  ${secs.map(([k,n,l])=>`<li><a href="#${k}" data-go="${k}"><b>${n}</b>${l}</a></li>`).join('')}
+</ol></nav>
+<main>${inner}</main>`;
+
+const head = (n,title,right) => `<div class="sec-head"><span class="n">${n}</span><h2>${title}</h2><span class="r">${right??''}</span></div>`;
+const fig = (k,v,d,red) => `<div class="fig"><div class="k">${k}</div><div class="v ${red?'red':''}">${v}</div><div class="d">${d}</div></div>`;
+
+window.VARIANT = { id:'05-swiss-ledger', name:'Swiss Ledger', screens:{
+dashboard: () => `
+  <div class="lede">
+    <h1>Six found.<br>One blocked.<br>Three need a signature.</h1>
+    <div class="aside"><b>14:06 · Thursday 22 October</b>
+      The agent is reading rekrute.com, page one of three. A challenge on page two stopped it at 14:04.
+      Nothing else has run since.</div>
+  </div>
+  <div class="figs">
+    ${fig('ready to sign','3','Auto Hall, Alten, AKDITAL')}
+    ${fig('needs you','2','one has no named employer')}
+    ${fig('blocked','1','verification wall · 2m 10s',true)}
+    ${fig('found today','6','2 dropped as noise')}
+  </div>
+  <div class="two">
+    <div class="c7">
+      ${head('01','Verification wall','agent frozen · VPS')}
+      <div class="block red">
+        <div class="t">rekrute.com · security challenge</div>
+        <div class="muted" style="font-size:11.5px;word-break:break-all;margin-bottom:8px">${D.verification.url}</div>
+        <div class="shot">paused tab · screenshot</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input placeholder="000000" aria-label="one-time code">
+          <button class="solid" data-act="Submit code and resume">Submit and resume</button>
+          <button data-go="verification">Open</button>
+        </div>
+        <div class="muted" style="font-size:11.5px;margin-top:8px">Never continues on a timer. No code is ever solved automatically.</div>
+      </div>
+      ${head('02','Queue','sorted by match × honesty')}
+      <table><tr><th>Job</th><th>Employer</th><th>City</th><th class="n">Match</th><th></th></tr>
+      ${D.triage.ready.concat(D.triage.needsYou).map(j=>`<tr>
+        <td>${j.title}</td><td class="muted">${j.company}</td><td>${j.city}</td>
+        <td class="n">${j.score}</td><td><button data-act="Preview ${j.title}">Open</button></td></tr>`).join('')}</table>
+    </div>
+    <div class="c5">
+      ${head('03','Trust','estimate, not a guarantee')}
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:2px">
+        <div style="font-size:64px;font-weight:700;line-height:.9;letter-spacing:-.05em;font-variant-numeric:tabular-nums">76</div>
+        <div class="muted" style="font-size:12px;padding-bottom:6px">/100<br>caution</div>
+      </div>
+      <div class="bar r"><i style="width:76%"></i></div>
+      <table style="margin-top:10px">
+        ${D.trust.signals.map(s=>`<tr><td style="width:44px" class="${s.state==='PASS'?'muted':'flag'}">${s.state==='PASS'?'ok':'fail'}</td>
+          <td style="font-size:12.5px">${s.name}</td></tr>`).join('')}
+      </table>
+      ${head('04','Recent','')}
+      <table>
+        <tr><td class="muted" style="width:52px">14:04</td><td>Challenge on rekrute.com</td></tr>
+        <tr><td class="muted">14:06</td><td>10 cards parsed, 0 misses</td></tr>
+        <tr><td class="muted">14:05</td><td>21 cards, 1 banner ad dropped</td></tr>
+        <tr><td class="muted">13:58</td><td>Vault opened for marocannonces</td></tr>
+      </table>
+    </div>
+  </div>`,
+jobs: () => `
+  ${head('01','Listings','7 shown · 2 low signal hidden')}
+  <table><tr><th class="n">#</th><th>Title</th><th>Employer</th><th>City</th><th>Source</th><th class="n">Pay</th><th>Signal</th><th></th></tr>
+  ${D.jobs.filter(j=>j.signal!=='low').map((j,i)=>`<tr>
+    <td class="n muted">${String(i+1).padStart(2,'0')}</td><td>${j.title}</td>
+    <td class="muted">${j.company ?? '—'}</td><td>${j.city}</td><td class="muted">${j.source}</td>
+    <td class="n">${j.salary ?? '—'}</td>
+    <td>${j.signal==='high'?'high':'<span class=flag>medium</span>'}</td>
+    <td><button data-act="Tailor ${j.title}">Tailor</button></td></tr>`).join('')}</table>
+  <div style="margin-top:12px;display:flex;gap:6px"><button data-act="Show low signal">Show 2 hidden</button>
+    <button data-act="Export">Export</button></div>
+  ${head('02','Dropped','kept, never deleted')}
+  <table><tr><th>Record</th><th>Source</th><th>Reason</th></tr>
+    <tr><td>(no title)</td><td class="muted">marocannonces</td><td class="muted">banner advertisement, not a job</td></tr>
+    <tr><td>Stage marketing — non rémunéré</td><td class="muted">marocannonces</td><td class="muted">unpaid, outside stated preferences</td></tr>
+  </table>`,
+triage: () => `
+  ${head('01','Triage','nothing sends without you')}
+  <div style="display:flex;gap:6px;margin-bottom:14px">
+    <button class="solid" data-act="Approve top 3">Approve top three</button>
+    <button data-act="Snooze rest">Snooze the rest</button>
+    <button data-act="Preview as employer">Preview as employer</button>
+  </div>
+  <table><tr><th class="n">Match</th><th>Job</th><th>Employer</th><th>Honesty</th><th>Group</th><th></th></tr>
+  ${[['Ready',D.triage.ready],['Needs you',D.triage.needsYou],['Skip pile',D.triage.skip]].map(([g,list])=>
+    list.map(j=>`<tr><td class="n" style="font-size:20px;font-weight:700;letter-spacing:-.03em">${j.score}</td>
+      <td><b style="font-weight:700">${j.title}</b><div class="muted" style="font-size:11.5px">${j.city} · ${j.type}</div></td>
+      <td class="muted">${j.company ?? 'not named'}</td><td class="muted" style="font-size:12px">${j.honesty}</td>
+      <td style="font-size:11.5px;${g==='Skip pile'?'color:var(--red)':''}">${g}</td>
+      <td><button data-act="Preview ${j.title}">Open</button></td></tr>`).join('')).join('')}</table>`,
+verification: () => `
+  ${head('01','Verification wall','rekrute.com · VPS · frozen 2m 10s')}
+  <div class="two">
+    <div class="c7">
+      <div class="block red" style="padding:16px">
+        <div class="t" style="font-size:15px">Security challenge</div>
+        <div class="muted" style="font-size:12px;word-break:break-all;margin-bottom:4px">${D.verification.url}</div>
+        <div class="muted" style="font-size:12px;margin-bottom:6px">${D.verification.run}</div>
+        <div class="shot">the paused tab, as the agent sees it</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <input placeholder="000000" aria-label="one-time code">
+          <button class="solid" data-act="Submit code and resume">Submit and resume</button>
+          <button data-go="pwa">Take control</button>
+          <button class="red" data-act="Abandon run">Abandon</button>
+        </div>
+      </div>
+      <div class="kicker">If it did not arrive</div>
+      <table>
+        <tr><td class="muted" style="width:140px">Sent to</td><td>${D.verification.guidance.account}</td></tr>
+        <tr><td class="muted">Search for</td><td><pre style="display:inline">${D.verification.guidance.search}</pre></td></tr>
+        <tr><td class="muted">Phone on file</td><td>${D.verification.guidance.phone}</td></tr>
+        <tr><td class="muted">Valid for</td><td>${D.verification.guidance.validFor}</td></tr>
+      </table>
+    </div>
+    <div class="c5">
+      <div class="kicker">Rules that do not bend</div>
+      <table>
+        <tr><td style="width:70px" class="flag">Never</td><td>solve a challenge, guess a code, retry on a timer</td></tr>
+        <tr><td class="flag">Never</td><td>continue while the screenshot shows a challenge</td></tr>
+        <tr><td>Always</td><td>freeze every other action, send one push per wall</td></tr>
+      </table>
+      ${head('02','History','')}
+      <table><tr><th>When</th><th>Site</th><th>Resolved</th></tr>
+        <tr><td class="muted">today 14:04</td><td>rekrute.com</td><td class="flag">open</td></tr>
+        <tr><td class="muted">yesterday</td><td>linkedin.com</td><td>1m 20s</td></tr></table>
+    </div>
+  </div>`,
+doctor: () => `
+  ${head('01','Doctor','11 pass · 2 warn · 2 fail')}
+  <div class="figs">
+    ${fig('checks','15','of 15 run')}
+    ${fig('passing','11','')}
+    ${fig('failing','2','WebGL, timezone',true)}
+    ${fig('trust','76','/100 · caution')}
+  </div>
+  <div class="two">
+    <div class="c7">
+      <table style="margin-top:14px"><tr><th>State</th><th>Check</th><th>Why</th><th>Fix</th></tr>
+      ${D.doctor.map(c=>`<tr><td style="width:52px" class="${c.state==='PASS'?'muted':'flag'}">${c.state==='PASS'?'pass':c.state.toLowerCase()}</td>
+        <td>${c.name}</td><td class="muted" style="font-size:12px">${c.why}</td>
+        <td>${c.fix?`<button data-act="${c.fix}">${c.fix}</button>`:'<span class="muted">—</span>'}</td></tr>`).join('')}</table>
+    </div>
+    <div class="c5">
+      <div class="kicker">Two failures, explained</div>
+      <div class="block"><div class="t">No WebGL context</div>
+        <div style="font-size:12.5px">Under Xvfb there is no GL renderer, which is a common fingerprint. Forcing SwiftShader trades a clean machine for a recognisable one.</div></div>
+      <div class="block"><div class="t">Clock and timezone</div>
+        <div style="font-size:12.5px">The browser reports UTC while the address geolocates to Berlin. Fix the TZ variable, or accept the mismatch knowingly.</div></div>
+      <div class="block"><div class="t">Run anyway?</div>
+        <div style="font-size:12.5px">Allowed. Written to the log with both failures attached, never silently.</div>
+        <div style="display:flex;gap:6px;margin-top:8px"><button data-act="Re-run checks">Re-run</button>
+          <button class="red" data-act="Run anyway (logged)">Run anyway</button></div></div>
+    </div>
+  </div>`,
+logs: () => `
+  ${head('01','Log','run 41 · live · secrets redacted at write')}
+  <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <button>Level: all</button><button>Agent: all</button><button>Site: all</button>
+    <button data-act="Export diagnostic bundle" style="margin-left:auto">Export bundle</button></div>
+  <table><tr><th style="width:64px">Time</th><th style="width:64px">Level</th><th style="width:70px">Agent</th><th>Event</th><th class="n" style="width:56px">Took</th></tr>
+  ${D.logs.map(l=>`<tr><td class="muted">${l.t}</td>
+    <td class="${l.lvl==='INFO'?'muted':'flag'}">${l.lvl.toLowerCase()}</td>
+    <td>${l.agent}</td><td>${l.msg}</td><td class="n muted">${l.dur}</td></tr>`).join('')}</table>
+  <div style="margin-top:12px"><button data-act="Explain last error">Explain the last error</button>
+    <span class="muted" style="font-size:12px">retained 30 days · export is a zip of jsonl</span></div>`,
+scope: () => `
+  ${head('01','Scope','six sites · four working')}
+  <table><tr><th>Site</th><th>Mode</th><th>State</th><th>Last scan</th><th class="n">Found</th><th></th></tr>
+  ${D.sites.map(s=>`<tr><td>${s.host}</td><td>${s.mode}</td>
+    <td class="${s.state==='planned'?'flag':'muted'}">${s.state}</td>
+    <td class="muted">${s.lastScan}</td><td class="n">${s.found}</td>
+    <td><button data-act="Edit ${s.host}">Edit</button></td></tr>`).join('')}</table>
+  <div class="two">
+    <div class="c6">
+      ${head('02','Locations','asked once · editable')}
+      <table>${D.locations.map(l=>`<tr><td>${l.country}</td><td class="muted">${l.cities.join(', ')||'—'}</td><td class="n">${l.count}</td></tr>`).join('')}</table>
+      <div style="margin-top:10px"><button data-act="Add location">Add location</button></div>
+    </div>
+    <div class="c6b">
+      ${head('03','Modes','what each one means')}
+      <table>
+        <tr><td style="width:70px">adapter</td><td class="muted">named selectors, tested against a fixture</td></tr>
+        <tr><td>generic</td><td class="muted">JSON-LD, then OpenGraph, then heuristics</td></tr>
+        <tr><td>api</td><td class="muted">documented endpoint, no browser</td></tr>
+        <tr><td>paste</td><td class="muted">you give one URL; the agent reads one page</td></tr>
+      </table>
+      <div class="kicker" style="margin-top:10px">No crawl</div>
+      <div style="font-size:12.5px">There is no open-web mode and no way to switch one on. Coverage means more named sites, not a spider.</div>
+    </div>
+  </div>`,
+agent: () => `
+  ${head('01','Browser','brave 1.98.60 · engine 156')}
+  <div class="two">
+    <div class="c6">
+      <table>
+        <tr><td class="muted" style="width:130px">Profile</td><td>spike/profile/brave · 124 MB</td></tr>
+        <tr><td class="muted">DevTools</td><td>127.0.0.1:9222</td></tr>
+        <tr><td class="muted">Mode</td><td>headed under Xvfb</td></tr>
+        <tr><td class="muted">Your browser</td><td class="flag">never attached</td></tr>
+      </table>
+      <div style="margin-top:10px;display:flex;gap:6px"><button data-act="Restart browser">Restart</button>
+        <button data-act="Switch to Chrome">Use Chrome</button></div>
+    </div>
+    <div class="c6b">
+      ${head('02','Session survival','required')}
+      <div style="font-size:12.5px;margin-bottom:8px">The plan called it “Forgetful Browsing”. Brave desktop has no global toggle;
+      these three settings are the real gate.</div>
+      <table>
+        <tr><td>cookies_on_exit</td><td class="muted">false — logins survive</td></tr>
+        <tr><td>browsing_history_on_exit</td><td class="muted">false</td></tr>
+        <tr><td>restore_on_startup</td><td class="muted">1</td></tr>
+      </table>
+      <div style="margin-top:10px"><button class="solid" data-act="Re-check now">Verify now</button></div>
+    </div>
+  </div>
+  ${head('03','Signed out','2 sites')}
+  <table><tr><td class="flag">rekrute.com</td><td class="muted">needs a sign-in before applying</td><td><button data-go="credentials">Open vault</button></td></tr>
+    <tr><td class="flag">linkedin.com</td><td class="muted">manual login only, no stored password</td><td><button data-go="credentials">Open vault</button></td></tr></table>`,
+credentials: () => `
+  ${head('01','Vault','AES-256-GCM · passphrase held by you')}
+  <table><tr><th>Site</th><th>Account</th><th>Held</th><th>Last used</th><th class="n">Uses</th><th></th></tr>
+  ${D.credentials.map(c=>`<tr><td>${c.site}</td><td>${c.user}</td><td class="muted">${c.kind}</td>
+    <td class="muted">${c.lastUsed}</td><td class="n">${c.uses}</td>
+    <td><button data-act="Reveal ${c.site}">Reveal</button></td></tr>`).join('')}</table>
+  <div style="margin-top:12px;display:flex;gap:6px"><button data-act="Lock vault">Lock</button>
+    <button data-act="Rotate passphrase">Rotate passphrase</button>
+    <span class="muted" style="font-size:12px;align-self:center">no credential is ever placed in a prompt</span></div>
+  ${head('02','Audit','append-only')}
+  <table><tr><td style="width:64px" class="muted">14:04</td><td>credential.used</td><td class="muted">rekrute.com · run 41</td></tr>
+    <tr><td class="muted">13:58</td><td>credential.revealed</td><td class="muted">marocannonces · passphrase</td></tr>
+    <tr><td class="muted">09:12</td><td>credential.used</td><td class="muted">gmail oauth · read one message</td></tr></table>`,
+data: () => `
+  ${head('01','Data','two hosts · one history')}
+  <div class="figs" style="margin-bottom:14px">
+    ${D.hosts.map(h=>`<div class="fig"><div class="k">${h.id} · ${h.label}</div>
+      <div class="v">${h.events}</div><div class="d">events · ${h.db} · heartbeat ${h.heartbeat} · merge ${h.lastSync}</div></div>`).join('')}
+    <div class="fig"><div class="k">last delta</div><div class="v" style="font-size:30px">14</div><div class="d">events from PC</div></div>
+    <div class="fig"><div class="k">hash</div><div class="v" style="font-size:30px">ok</div><div class="d">${D.sync.hash}</div></div>
+  </div>
+  <div class="two">
+    <div class="c7">
+      ${head('02','Conflict',D.sync.conflict.field)}
+      <div class="block" style="border-color:#000">
+        <div class="t">${D.sync.conflict.field}</div>
+        <div class="muted" style="font-size:12.5px;margin-bottom:8px">${D.sync.conflict.asked}</div>
+        <table><tr><td style="width:52px" class="muted">PC</td><td>${D.sync.conflict.pc}</td>
+          <td style="text-align:right"><button data-act="Keep PC value">Keep</button></td></tr>
+          <tr><td class="muted">VPS</td><td>${D.sync.conflict.vps}</td>
+          <td style="text-align:right"><button data-act="Keep VPS value">Keep</button></td></tr></table>
+        <div class="flag" style="font-size:12px;margin-top:8px">Last-writer-wins is off for anything security-relevant.</div>
+      </div>
+    </div>
+    <div class="c5">
+      ${head('03','Actions','')}
+      <div style="display:grid;gap:6px">
+        <button class="solid" data-act="Sync now">Sync now</button>
+        <button data-act="Export everything">Export everything</button>
+        <button class="red" data-act="Delete everything on both hosts">Delete on both hosts</button>
+      </div>
+      <div class="muted" style="font-size:12px;margin-top:10px">Delete requires typing “delete both”. It is not undoable.</div>
+      <div class="kicker" style="margin-top:14px">What is stored</div>
+      <div style="font-size:12.5px">Listings, scores, letters, every agent action, your corrections. Never your passwords in plain text, never a session cookie in the log.</div>
+    </div>
+  </div>`,
+onboarding: () => `
+  ${head('01','First run','step 4 of 5 · two minutes left')}
+  <div class="bar" style="max-width:520px"><i style="width:60%"></i></div>
+  <div class="two">
+    <div class="c7">
+      <table>
+        <tr><td class="n muted" style="width:36px">01</td><td>OpenRouter key</td><td class="muted">valid · claude-haiku · 412 credits</td></tr>
+        <tr><td class="n muted">02</td><td>Resume</td><td class="muted">v4 parsed · 82% fit · three fields to confirm</td></tr>
+        <tr><td class="n muted">03</td><td>Type and places</td><td class="muted">internships, full-time · Casablanca, Rabat, Remote</td></tr>
+        <tr><td class="n flag">04</td><td class="flag">Agent browser</td><td class="muted">Brave found. Confirm logins survive a restart.</td></tr>
+        <tr><td class="n muted">05</td><td>Risk acknowledgement</td><td class="muted">Bans are possible. Nothing sends without your click.</td></tr>
+      </table>
+      <div style="margin-top:12px;display:flex;gap:6px"><button class="solid" data-go="agent">Open step 04</button>
+        <button data-act="Run first scan">Run first scan</button></div>
+    </div>
+    <div class="c5">
+      <div class="kicker">The honest sentence</div>
+      <div style="font-size:14px;line-height:1.5">Automation can breach a site's terms even when it behaves. Accounts get banned permanently. The agent stays inside one browser, moves at human pace, and never presses submit.</div>
+      <div class="kicker" style="margin-top:14px">Editable later</div>
+      <div style="font-size:12.5px">Every choice on this page lives in settings and can move to a VPS without starting over.</div>
+    </div>
+  </div>`,
+pwa: () => `
+  ${head('01','Telephone','390 × 844')}
+  <div class="phone">
+    <div class="hd"><span>VPS · synced</span><span>76</span></div>
+    <div class="it" style="border-bottom:2px solid var(--red)">
+      <div class="kicker" style="color:var(--red)">Frozen</div>
+      <div style="font-weight:700">rekrute.com · challenge</div>
+      <div class="muted" style="font-size:11.5px;margin:2px 0 8px">2m ago · push delivered in 1.4 s</div>
+      <div style="display:flex;gap:6px"><button class="solid" data-go="verification">Resolve</button>
+        <button data-act="Enter code">Code</button></div>
+    </div>
+    <div class="it"><div style="font-size:20px;font-weight:700;letter-spacing:-.03em">88</div>
+      <div style="font-weight:700">Conseiller de service</div>
+      <div class="muted" style="font-size:11.5px">Auto Hall · Casablanca</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><button class="solid" data-act="Approve">Approve</button>
+        <button data-act="Skip">Skip</button></div></div>
+    <div class="it"><div style="font-size:20px;font-weight:700;letter-spacing:-.03em">84</div>
+      <div style="font-weight:700">Business développeur</div>
+      <div class="muted" style="font-size:11.5px">Alten Maroc · Rabat</div>
+      <div style="display:flex;gap:6px;margin-top:8px"><button class="solid" data-act="Approve">Approve</button>
+        <button data-act="Skip">Skip</button></div></div>
+  </div>`,
+}, render(id){ return shell(id, this.screens[id]()); } };
+</script>
+<script src="../../shared/app.js"></script>
+</body></html>

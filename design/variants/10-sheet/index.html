@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sheet</title>
+<style>
+  :root{
+    --bg:#fff; --ink:#1f2328; --dim:#57606a; --line:#d0d7de; --head:#f6f8fa; --zebra:#fbfcfd;
+    --blue:#0550ae; --sel:#ddf4ff; --green:#1a7f37; --amber:#9a6700; --red:#cf222e;
+    --sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:12.5px/1.35 var(--sans);display:flex;flex-direction:column}
+  a{color:var(--blue);text-decoration:none}
+  .titlebar{display:flex;align-items:center;gap:14px;padding:6px 12px;border-bottom:1px solid var(--line);background:#fff}
+  .logo{width:18px;height:18px;border-radius:4px;background:var(--green);display:inline-block}
+  .doc{font-weight:600;font-size:12.5px}
+  .doc span{color:var(--dim);font-weight:400}
+  .save{margin-left:auto;font-size:11.5px;color:var(--dim)}
+  .save b{color:var(--green);font-weight:600}
+  .menus{display:flex;gap:2px;padding:2px 10px;border-bottom:1px solid var(--line);background:#fff;align-items:center}
+  .menus span{padding:3px 8px;font-size:12px;color:var(--dim);cursor:default}
+  .menus span:hover{background:var(--head)}
+  .menus .sep{width:1px;height:14px;background:var(--line);margin:0 6px;padding:0}
+  .menus button{font:12px var(--sans);border:1px solid var(--line);background:var(--head);border-radius:4px;
+    padding:2px 8px;cursor:pointer;color:var(--ink)}
+  .menus button:hover{background:#eaeef2}
+  .menus button.p{background:var(--blue);border-color:var(--blue);color:#fff}
+  .fbar{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);font-size:12px;background:#fff}
+  .cellref{width:78px;padding:3px 8px;border-right:1px solid var(--line);color:var(--ink);text-align:center;
+    font-family:var(--mono);font-size:11.5px;background:var(--head)}
+  .fx{padding:3px 8px;color:var(--dim);border-right:1px solid var(--line);font-style:italic}
+  .fval{padding:3px 8px;font-family:var(--mono);font-size:11.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gridwrap{flex:1;overflow:auto;background:#fff}
+  table.sheet{border-collapse:separate;border-spacing:0;width:100%;font-size:12px;table-layout:fixed}
+  table.sheet th{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);
+    border-right:1px solid var(--line);font-weight:500;font-size:10.5px;color:var(--dim);padding:2px 6px;
+    text-align:center;height:22px}
+  table.sheet th.rowh{width:38px;position:sticky;left:0;z-index:3;text-align:center;font-weight:400;
+    background:var(--head);border-right:1px solid var(--line);color:var(--dim);font-size:10.5px}
+  table.sheet td{border-bottom:1px solid #eaeef2;border-right:1px solid #eaeef2;padding:4px 7px;vertical-align:top;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px;height:26px}
+  table.sheet tr:nth-child(even) td{background:var(--zebra)}
+  table.sheet td.rowh{position:sticky;left:0;background:var(--head);color:var(--dim);text-align:center;
+    font-family:var(--mono);font-size:10.5px;z-index:1;border-right:1px solid var(--line)}
+  table.sheet tr:hover td{background:#f0f6ff}
+  table.sheet td.sel{background:var(--sel)!important;outline:2px solid var(--blue);outline-offset:-2px}
+  .g{color:var(--dim)}.mono{font-family:var(--mono);font-size:11px}
+  .b{font-weight:600}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:0 5px;font-size:10.5px;color:var(--dim);background:#fff}
+  .pill.g{color:var(--green);border-color:#b7e1c3;background:#e9f7ee}
+  .pill.a{color:var(--amber);border-color:#f0d8a0;background:#fdf6e3}
+  .pill.r{color:var(--red);border-color:#f7c4c4;background:#fdeeee}
+  .pill.b{color:var(--blue);border-color:#b6d4f7;background:#e7f2fd}
+  .link{color:var(--blue);cursor:pointer}
+  .mini{display:inline-flex;gap:3px;align-items:center}
+  button.cellbtn{font:11px var(--sans);border:1px solid var(--line);background:#fff;border-radius:3px;padding:0 6px;
+    cursor:pointer;color:var(--ink);line-height:16px}
+  button.cellbtn:hover{background:var(--head)}
+  button.cellbtn.p{background:var(--blue);border-color:var(--blue);color:#fff}
+  button.cellbtn.d{color:var(--red);border-color:#f0b8b8}
+  input.sheetin{font:11px var(--mono);border:1px solid var(--blue);padding:1px 4px;width:132px;border-radius:2px}
+  .shot{border:1px dashed #c9d1d9;color:var(--dim);font-size:11px;text-align:center;padding:26px 8px;background:#fbfcfd}
+  .tabstrip{flex:0 0 auto;display:flex;align-items:stretch;border-top:1px solid var(--line);background:var(--head);
+    overflow:auto;height:32px}
+  .tabstrip .ctrl{display:flex;align-items:center;gap:8px;padding:0 8px;color:var(--dim);font-size:10.5px;border-right:1px solid var(--line)}
+  .tabstrip a{display:flex;align-items:center;padding:0 12px;font-size:11.5px;color:var(--dim);
+    border-right:1px solid var(--line);white-space:nowrap}
+  .tabstrip a.is-active{background:#fff;color:var(--ink);font-weight:600;box-shadow:inset 0 2px 0 var(--green)}
+  .tabstrip a:hover{background:#eef1f4}
+  .fnote{flex:0 0 auto;display:flex;gap:16px;padding:2px 10px;font-size:10.5px;color:var(--dim);
+    background:#fff;border-top:1px solid var(--line)}
+  .fnote b{color:var(--ink);font-weight:500}
+  .mock-toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%);background:#1f2328;color:#fff;
+    padding:5px 11px;border-radius:4px;font-size:11.5px;z-index:99}
+  @media(max-width:760px){
+    table.sheet td{max-width:220px}
+    .menus{flex-wrap:wrap;padding:3px 8px}
+    .fnote{display:none}
+    /* spreadsheets do not fit a phone: keep the row label and the row's action */
+    table.sheet{table-layout:auto}
+    table.sheet :is(th,td):nth-child(n+4):nth-last-child(n+2){display:none}
+    table.sheet th.rowh,table.sheet td.rowh{width:30px;padding:4px 2px}
+    table.sheet th:nth-child(2),table.sheet td:nth-child(2){width:44%!important;white-space:normal}
+    table.sheet th:last-child,table.sheet td:last-child{white-space:normal;padding-left:4px}
+    table.sheet td{height:auto;padding:5px 5px;font-size:11.5px}
+    table.sheet td .cellbtn{font-size:10px;padding:1px 4px}
+    .fbar .fval{font-size:10px}
+    .titlebar{flex-wrap:wrap;gap:6px}
+    .save{margin-left:0}
+  }
+</style></head><body>
+<script src="../../shared/data.js"></script>
+<script>
+const D = window.JOBPILOT;
+const sheets = [['dashboard','Today'],['jobs','Jobs'],['triage','Triage'],['verification','Verify'],
+  ['doctor','Doctor'],['logs','Log'],['scope','Sites'],['agent','Browser'],
+  ['credentials','Vault'],['data','Data'],['onboarding','Setup'],['pwa','Phone']];
+
+const shell = (id, ref, formula, body, footer) => `
+<div class="titlebar"><span class="logo"></span>
+  <span class="doc">jobpilot.xlsx <span>· ${sheets.find(s=>s[0]===id)[1]} · read-only mockup</span></span>
+  <span class="save">run 41 · <b>synced to VPS</b></span></div>
+<div class="menus">
+  <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Data</span><span>Run</span><span>Help</span>
+  <span class="sep"></span>
+  ${footer?.[0]||''}
+  <span style="margin-left:auto"></span>
+  <span class="pill b">${D.hosts[1].id} ${D.hosts[1].label}</span>
+  <span class="pill">trust ${D.trust.score}</span>
+</div>
+<div class="fbar"><div class="cellref">${ref}</div><div class="fx">fx</div>
+  <div class="fval">${formula}</div></div>
+<div class="gridwrap"><table class="sheet">${body}</table></div>
+<div class="fnote"><span><b>Sum</b> ${D.trust.score}</span><span>Count 12</span><span>Ready</span>
+  <span style="margin-left:auto">P0 mockup · no real data leaves this page</span></div>
+<nav class="tabstrip" aria-label="sheets"><div class="ctrl">◀ ▶</div>
+  ${sheets.map(([k,l])=>`<a href="#${k}" data-go="${k}">${l}</a>`).join('')}</nav>`;
+
+const cols = (labels, widths=[]) => `<thead><tr><th class="rowh"></th>
+  ${labels.map((l,i)=>`<th${widths[i]?` style="width:${widths[i]}"`:''}>${l}</th>`).join('')}</tr></thead>`;
+
+// rows: array of arrays; first entry is row number
+const rows = (data, selRow) => `<tbody>${data.map((r,ri)=>`<tr>${r.map((c,ci)=>
+  ci===0?`<td class="rowh">${c}</td>`:`<td class="${selRow===ri&&ci===1?'sel':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+
+window.VARIANT = { id:'10-sheet', name:'Sheet', screens:{
+dashboard: () => shell('dashboard','B4','=COUNTIF(Jobs!G2:G9,"high")',
+  cols(['A · signal','B · job','C · employer','D · city','E · source','F · match','G · state','H · action'],[80,300,180,110,150,70,130,100]) +
+  rows([
+    ['1','jobPilot — today, 22 October 2026','','','','','',''],
+    ['2','<span class="pill r">BLOCKED</span>','rekrute.com · security challenge','frozen 2m 10s','VPS','verification',88,'<button class="cellbtn p" data-go="verification">Resolve</button>'],
+    ['3','<span class="pill g">READY</span>','Conseiller de service','Auto Hall','Casablanca','rekrute.com',88,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
+    ['4','<span class="pill g">READY</span>','Business développeur','Alten Maroc','Rabat','rekrute.com',84,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
+    ['5','<span class="pill g">READY</span>','Technicien Laboratoire','AKDITAL','Mohammédia','rekrute.com',81,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
+    ['6','<span class="pill a">DECIDE</span>','Chargé de relation client','Fondation Arrawaj','Rabat','rekrute.com',74,'<button class="cellbtn" data-act="Review">Review</button>'],
+    ['7','<span class="pill a">DECIDE</span>','Commercial sédentaire 100%','<span class="g">not named</span>','Casablanca','marocannonces',61,'<button class="cellbtn" data-act="Review">Review</button>'],
+    ['8','<span class="pill">DROP</span>','Recrutement à Casablanca — assurance','Foundever','Casablanca','rekrute.com',32,'<button class="cellbtn" data-act="Restore">Restore</button>'],
+    ['9','<span class="pill">DROP</span>','(no title)','<span class="g">—</span>','Casablanca','marocannonces',12,'<button class="cellbtn" data-act="Restore">Restore</button>'],
+    ['10','','','','','','',''],
+    ['11','found today','6 valid','2 dropped','','','','<span class="g">run 41 · 3m 41s</span>'],
+    ['12','awaiting you','5','of which ready','3','','',''],
+    ['13','blocked','1','security wall','rekrute.com','','',''],
+  ], 1),
+  ['<button class="p" data-act="Pause all agents">Pause</button><button data-act="Open live browser">Live browser</button><button data-go="logs">Log</button>','']),
+
+jobs: () => shell('jobs','B2','=FILTER(Jobs!B2:H9, Jobs!G2:G9<>"low")',
+  cols(['A · title','B · employer','C · city','D · source','E · pay','F · posted','G · signal','H · type','I · action'],[240,150,110,130,130,80,70,90,80]) +
+  rows([
+    ['1','<span class="b">Title</span>','Employer','City','Source','Pay','Posted','Signal','Type',''],
+    ...D.jobs.filter(j=>j.signal!=='low').map((j,i)=>[String(i+2), j.title,
+      j.company==='unnamed'?'<span class="g">not named</span>':j.company, j.city, j.source,
+      j.salary??'<span class="g">—</span>', j.age, `<span class="pill ${j.signal==='high'?'g':'a'}">${j.signal}</span>`,
+      j.type, `<button class="cellbtn" data-act="Tailor ${j.title}">Tailor</button>`]),
+    [String(D.jobs.filter(j=>j.signal!=='low').length+2),'<span class="g">2 rows hidden — low signal</span>','','','','','','','',
+      '<button class="cellbtn" data-act="Show hidden">Show</button>'],
+  ], 1),
+  ['<button data-act="Filter">Filter</button><button data-act="Sort by match">Sort</button><button data-act="Export CSV">Export CSV</button>','']),
+
+triage: () => shell('triage','D4','=SORT(Triage!B2:F6, 5, FALSE)',
+  cols(['A · group','B · title','C · employer','D · city','E · match','F · honesty note','G · contract','H · action'],[90,240,160,110,70,240,90,110]) +
+  rows([
+    ['1','<span class="b">Group</span>','Title','Employer','City','Match','Honesty note','Contract',''],
+    ...D.triage.ready.map((j,i)=>[i===0?'<span class="pill g">ready</span>':'', j.title, j.company, j.city,
+      String(j.score), j.honesty, j.type, `<button class="cellbtn p" data-act="Approve ${j.title}">Approve</button>`]),
+    ...D.triage.needsYou.map((j,i)=>[i===0?'<span class="pill a">needs you</span>':'', j.title, j.company, j.city,
+      String(j.score), j.honesty, j.type, `<button class="cellbtn" data-act="Review ${j.title}">Review</button>`]),
+    ...D.triage.skip.map((j,i)=>[i===0?'<span class="pill">skip</span>':'', j.title, j.company ?? '—', j.city,
+      String(j.score), j.honesty, j.type, `<button class="cellbtn" data-act="Restore ${j.title}">Restore</button>`]),
+    ['','<span class="g">submit is never automated — the last click is yours</span>','','','','','',''],
+  ], 1),
+  ['<button class="p" data-act="Approve top 3">Approve top 3</button><button data-act="Snooze rest">Snooze rest</button><button data-act="Preview as employer">Preview</button>','']),
+
+verification: () => shell('verification','C3','=IF(Verification!B3="open","FROZEN","clear")',
+  cols(['A · field','B · value','C · detail','D · action'],[150,260,320,150]) +
+  rows([
+    ['1','<span class="b">Verification event</span>','rekrute.com','security challenge',''],
+    ['2','state','<span class="pill r">FROZEN</span>','agent paused, no retry',''],
+    ['3','detected','2026-10-22 14:04:12','host VPS',''],
+    ['4','elapsed','2m 10s','push delivered in 1.4s',''],
+    ['5','url','<span class="mono">https://www.rekrute.com/offres-emploi-maroc.html?page=2</span>','','<button class="cellbtn" data-act="Open in browser">Open</button>'],
+    ['6','run','run 41 · job “Technicien Laboratoire”','',''],
+    ['7','evidence','screenshot of the paused tab','viewport only; no browser chrome','<button class="cellbtn" data-act="View screenshot">View</button>'],
+    ['8','','<div class="shot">screenshot · one-time values redacted</div>','',''],
+    ['9','<span class="b">Where the code went</span>','','',''],
+    ['10','account','h•••@gmail.com','',''],
+    ['11','search','<span class="mono">from:no-reply newer:10m</span>','',''],
+    ['12','phone','+212 6•• ••• •••','',''],
+    ['13','valid for','10 minutes','',''],
+    ['14','<span class="b">Resolve</span>','<input class="sheetin" placeholder="000000" aria-label="code">','','<button class="cellbtn p" data-act="Submit code and resume">Submit + resume</button>'],
+    ['15','','','','<button class="cellbtn" data-act="I finished — resume">I finished it</button> <button class="cellbtn d" data-act="Abandon run">Abandon</button>'],
+    ['16','<span class="b">History</span>','','',''],
+    ['17','today 14:04','rekrute.com','security challenge · VPS','<span class="pill r">open</span>'],
+    ['18','yesterday 09:12','linkedin.com','email code · PC','<span class="pill g">1m 20s</span>'],
+  ], 2),
+  ['<button data-go="pwa">Take control on phone</button>','']),
+
+doctor: () => shell('doctor','C8','=COUNTIF(Doctor!C2:C16,"FAIL")',
+  cols(['A · state','B · check','C · value','D · why it matters','E · fix','F · weight'],[80,200,190,300,180,60]) +
+  rows([
+    ['1','<span class="b">State</span>','Check','Result','Why','Fix','Weight'],
+    ['2','<span class="pill g">PASS</span>','Node.js','20.20.2','supported runtime','',''],
+    ['3','<span class="pill g">PASS</span>','SQLite integrity_check','ok','consistent, WAL on','',''],
+    ['4','<span class="pill g">PASS</span>','Disk space','120 GB free','plenty','',''],
+    ['5','<span class="pill g">PASS</span>','Brave + Playwright','1.98.60 / 1.64.1','pinned and matching','',''],
+    ['6','<span class="pill g">PASS</span>','Browser profile','writable','spike/profile/brave','',''],
+    ['7','<span class="pill r">FAIL</span>','WebGL / renderer','<span class="pill r">no context</span>','easy to fingerprint','Install Mesa llvmpipe','8'],
+    ['8','<span class="pill r">FAIL</span>','Clock and timezone','<span class="pill r">UTC vs Berlin</span>','mismatch sites can see','Set TZ=Europe/Berlin','9'],
+    ['9','<span class="pill a">WARN</span>','Tectonic + LaTeX','not installed','PDF falls back to Markdown','Install Tectonic','—'],
+    ['10','<span class="pill g">PASS</span>','OpenRouter key','valid','412 credits','',''],
+    ['11','<span class="pill a">WARN</span>','Ollama','not installed','no local fallback','Optional','—'],
+    ['12','<span class="pill g">PASS</span>','Tailscale certificate','valid 71 days','server1.tail9f2.ts.net','',''],
+    ['13','<span class="pill g">PASS</span>','VAPID push keys','1 device','','',''],
+    ['14','<span class="pill g">PASS</span>','Backup freshness','4h ago','','',''],
+    ['15','<span class="pill g">PASS</span>','Sync conflicts','none','','',''],
+    ['16','','<span class="b">TOTAL</span>','11 pass · 2 warn · 2 fail','<span class="pill a">trust 76 · caution</span>','estimate, not a guarantee',''],
+    ['17','','','','<button class="cellbtn" data-act="Re-run checks">Re-run all</button> <button class="cellbtn d" data-act="Run anyway (logged)">Run anyway</button>',''],
+  ], 6),
+  ['<button data-act="Re-run checks">Re-run</button><button data-act="Explain trust score">Explain trust</button>','']),
+
+logs: () => shell('logs','B4','=FILTER(Log!A2:E11, Log!B2:B11="ALERT")',
+  cols(['A · time','B · level','C · agent','D · site','E · event','F · duration'],[70,70,80,130,520,80]) +
+  rows([
+    ['1','<span class="b">Time</span>','Level','Agent','Site','Event','Took'],
+    ...D.logs.map((l,i)=>[String(i+2), l.t, `<span class="pill ${l.lvl==='INFO'?'g':l.lvl==='WARN'?'a':'r'}">${l.lvl}</span>`,
+      l.agent, l.site, l.msg, l.dur]),
+    [String(D.logs.length+2),'','','','<span class="g">retention 30 days · secrets redacted at write</span>',''],
+  ], 6),
+  ['<button data-act="Export diagnostic bundle">Export bundle</button><button data-act="Explain last error">Explain last error</button>','']),
+
+scope: () => shell('scope','A2','=COUNTA(Sites!A2:A7)',
+  cols(['A · site','B · mode','C · state','D · last scan','E · found','F · login needed','G · notes','H · action'],[160,90,100,110,70,110,280,90]) +
+  rows([
+    ['1','<span class="b">Site</span>','Mode','State','Last scan','Found','Login','Notes',''],
+    ...D.sites.map((s,i)=>[String(i+2), s.host, `<span class="pill b">${s.mode}</span>`,
+      `<span class="pill ${s.state==='working'?'g':s.state==='planned'?'a':''}">${s.state}</span>`,
+      s.lastScan, String(s.found), s.mode==='paste'?'manual':'no',
+      s.host==='marocannonces.com'?'cards never name the employer → enrichDetail':'',
+      `<button class="cellbtn" data-act="Edit ${s.host}">Edit</button>`]),
+    [String(D.sites.length+2),'<span class="g">no adapter and no structured data → paste one URL; there is no crawl mode</span>','','','','','','',''],
+    [String(D.sites.length+3),'<span class="b">Places</span>','Country','Cities','Count','','','',''],
+    ...D.locations.map((l,i)=>[String(D.sites.length+i+4), l.country, '', l.cities.join(', ')||'any', String(l.count), '', '', '',
+      `<button class="cellbtn" data-act="Edit ${l.country}">Edit</button>`]),
+  ], 3),
+  ['<button class="p" data-act="Add a site">Add site</button><button data-act="Add a place">Add place</button>','']),
+
+agent: () => shell('agent','B3','=Brave.Version()',
+  cols(['A · setting','B · value','C · source','D · status'],[220,280,260,140]) +
+  rows([
+    ['1','<span class="b">Browser</span>','Brave 1.98.60','engine Chrome 156.0.8078.48','<span class="pill g">detected</span>'],
+    ['2','profile','spike/profile/brave · 124 MB','own profile, not yours','<span class="pill g">writable</span>'],
+    ['3','devtools','127.0.0.1:9222','connectOverCDP','<span class="pill g">attached</span>'],
+    ['4','mode','headed under Xvfb :99','screencast for take-control',''],
+    ['5','<span class="b">Session survival</span>','','',''],
+    ['6','cookies_on_exit','false','chrome.settingsPrivate.getAllPrefs()','<span class="pill g">logins survive</span>'],
+    ['7','browsing_history_on_exit','false','same','<span class="pill g">history survives</span>'],
+    ['8','restore_on_startup','1','same','<span class="pill g">continue where you left off</span>'],
+    ['9','','<span class="g">Brave desktop has no global “Forgetful Browsing” toggle — these three are the real gate</span>','',''],
+    ['10','<span class="b">Signed out</span>','','',''],
+    ['11','rekrute.com','needs sign-in','vault entry present','<span class="pill r">signed out</span>'],
+    ['12','linkedin.com','manual login','no password stored','<span class="pill r">signed out</span>'],
+    ['13','marocannonces.com','ok','reading public listings','<span class="pill g">ok</span>'],
+    ['14','','','','<button class="cellbtn p" data-act="Re-check now">Re-check</button> <button class="cellbtn" data-act="Restart browser">Restart</button>'],
+  ], 1),
+  ['<button data-act="Switch to Chrome">Use Chrome instead</button>','']),
+
+credentials: () => shell('credentials','C2','=COUNTA(Vault!A2:E5)',
+  cols(['A · site','B · account','C · held','D · last used','E · uses','F · last action','G · audit','H · action'],[180,190,180,110,60,220,180,90]) +
+  rows([
+    ['1','<span class="b">Site</span>','Account','Held','Last used','Uses','Last action','',''],
+    ...D.credentials.map((c,i)=>[String(i+2), c.site, c.user, c.kind, c.lastUsed, String(c.uses),
+      c.site.startsWith('gmail')?'read one message (OAuth)':'filled a login form',
+      '14:04 · run 41', `<button class="cellbtn" data-act="Reveal ${c.site}">Reveal</button>`]),
+    [String(D.credentials.length+2),'<span class="g">every reveal is written to the audit sheet</span>','','','','','','',
+      '<button class="cellbtn" data-act="Lock vault">Lock</button>'],
+  ], 1),
+  ['<button data-act="Rotate passphrase">Rotate passphrase</button><button data-act="Export audit">Export audit</button>','']),
+
+data: () => shell('data','B2','=SUM(PC.Events, VPS.Events)',
+  cols(['A · host','B · state','C · heartbeat','D · database','E · events','F · last merge','G · note'],[110,110,110,100,90,130,300]) +
+  rows([
+    ['1','<span class="b">Host</span>','State','Heartbeat','DB','Events','Last merge','Note'],
+    ['2','PC','<span class="pill a">connecting</span>','12s ago','38 MB','1204','yesterday 21:10','offline overnight'],
+    ['3','VPS','<span class="pill g">synced</span>','1s ago','41 MB','1288','just now','lease holder'],
+    ['4','','','','','','',''],
+    ['5','<span class="b">Conflict</span>','send hours','','','','',''],
+    ['6','PC value','09:00 – 18:00 Africa/Casablanca','','','','','<button class="cellbtn" data-act="Keep PC value">Keep</button>'],
+    ['7','VPS value','10:00 – 19:00 Europe/Berlin','','','','','<button class="cellbtn" data-act="Keep VPS value">Keep</button>'],
+    ['8','note','<span class="pill a">security-relevant</span>','changed on both while offline','','','','last-writer-wins disabled'],
+    ['9','','','','','','',''],
+    ['10','<span class="b">Sync</span>',D.sync.state,D.sync.lastDelta,'','','<span class="pill g">hash match</span>','<button class="cellbtn p" data-act="Sync now">Sync now</button>'],
+    ['11','export','jsonl + files','','','','','<button class="cellbtn" data-act="Export everything">Export</button>'],
+    ['12','delete','both hosts','','','','','<button class="cellbtn d" data-act="Delete everything on both hosts">Delete</button>'],
+  ], 1),
+  ['<button data-act="Verify hashes">Verify hashes</button>','']),
+
+onboarding: () => shell('onboarding','C2','=COUNTIF(Setup!D2:D6,"done")&"/5"',
+  cols(['A · step','B · item','C · detail','D · state','E · action'],[60,200,380,100,130]) +
+  rows([
+    ['1','#','Item','Detail','State',''],
+    ['2','1','OpenRouter key','valid · claude-haiku · 412 credits','<span class="pill g">done</span>',''],
+    ['3','2','Resume','v4 parsed · 82% fit · 3 fields to confirm','<span class="pill g">done</span>',''],
+    ['4','3','Job type and places','internships, full-time · Casablanca, Rabat, Remote','<span class="pill g">done</span>',''],
+    ['5','4','Agent browser','Brave found · confirm logins survive a restart','<span class="pill a">open</span>','<button class="cellbtn p" data-go="agent">Open</button>'],
+    ['6','5','Risk acknowledgement','bans are possible; nothing sends without your click','<span class="pill">todo</span>','<button class="cellbtn" data-act="Acknowledge">Acknowledge</button>'],
+    ['7','','','','',''],
+    ['8','','<span class="b">What it will not do</span>','crawl the web · solve a captcha · press submit · hide a failure','',''],
+    ['9','','','','','<button class="cellbtn p" data-act="Run first scan">Run first scan</button>'],
+  ], 3),
+  ['<button data-act="Run first scan">Run first scan</button>','']),
+
+pwa: () => shell('pwa','A2','=PHONE(390,844)',
+  cols(['A · phone screen','B · content'],[220,560]) +
+  rows([
+    ['1','<span class="b">PWA · 390 × 844</span>','<span class="g">two jobs only: unblock, approve</span>'],
+    ['2','status bar','VPS · synced · trust 76 · 14:06'],
+    ['3','<span class="pill r">FROZEN</span>','rekrute.com · security challenge · 2m ago'],
+    ['4','action','<button class="cellbtn p" data-go="verification">Take control</button> <button class="cellbtn" data-act="Enter code">Enter code</button>'],
+    ['5','job 1','Conseiller de service · Auto Hall · Casablanca · match 88'],
+    ['6','action','<button class="cellbtn p" data-act="Approve">Approve</button> <button class="cellbtn" data-act="Skip">Skip</button>'],
+    ['7','job 2','Business développeur · Alten Maroc · Rabat · match 84'],
+    ['8','action','<button class="cellbtn p" data-act="Approve">Approve</button> <button class="cellbtn" data-act="Skip">Skip</button>'],
+    ['9','tab bar','Queue · Jobs · Health · Run'],
+    ['10','push','1 device · delivered 1.4s · <button class="cellbtn" data-act="Send test push">Send test</button>'],
+    ['11','note','approving on the phone still does not submit; the form is filled on the host holding the session'],
+  ], 2),
+  ['<button data-act="Send test push">Test push</button>','']),
+}, render(id){ return this.screens[id](); } };
+</script>
+<script src="../../shared/app.js"></script>
+</body></html>

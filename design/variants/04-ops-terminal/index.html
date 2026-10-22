@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ops Terminal</title>
+<style>
+  :root{
+    --bg:#171512; --panel:#1d1a16; --panel2:#221e19; --ink:#ffb000; --paper:#e9dfcb;
+    --dim:#8a8578; --line:#3a342b; --bad:#e5484d; --ok:#9bbf6a;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--paper);font:13px/1.45 var(--mono);
+    padding-bottom:54px}
+  a{color:var(--ink);text-decoration:none}
+  .bar{display:flex;align-items:center;gap:14px;padding:6px 12px;border-bottom:1px solid var(--line);
+    background:#100e0c;color:var(--dim);font-size:12px;flex-wrap:wrap}
+  .bar b{color:var(--ink);font-weight:400}
+  .bar .sep{color:#4a4238}
+  .live{color:var(--ok)}
+  .live::before{content:"● ";animation:none}
+  main{padding:12px 14px 20px;max-width:1240px}
+  .pane{border:1px solid var(--line);background:var(--panel);margin-bottom:10px}
+  .pane > h2{margin:0;padding:3px 8px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink);border-bottom:1px solid var(--line);background:var(--panel2);font-weight:400;
+    display:flex;justify-content:space-between;gap:10px}
+  .pane > h2 .r{color:var(--dim);letter-spacing:0;text-transform:none}
+  .pane .in{padding:9px 10px}
+  .cols{display:grid;gap:10px}
+  .c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:repeat(3,1fr)}.c4{grid-template-columns:repeat(4,1fr)}
+  .kv{display:grid;grid-template-columns:140px 1fr;gap:2px 10px}
+  .kv dt{color:var(--dim)}.kv dd{margin:0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--dim);font-weight:400;border-bottom:1px solid var(--line);
+    padding:4px 6px;letter-spacing:.06em;text-transform:uppercase;font-size:10.5px}
+  td{padding:4px 6px;border-bottom:1px dotted #2b2620;vertical-align:top}
+  tr:hover td{background:#211d18}
+  .num{font-variant-numeric:tabular-nums}
+  .big{font-size:30px;color:var(--ink);line-height:1}
+  .lbl{color:var(--dim);font-size:11px}
+  .st{font-size:11px;padding:0 4px;border:1px solid currentColor}
+  .st.ok{color:var(--ok)}.st.warn{color:var(--ink)}.st.bad{color:var(--bad)}
+  .st.flip{background:var(--bad);color:#1a0f0f;border-color:var(--bad);font-weight:700}
+  .hl{background:var(--ink);color:#171512;padding:0 3px}
+  .frame{border:1px dashed #4a4238;color:#6d665a;text-align:center;padding:34px 10px;font-size:11.5px;margin:6px 0}
+  .act{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  button{font:12px var(--mono);background:transparent;color:var(--paper);border:1px solid var(--line);
+    padding:3px 8px;cursor:pointer}
+  button:hover{border-color:var(--ink);color:var(--ink)}
+  button.p{border-color:var(--ink);color:var(--ink)}
+  button.p:hover{background:var(--ink);color:#171512}
+  button.d{border-color:var(--bad);color:var(--bad)}
+  button.d:hover{background:var(--bad);color:#170b0b}
+  input{font:12px var(--mono);background:#100e0c;color:var(--ink);border:1px solid var(--line);
+    padding:4px 6px;width:150px;letter-spacing:.3em}
+  pre{margin:0;white-space:pre-wrap;font:12px/1.55 var(--mono)}
+  .log{display:grid;grid-template-columns:58px 48px 58px 1fr 44px;gap:6px;padding:2px 0;
+    border-bottom:1px dotted #2b2620;font-size:12px}
+  .log .t{color:#6d665a}
+  .log .a{color:var(--dim)}
+  .lv{font-size:10px;text-align:center;padding:0 2px;line-height:15px}
+  .lv.INFO{color:var(--ok);border:1px solid #3c4a2c}
+  .lv.WARN{color:var(--ink);border:1px solid #4a3a20}
+  .lv.ERROR{color:var(--bad);border:1px solid #4a2a2a}
+  .lv.ALERT{background:var(--bad);color:#170b0b;font-weight:700}
+  .waterfall{display:grid;gap:3px;margin-top:8px}
+  .wf{display:grid;grid-template-columns:110px 1fr 44px;gap:8px;font-size:11.5px;align-items:center}
+  .wf i{display:block;height:7px;background:var(--ink);opacity:.75}
+  .fkeys{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(12,1fr);
+    border-top:1px solid var(--line);background:#100e0c;font-size:10.5px}
+  .fkeys a{padding:4px 3px;text-align:center;color:var(--dim);border-right:1px solid #241f1a;line-height:1.25}
+  .fkeys a b{display:block;color:var(--ink);font-weight:400;font-size:10px}
+  .fkeys a.is-active{background:var(--ink);color:#171512}
+  .fkeys a.is-active b{color:#171512}
+  .prompt{display:flex;gap:6px;align-items:center;border:1px solid var(--line);padding:4px 8px;background:#100e0c}
+  .prompt span{color:var(--ink)}
+  .prompt em{color:var(--dim);font-style:normal;font-size:12px}
+  .tree{font-size:12px;line-height:1.7;color:var(--dim)}
+  .tree b{color:var(--paper);font-weight:400}
+  .phone{width:330px;border:1px solid var(--line);background:var(--bg);padding:8px}
+  .phone .hd{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);
+    border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:6px}
+  .phone .it{border:1px solid var(--line);padding:7px 8px;margin-bottom:6px}
+  .mock-toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%);background:var(--ink);
+    color:#171512;padding:5px 11px;font-size:12px;z-index:99;border:1px solid #000}
+  @media(max-width:900px){
+    .c4,.c3,.c2{grid-template-columns:1fr 1fr}
+    .fkeys{grid-template-columns:repeat(6,1fr)}
+    body{padding-bottom:96px}
+    .phone{width:100%}
+  }
+  @media(max-width:560px){
+    .c4,.c3,.c2{grid-template-columns:1fr}
+    .fkeys{grid-template-columns:repeat(4,1fr)}
+    body{padding-bottom:118px}
+  }
+</style></head><body>
+<script src="../../shared/data.js"></script>
+<script>
+const D = window.JOBPILOT;
+const keys = [['dashboard','F1','overview'],['jobs','F2','jobs'],['triage','F3','triage'],['verification','F4','verify'],
+  ['doctor','F5','doctor'],['logs','F6','logs'],['scope','F7','scope'],['agent','F8','browser'],
+  ['credentials','F9','vault'],['data','F10','data'],['onboarding','F11','setup'],['pwa','F12','phone']];
+
+const shell = (id, inner) => `
+<div class="bar">
+  <b>jobpilot</b><span class="sep">::</span>
+  <span>run 41 · ${D.run.state}</span><span class="sep">|</span>
+  <span>${D.run.site} ${D.run.page}</span><span class="sep">|</span>
+  <span class="live">${D.run.host} up</span>
+  <span style="margin-left:auto">trust <span class="hl">${D.trust.score}</span> caution</span>
+  <span class="sep">|</span><span>${D.dimTime ?? '14:06'}</span>
+</div>
+<main>${inner}</main>
+<nav class="fkeys" aria-label="function keys">${keys.map(([k,f,l])=>`<a href="#${k}" data-go="${k}"><b>${f}</b>${l}</a>`).join('')}</nav>`;
+
+const pane = (title, right, body) => `<section class="pane"><h2><span>${title}</span><span class="r">${right??''}</span></h2><div class="in">${body}</div></section>`;
+
+window.VARIANT = { id:'04-ops-terminal', name:'Ops Terminal', screens:{
+dashboard: () => `
+  <div class="cols c3" style="margin-bottom:10px">
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">agent state</div><div class="big">DISCOVERING</div>
+      <div class="lbl">rekrute.com · page 1 of 3 · 62%</div></div></div>
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">awaiting you</div><div class="big" style="color:var(--ink)">6</div>
+      <div class="lbl">3 ready · 2 review · 1 frozen</div></div></div>
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">found today</div><div class="big">6</div>
+      <div class="lbl">2 low signal dropped</div></div></div>
+  </div>
+  ${pane('! blocked', D.verification.age, `
+    <pre style="color:var(--bad)">FROZEN  verification wall · rekrute.com · host VPS
+        ${D.verification.url}
+        agent will not click until you resolve</pre>
+    <div class="act"><button class="p" data-go="verification">[ F4 ] resolve</button>
+      <button data-act="Abandon run">abandon run</button>
+      <span class="lbl" style="margin-left:auto">push delivered 1.4s</span></div>`)}
+  <div class="cols c2">
+    ${pane('run 41 · trace', '3m 41s', `<div class="waterfall">
+      ${[['lease',4],['navigate p1',18],['parse listing',30],['llm normalise',62],['navigate p2',8],['verification',100]]
+        .map(([k,w])=>`<div class="wf"><span>${k}</span><i style="width:${w}%"></i><span class="lbl num">${w===100?'frozen':''}</span></div>`).join('')}
+    </div>
+    <div class="act"><button data-act="Pause all">pause</button><button data-go="logs">[ F6 ] full trace</button></div>`)}
+    ${pane('log tail', 'live', D.logs.slice(0,6).map(l=>`<div class="log"><span class="t">${l.t}</span>
+      <span class="lv ${l.lvl}">${l.lvl}</span><span class="a">${l.agent}</span><span>${l.msg}</span><span class="lbl">${l.dur}</span></div>`).join(''))}
+  </div>
+  ${pane('command', 'try: triage / doctor / why', `<div class="prompt"><span>jobpilot&gt;</span><em>approve top 3 --dry-run</em></div>`)}`,
+
+jobs: () => pane('listings', '7 shown · 2 hidden', `
+  <div class="lbl" style="margin-bottom:6px">filter: country=ma city=casablanca,rabat type=cdi,full-time !low-signal</div>
+  <table><tr><th>#</th><th>title</th><th>employer</th><th>city</th><th>source</th><th>pay</th><th>signal</th><th></th></tr>
+  ${D.jobs.filter(j=>j.signal!=='low').map((j,i)=>`<tr>
+    <td class="num lbl">${String(i+1).padStart(2,'0')}</td><td>${j.title}</td>
+    <td style="color:var(--dim)">${j.company ?? '—'}</td><td>${j.city}</td>
+    <td class="lbl">${j.source}</td><td class="num">${j.salary ?? '—'}</td>
+    <td><span class="st ${j.signal==='high'?'ok':'warn'}">${j.signal}</span></td>
+    <td><button data-act="Tailor ${j.title}">tailor</button></td></tr>`).join('')}</table>
+  <div class="act"><button data-act="Show low signal">show 2 hidden</button>
+    <button data-act="Export list">export</button></div>`) + pane('dropped', 'why', `
+  <pre class="tree"><b>(no title)</b>        marocannonces · banner ad, not a job
+<b>Stage marketing</b>  marocannonces · unpaid, outside preferences</pre>`),
+
+triage: () => `
+  ${pane('triage', '3 ready · 2 need you', `
+  <div class="act" style="margin:0 0 8px"><button class="p" data-act="Approve top 3">approve top 3</button>
+    <button data-act="Snooze rest">snooze rest</button><button data-act="Preview as employer">preview as employer</button></div>
+  <table><tr><th>group</th><th>job</th><th>score</th><th>honesty</th><th></th></tr>
+  ${[['ready',D.triage.ready,'ok'],['needs-you',D.triage.needsYou,'warn'],['skip',D.triage.skip,'bad']]
+    .flatMap(([g,list,t])=>list.map((j,i)=>`<tr>
+      <td class="lbl">${i===0?`<span class="st ${t}">${g}</span>`:''}</td>
+      <td><b style="font-weight:400">${j.title}</b> <span class="lbl">${j.company} ${j.city} ${j.score}</span></td>
+      <td class="num">${j.score}</td><td class="lbl">${j.honesty}</td>
+      <td><button data-act="Preview ${j.title}">open</button></td></tr>`)).join('')}</table>`)}
+  ${pane('guard', 'always on', `<pre class="tree">submit        never automated — you click it
+<b>captcha</b>    never solved — run freezes
+unattended    no run without heartbeat + lease</pre>`)}`,
+
+verification: () => `
+  ${pane('!! verification wall', 'agent frozen', `
+  <div class="kv" style="margin-bottom:8px">
+    <dt>site</dt><dd>${D.verification.site}</dd>
+    <dt>type</dt><dd>${D.verification.type}</dd>
+    <dt>host</dt><dd>${D.verification.host}</dd>
+    <dt>run</dt><dd>${D.verification.run}</dd>
+    <dt>url</dt><dd style="word-break:break-all;color:var(--dim)">${D.verification.url}</dd>
+    <dt>frozen</dt><dd style="color:var(--bad)">${D.verification.age}</dd>
+  </div>
+  <div class="frame">[ screenshot of paused tab · one-time values redacted ]</div>
+  <div class="act"><input placeholder="000000" aria-label="one-time code">
+    <button class="p" data-act="Submit code and resume">submit + resume</button>
+    <button data-act="I finished — resume">i finished in browser</button>
+    <button class="d" data-act="Abandon run">abandon</button></div>
+  <pre class="tree" style="margin-top:10px">where it went   ${D.verification.guidance.account}
+search inbox    ${D.verification.guidance.search}
+phone on file   ${D.verification.guidance.phone}
+valid for       ${D.verification.guidance.validFor}</pre>`)}
+  ${pane('rules', 'no timeout auto-continue', `<pre class="tree">no automatic retry against a challenge
+no solving, no outsourcing, no third-party captcha
+resume only after a human signal — code or “i finished”</pre>`)}`,
+
+doctor: () => `
+  <div class="cols c3" style="margin-bottom:10px">
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">trust score</div>
+      <div class="big" style="color:var(--ink)">76<span style="font-size:14px">/100</span></div>
+      <div class="lbl">caution · estimate, never a guarantee</div></div></div>
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">checks</div>
+      <div class="big">11<span style="font-size:14px"> pass</span></div>
+      <div class="lbl"><span class="st warn">2 warn</span> <span class="st bad">2 fail</span></div></div></div>
+    <div class="pane" style="margin:0"><div class="in"><div class="lbl">will a run be blocked?</div>
+      <div class="big" style="color:var(--ok)">NO</div>
+      <div class="lbl">fails are logged, not hidden</div></div></div>
+  </div>
+  ${pane('checks', '11 pass · 2 warn · 2 fail', `
+  <table><tr><th>state</th><th>check</th><th>why</th><th>fix</th></tr>
+  ${D.doctor.map(c=>`<tr><td><span class="st ${c.state==='PASS'?'ok':c.state==='WARN'?'warn':'bad'}">${c.state}</span></td>
+    <td>${c.name}</td><td class="lbl">${c.why}</td>
+    <td>${c.fix?`<button data-act="${c.fix}">fix</button>`:'<span class="lbl">—</span>'}</td></tr>`).join('')}</table>
+  <div class="act"><button data-act="Re-run checks">re-run all</button>
+    <button class="d" data-act="Run anyway (logged)">run anyway (logged)</button></div>`)}`,
+
+logs: () => `
+  ${pane('log', 'live tail · 30d retention', `
+  <div class="lbl" style="margin-bottom:6px">level [all] · agent [all] · site [all] · run [41] · secrets redacted at write</div>
+  ${D.logs.map(l=>`<div class="log"><span class="t">${l.t}</span><span class="lv ${l.lvl}">${l.lvl}</span>
+    <span class="a">${l.agent}</span><span>${l.msg}</span><span class="lbl">${l.dur}</span></div>`).join('')}
+  <div class="act"><button data-act="Export diagnostic bundle">export bundle</button>
+    <button data-act="Explain last error">explain last error</button>
+    <button data-act="Copy run id">copy run id</button></div>`)}
+  ${pane('run 41 · timeline', 'started 14:02 · lease 30m', `<pre class="tree">
+14:02:00  <b>lease</b>      acquired on VPS, heartbeat 5s
+14:02:03  <b>browser</b>    brave 1.98.60 attached, profile writable
+14:04:12  <b>alert</b>      verification wall — agent frozen
+14:04:13  <b>push</b>       phone + desktop, delivered
+--:--:--  <b>resume</b>     waiting for human signal</pre>`)}`,
+
+scope: () => `
+  ${pane('sites', '6 configured · 4 working', `
+  <table><tr><th>site</th><th>mode</th><th>state</th><th>last scan</th><th>found</th><th></th></tr>
+  ${D.sites.map(s=>`<tr><td>${s.host}</td><td><span class="st">${s.mode}</span></td>
+    <td><span class="st ${s.state==='working'?'ok':s.state==='planned'?'warn':''}">${s.state}</span></td>
+    <td class="lbl">${s.lastScan}</td><td class="num">${s.found}</td>
+    <td><button data-act="Edit ${s.host}">edit</button></td></tr>`).join('')}</table>
+  <pre class="tree" style="margin-top:8px">adapter = named selectors, tested    api   = documented endpoint
+generic = JSON-LD then opengraph     paste = you give one url, agent reads one page</pre>`)}
+  ${pane('locations', 'asked once, editable forever', `<pre class="tree">
+${D.locations.map(l=>`<b>${l.country}</b>  ${l.cities.length?l.cities.join(', '):'—'}   (${l.count})`).join('\n')}</pre>
+  <div class="act"><button data-act="Add location">+ location</button>
+    <button data-act="Remove location">− location</button></div>`)}`,
+
+agent: () => `
+  <div class="cols c2">
+    ${pane('browser', 'brave 1.98.60', `<dl class="kv">
+      <dt>engine</dt><dd>chrome 156.0.8078.48</dd>
+      <dt>profile</dt><dd>spike/profile/brave · 124 MB</dd>
+      <dt>devtools</dt><dd>127.0.0.1:9222</dd>
+      <dt>mode</dt><dd>headed · xvfb :99</dd>
+      <dt>yours</dt><dd>never attached</dd></dl>
+    <div class="act"><button data-act="Restart browser">restart</button>
+      <button data-act="Switch to Chrome">use chrome</button></div>`)}
+    ${pane('session survival', 'required', `<pre class="tree">the plan said “forgetful browsing”.
+brave desktop has no global toggle.
+these decide it:</pre>
+    <table style="margin-top:6px">
+      <tr><td>cookies_on_exit</td><td><span class="st ok">survive</span></td></tr>
+      <tr><td>history_on_exit</td><td><span class="st ok">survive</span></td></tr>
+      <tr><td>restore_on_startup</td><td><span class="st ok">1</span></td></tr>
+    </table>
+    <div class="act"><button class="p" data-act="Re-check now">re-check now</button></div>`)}
+  </div>
+  ${pane('logged-out sites', '2', `<pre class="tree"><span style="color:var(--bad)">✗ rekrute.com</span>     needs sign-in
+<span style="color:var(--bad)">✗ linkedin.com</span>    needs sign-in
+<span style="color:var(--ok)">✓ marocannonces.com</span>  ok</pre>
+  <div class="act"><button data-go="credentials">[ F9 ] open vault</button></div>`)}`,
+
+credentials: () => `
+  ${pane('vault', 'aes-256-gcm · passphrase held by you', `
+  <table><tr><th>site</th><th>account</th><th>held</th><th>last used</th><th>uses</th><th></th></tr>
+  ${D.credentials.map(c=>`<tr><td>${c.site}</td><td>${c.user}</td><td class="lbl">${c.kind}</td>
+    <td class="lbl">${c.lastUsed}</td><td class="num">${c.uses}</td>
+    <td><button data-act="Reveal ${c.site}">reveal</button></td></tr>`).join('')}</table>
+  <div class="act"><button data-act="Lock vault">lock</button><button data-act="Rotate passphrase">rotate passphrase</button></div>`)}
+  ${pane('audit', 'append-only', `<pre class="tree">
+14:04:03  credential.used      rekrute.com      run 41
+13:58:20  credential.revealed  marocannonces    passphrase ok
+09:12:41  credential.used      gmail oauth      read:otp</pre>`)}`,
+
+data: () => `
+  <div class="cols c2">
+    ${D.hosts.map(h=>pane(`${h.id}`, h.label, `<div class="big">${h.events}</div>
+      <div class="lbl">events · db ${h.db} · heartbeat ${h.heartbeat} · last merge ${h.lastSync}</div>`)).join('')}
+  </div>
+  ${pane('sync', D.sync.state, `<pre class="tree">${D.sync.lastDelta}
+${D.sync.hash}</pre>
+  <div class="act"><button class="p" data-act="Sync now">sync now</button><button data-act="Export everything">export</button></div>`)}
+  ${pane('conflict · '+D.sync.conflict.field, 'needs a human', `<pre class="tree">${D.sync.conflict.asked}</pre>
+  <table style="margin-top:6px">
+    <tr><td style="width:60px" class="lbl">pc</td><td>${D.sync.conflict.pc}</td><td><button data-act="Keep PC value">keep pc</button></td></tr>
+    <tr><td class="lbl">vps</td><td>${D.sync.conflict.vps}</td><td><button data-act="Keep VPS value">keep vps</button></td></tr>
+  </table>
+  <pre class="tree" style="margin-top:8px;color:var(--bad)">last-writer-wins is disabled for security settings.</pre>`)}`,
+
+onboarding: () => `
+  ${pane('first run', '3 of 5 · ~2 min left', `
+  <pre class="tree">
+<span style="color:var(--ok)">[x]</span> 01  openrouter key        valid · claude-haiku · 412 credits
+<span style="color:var(--ok)">[x]</span> 02  resume                v4 parsed · 82% fit · 3 fields to confirm
+<span style="color:var(--ok)">[x]</span> 03  type + places         internships, full-time · casablanca, rabat, remote
+<span style="color:var(--ink)">[ ]</span> 04  browser check         brave found · confirm logins survive restart
+<span style="color:var(--dim)">[ ]</span> 05  risk acknowledgement  bans are possible; nothing sends without you</pre>
+  <div class="act"><button class="p" data-go="agent">do step 04</button>
+    <button data-act="Run first scan">run first scan</button>
+    <span class="lbl" style="margin-left:auto">all of this is editable later</span></div>`)}
+  ${pane('what the agent will do', 'honest scope', `<pre class="tree">searches the sites you configured — not the whole web
+reads listings, scores them against your resume, writes a letter
+fills the form in a real browser; <b>you press submit</b></pre>`)}`,
+
+pwa: () => `
+  ${pane('phone · pwa', '390×844', `<div class="phone"><div class="hd"><span>● vps synced</span><span>trust 76</span></div>
+    <div class="it" style="border-color:var(--bad)"><span class="st flip">FROZEN</span>
+      <div style="margin-top:4px">rekrute.com · challenge</div>
+      <div class="lbl">2m ago · push delivered</div>
+      <div class="act"><button class="p" data-go="verification">resolve</button><button data-act="Enter code">code</button></div></div>
+    <div class="it"><b style="font-weight:400">Auto Hall — conseiller de service</b>
+      <div class="lbl">casablanca · cdi · 88</div>
+      <div class="act"><button class="p" data-act="Approve">approve</button><button data-act="Skip">skip</button></div></div>
+    <div class="it"><b style="font-weight:400">Alten Maroc — business développeur</b>
+      <div class="lbl">rabat · cdi · 84</div>
+      <div class="act"><button class="p" data-act="Approve">approve</button><button data-act="Skip">skip</button></div></div>
+  </div>`)}`,
+
+}, render(id){ return shell(id, this.screens[id]()); } };
+</script>
+<script src="../../shared/app.js"></script>
+</body></html>

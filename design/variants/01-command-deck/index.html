@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Command Deck</title>
+<style>
+  :root{
+    --bg:#15171a; --panel:#1c1f24; --panel2:#22262c; --ink:#e8eaed; --dim:#8b93a1;
+    --line:#2b3037; --accent:#7aa2f7; --warn:#e0af68; --bad:#f7768e; --ok:#9ece6a;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 var(--mono)}
+  a{color:var(--accent);text-decoration:none}
+  .app{display:grid;grid-template-columns:54px 1fr;min-height:100vh}
+  .rail{background:#101216;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:2px}
+  .rail button{width:40px;height:34px;background:none;border:0;color:var(--dim);font:12px var(--mono);cursor:pointer;border-radius:4px}
+  .rail button:hover{background:#1a1e24;color:var(--ink)}
+  nav.rail button.is-active{background:#232a36;color:var(--accent)}
+  .mnav{display:none}
+  @media (max-width:760px){
+    .mnav{display:flex;gap:2px;overflow:auto;padding:4px 6px;border-bottom:1px solid var(--line);background:#121417}
+    .mnav::-webkit-scrollbar{display:none}
+    .mnav button{background:none;border:1px solid transparent;color:var(--dim);font:11px var(--mono);
+      padding:3px 8px;border-radius:3px;white-space:nowrap;cursor:pointer}
+    .mnav button.is-active{color:var(--accent);border-color:#2b3d5e;background:#1a2028}
+  }
+  .rail .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);margin:6px 0 10px}
+  .main{display:flex;flex-direction:column;min-width:0}
+  .bar{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);background:#121417}
+  .cmd{flex:1;display:flex;align-items:center;gap:8px;background:#0e1013;border:1px solid var(--line);border-radius:4px;padding:6px 10px;color:var(--dim);max-width:520px}
+  .cmd kbd{background:#232830;border:1px solid #343b45;border-radius:3px;padding:1px 5px;color:#cdd3dd;font-size:11px}
+  .hosts{display:flex;gap:8px;margin-left:auto}
+  .host{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:3px;padding:3px 8px;font-size:11px;color:var(--dim)}
+  .host b{color:var(--ink);font-weight:500}
+  .g{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  .y{background:var(--warn)}.r{background:var(--bad)}
+  .wrap{padding:14px 16px 40px;overflow:auto}
+  h1{font-size:15px;margin:0 0 12px;font-weight:600;letter-spacing:.02em}
+  h1 span{color:var(--dim);font-weight:400}
+  .grid{display:grid;gap:10px}
+  .c2{grid-template-columns:repeat(2,1fr)}.c3{grid-template-columns:repeat(3,1fr)}.c4{grid-template-columns:repeat(4,1fr)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:4px}
+  .panel > h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);
+    margin:0;padding:7px 10px;border-bottom:1px solid var(--line);font-weight:500}
+  .body{padding:10px}
+  .kpi{font-size:26px;line-height:1.1}
+  .kpi small{display:block;font-size:11px;color:var(--dim);margin-top:2px}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-weight:500;color:var(--dim);font-size:11px;padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:5px 8px;border-bottom:1px solid #23272e;vertical-align:top}
+  tr:hover td{background:#1f242b}
+  .chip{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:0 5px;font-size:11px;color:var(--dim)}
+  .chip.ok{color:var(--ok);border-color:#2f4a2c}
+  .chip.warn{color:var(--warn);border-color:#4a3f28}
+  .chip.bad{color:var(--bad);border-color:#4a2b31}
+  .chip.acc{color:var(--accent);border-color:#2b3d5e}
+  .row{display:flex;align-items:center;gap:8px}
+  .btn{background:#242a33;border:1px solid #343c47;color:var(--ink);border-radius:3px;
+    padding:4px 9px;font:11px var(--mono);cursor:pointer}
+  .btn:hover{border-color:#4a5563}
+  .btn.primary{background:#2a3f66;border-color:#3d5a8c;color:#cfe0ff}
+  .btn.danger{background:#3a1f25;border-color:#63313a;color:#ffc9d2}
+  .muted{color:var(--dim)}
+  .log{font-size:12px;display:grid;grid-template-columns:64px 52px 70px 1fr;gap:8px;padding:3px 0;border-bottom:1px solid #1f242b}
+  .log .t{color:var(--dim)}
+  .lvl{font-size:10px;padding:0 4px;border-radius:2px;text-align:center;line-height:16px;height:16px;display:inline-block}
+  .lvl.INFO{background:#1d2b22;color:var(--ok)}
+  .lvl.WARN{background:#33291a;color:var(--warn)}
+  .lvl.ERROR{background:#3a1f25;color:var(--bad)}
+  .lvl.ALERT{background:#4a1d28;color:#ffb3c0;font-weight:700}
+  .frozen{border:1px solid #63313a;background:#2a1a1e;border-radius:4px;padding:12px;margin-bottom:10px}
+  .frozen h2{margin:0 0 6px;font-size:13px;color:#ffb3c0;letter-spacing:.06em;text-transform:uppercase}
+  .shot{background:#0b0d10;border:1px dashed #3a3f48;border-radius:3px;height:150px;
+    display:grid;place-items:center;color:#5b6270;font-size:11px;margin:8px 0}
+  .form{display:flex;gap:8px;align-items:center}
+  input[type=text]{background:#0e1013;border:1px solid #3a4048;color:var(--ink);
+    padding:6px 8px;border-radius:3px;font:13px var(--mono);width:160px;letter-spacing:.25em}
+  .hint{font-size:11px;color:var(--dim);display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin-top:8px}
+  .hint b{color:#c3cad6;font-weight:500}
+  .bar2{height:6px;background:#0e1013;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+  .bar2 i{display:block;height:100%;background:var(--accent)}
+  .steps{counter-reset:s;display:grid;gap:8px}
+  .step{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start;padding:8px;border:1px solid var(--line);border-radius:3px;background:#191d22}
+  .step b{display:block;font-weight:500}
+  .step .no{color:var(--dim);font-size:11px}
+  .phone{width:360px;margin:0 auto;background:#0b0d10;border:1px solid #3a4048;border-radius:18px;padding:10px}
+  .phone .scr{background:var(--bg);border-radius:10px;overflow:hidden}
+  .phone .hd{padding:10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px}
+  .phone .it{padding:10px;border-bottom:1px solid #23272e}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);text-align:center;font-size:10px;color:var(--dim)}
+  .tabs div{padding:8px 0}
+  .tabs .on{color:var(--accent)}
+  .mock-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#232a33;
+    border:1px solid #3b4450;color:#dfe4ec;padding:8px 12px;border-radius:4px;font:12px var(--mono);z-index:99}
+  @media (max-width:760px){
+    .c4,.c3,.c2{grid-template-columns:1fr 1fr}
+    .app{grid-template-columns:1fr}
+    .rail{display:none}
+    .cmd{display:none}
+    .bar{flex-wrap:wrap;gap:6px}
+    .hosts{margin-left:0;flex-wrap:wrap}
+    .phone{width:100%}
+  }
+  @media (max-width:560px){
+    .c4,.c3,.c2{grid-template-columns:1fr}
+    .log{grid-template-columns:58px 46px 1fr;row-gap:2px}
+    .log > span:nth-child(3){display:none}
+  }
+</style></head><body>
+<script src="../../shared/data.js"></script>
+<script>
+const D = window.JOBPILOT;
+const host = (h) => `<span class="host"><i class="g ${h.state === 'green' ? '' : h.state === 'yellow' ? 'y' : 'r'}"></i><b>${h.id}</b> ${h.label}</span>`;
+const navItems = [['dashboard','▚','Overview'],['jobs','≡','Jobs'],['triage','✓','Triage'],['verification','!','Verify'],['doctor','+','Doctor'],['logs','»','Logs'],['scope','◎','Scope'],['agent','◈','Browser'],['credentials','⌘','Vault'],['data','⇄','Data'],['onboarding','↦','Setup'],['pwa','▭','Phone']];
+const shell = (id, inner) => `
+<div class="app">
+  <nav class="rail" aria-label="sections">
+    <div class="dot" title="browser session"></div>
+    ${navItems.map(([k,g,label]) => `<button data-go="${k}" title="${label}" aria-label="${label}">${g}</button>`).join('')}
+  </nav>
+  <div class="main">
+    <div class="bar">
+      <div class="cmd"><span>⌘K</span><span>search jobs, agents, logs…</span><kbd>/</kbd></div>
+      <div class="hosts">${D.hosts.map(host).join('')}<span class="host"><b>76</b> trust · caution</span></div>
+    </div>
+    <nav class="mnav" aria-label="sections">${navItems.map(([k,g,label])=>`<button data-go="${k}">${label}</button>`).join('')}</nav>
+    <div class="wrap">${inner}</div>
+  </div>
+</div>`;
+
+const kpi = (n, label, tone='') => `<div class="panel"><div class="body"><div class="kpi" style="${tone}">${n}<small>${label}</small></div></div></div>`;
+
+window.VARIANT = { id:'01-command-deck', name:'Command Deck', screens:{
+dashboard: () => `
+  <h1>Overview <span>· run 41 on VPS · started 14:02</span></h1>
+  <div class="grid c4" style="margin-bottom:10px">
+    ${kpi('3','ready to approve')}${kpi('2','need a decision','color:var(--warn)')}${kpi('1','frozen · verification','color:var(--bad)')}${kpi('6','new today')}
+  </div>
+  <div class="grid c2">
+    <div class="panel">
+      <h2>Now running</h2>
+      <div class="body">
+        <div class="row"><span class="chip acc">DISCOVERING</span><b>rekrute.com</b><span class="muted">${D.run.page}</span></div>
+        <div style="margin:8px 0 6px" class="muted">${D.run.action} · host ${D.run.host} · ${D.run.elapsed} elapsed</div>
+        <div class="bar2"><i style="width:62%"></i></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn danger" data-act="Pause all agents">Pause all agents</button>
+          <button class="btn" data-act="Open live browser">Open live browser</button>
+          <span class="muted" style="margin-left:auto">last push 4m ago</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Verification waiting</h2>
+      <div class="body">
+        <div class="frozen" style="margin:0">
+          <h2>frozen 2m 10s · VPS</h2>
+          <div>rekrute.com — security challenge</div>
+          <div class="muted" style="font-size:11px;margin:4px 0 8px">${D.verification.url}</div>
+          <button class="btn primary" data-go="verification">Take control</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="grid-column:1/-1">
+      <h2>Log tail</h2>
+      <div class="body">${D.logs.slice(0,6).map(l=>`<div class="log"><span class="t">${l.t}</span><span class="lvl ${l.lvl}">${l.lvl}</span><span class="muted">${l.agent}</span><span>${l.msg}</span></div>`).join('')}
+      <div style="margin-top:8px"><button class="btn" data-go="logs">All logs</button></div></div>
+    </div>
+  </div>`,
+
+jobs: () => `
+  <h1>Jobs <span>· 7 after filters · 2 low signal hidden</span></h1>
+  <div class="panel">
+    <div class="body row" style="border-bottom:1px solid var(--line)">
+      <span class="chip">country: Morocco ×</span><span class="chip">city: Casablanca, Rabat ×</span><span class="chip">type: internship + full-time ×</span>
+      <span class="muted" style="margin-left:auto">grouped by location</span>
+    </div>
+    <table>
+      <thead><tr><th>Title</th><th>Company</th><th>City</th><th>Source</th><th>Salary</th><th>Signal</th><th></th></tr></thead>
+      <tbody>
+      ${D.jobs.filter(j=>j.signal!=='low').map(j=>`<tr>
+        <td>${j.title}</td><td class="muted">${j.company}</td><td>${j.city}</td>
+        <td class="muted">${j.source}</td><td>${j.salary ?? '—'}</td>
+        <td><span class="chip ${j.signal==='high'?'ok':'warn'}">${j.signal}</span></td>
+        <td><button class="btn" data-act="Tailor for ${j.title}">Tailor</button></td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="body"><button class="btn" data-act="Show 2 low-signal listings">Show low signal (2)</button></div>
+  </div>`,
+
+triage: () => `
+  <h1>Triage <span>· 3 ready · 2 need you · 2 skipped</span></h1>
+  <div class="row" style="margin-bottom:10px">
+    <button class="btn primary" data-act="Approve top 3">Approve top 3</button>
+    <button class="btn" data-act="Snooze rest">Snooze rest</button>
+    <span class="muted" style="margin-left:auto">sorted by match × honesty fit</span>
+  </div>
+  ${[['Ready',D.triage.ready,'ok'],['Needs you',D.triage.needsYou,'warn'],['Skip pile',D.triage.skip,'bad']].map(([label,list,tone])=>`
+  <div class="panel" style="margin-bottom:10px">
+    <h2>${label} · ${list.length}</h2>
+    <table><tbody>${list.map(j=>`<tr>
+      <td style="width:44%"><b>${j.title}</b><div class="muted" style="font-size:11px">${j.company} · ${j.city}</div></td>
+      <td><span class="chip">${j.type}</span></td>
+      <td class="muted">${j.source}</td>
+      <td>${j.score}</td>
+      <td class="muted" style="font-size:11px">${j.honesty}</td>
+      <td><button class="btn" data-act="Preview ${j.title}">Preview</button></td></tr>`).join('')}</tbody></table>
+  </div>`).join('')}`,
+
+verification: () => `
+  <h1>Verification <span>· agent frozen, nothing else is running</span></h1>
+  <div class="frozen">
+    <h2>security challenge · rekrute.com · host VPS · 2m 10s</h2>
+    <div class="muted" style="font-size:11px">${D.verification.url}<br>${D.verification.run}</div>
+    <div class="shot">screenshot of the paused tab (value-redacted)</div>
+    <div class="form">
+      <input type="text" placeholder="000000" aria-label="one-time code">
+      <button class="btn primary" data-act="Submit code and resume">Submit and resume</button>
+      <button class="btn" data-go="pwa">Take control</button>
+    </div>
+    <div class="hint">
+      <b>went to</b><span>${D.verification.guidance.account}</span>
+      <b>search</b><span>${D.verification.guidance.search}</span>
+      <b>phone</b><span>${D.verification.guidance.phone}</span>
+      <b>valid</b><span>${D.verification.guidance.validFor}</span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" data-act="I finished in the browser — resume">I finished — resume</button>
+      <button class="btn danger" data-act="Abandon run">Abandon run</button>
+      <span class="muted" style="margin-left:auto">never auto-continues</span>
+    </div>
+  </div>
+  <div class="panel"><h2>History</h2><div class="body muted">
+    today 14:04 · rekrute.com · challenge · resolved in 41s (VPS)<br>
+    yesterday 09:12 · linkedin.com · email OTP · resolved in 1m 20s (PC)
+  </div></div>`,
+
+doctor: () => `
+  <h1>Doctor <span>· 11 pass · 2 warn · 2 fail</span></h1>
+  <div class="grid c2" style="margin-bottom:10px">
+    <div class="panel"><div class="body row" style="gap:16px">
+      <div class="kpi" style="font-size:38px;color:var(--warn)">76<small>/100 trust score · caution</small></div>
+      <div class="muted" style="font-size:11px">estimate, not a guarantee.<br>bans are always possible.</div>
+    </div></div>
+    <div class="panel"><div class="body">
+      <div class="row"><span class="chip bad">FAIL</span> no WebGL context <span class="muted" style="margin-left:auto">−8</span></div>
+      <div class="row" style="margin-top:4px"><span class="chip bad">FAIL</span> timezone UTC vs IP Berlin <span class="muted" style="margin-left:auto">−9</span></div>
+      <div class="muted" style="font-size:11px;margin-top:8px">Both are fixable. Run anyway is logged.</div>
+    </div></div>
+  </div>
+  <div class="panel"><h2>Checks</h2><table>
+    <thead><tr><th>State</th><th>Check</th><th>Why it matters</th><th>Fix</th></tr></thead>
+    <tbody>${D.doctor.map(c=>`<tr>
+      <td><span class="chip ${c.state==='PASS'?'ok':c.state==='WARN'?'warn':'bad'}">${c.state}</span></td>
+      <td>${c.name}</td><td class="muted">${c.why}</td>
+      <td>${c.fix ? `<button class="btn" data-act="${c.fix}">${c.fix}</button>` : '<span class="muted">—</span>'}</td></tr>`).join('')}</tbody>
+  </table>
+  <div class="body row"><button class="btn" data-act="Re-run all checks">Re-run checks</button>
+    <button class="btn danger" data-act="Run anyway (logged)">Run anyway (logged)</button></div></div>`,
+
+logs: () => `
+  <h1>Logs <span>· live tail · VPS</span></h1>
+  <div class="row" style="margin-bottom:10px">
+    <span class="chip">level: all</span><span class="chip">agent: all</span><span class="chip">site: all</span>
+    <span class="chip">run 41 ×</span><span class="muted" style="margin-left:auto">1 s latency</span>
+  </div>
+  <div class="panel"><div class="body">
+    ${D.logs.map(l=>`<div class="log"><span class="t">${l.t}</span><span class="lvl ${l.lvl}">${l.lvl}</span><span class="muted">${l.agent}</span><span>${l.msg} <span class="muted" style="font-size:11px">${l.dur}</span></span></div>`).join('')}
+    <div class="row" style="margin-top:10px">
+      <button class="btn" data-act="Export diagnostic bundle">Export bundle</button>
+      <button class="btn" data-act="Explain last error">Explain last error</button>
+      <span class="muted" style="margin-left:auto">retention 30 days · secrets redacted</span>
+    </div>
+  </div></div>`,
+
+scope: () => `
+  <h1>Search scope <span>· sites + locations</span></h1>
+  <div class="panel" style="margin-bottom:10px"><h2>Sites</h2><table>
+    <thead><tr><th>Site</th><th>Mode</th><th>State</th><th>Last scan</th><th>Found</th><th></th></tr></thead>
+    <tbody>${D.sites.map(s=>`<tr><td>${s.host}</td><td><span class="chip acc">${s.mode}</span></td>
+      <td><span class="chip ${s.state==='working'?'ok':s.state==='planned'?'warn':''}">${s.state}</span></td>
+      <td class="muted">${s.lastScan}</td><td>${s.found}</td>
+      <td><button class="btn" data-act="Edit ${s.host}">Edit</button></td></tr>`).join('')}</tbody>
+  </table>
+  <div class="body muted" style="font-size:11px">No adapter and no structured data → paste a URL instead. No open-web crawling.</div></div>
+  <div class="panel"><h2>Locations</h2><div class="body">
+    ${D.locations.map(l=>`<div class="row" style="margin-bottom:6px"><b>${l.country}</b>
+      ${l.cities.map(c=>`<span class="chip">${c}</span>`).join('')}
+      <span class="muted" style="margin-left:auto">${l.count}</span></div>`).join('')}
+    <button class="btn" data-act="Add location">+ Location</button>
+  </div></div>`,
+
+agent: () => `
+  <h1>Agent browser <span>· Brave 1.98.60 · own profile</span></h1>
+  <div class="grid c2">
+    <div class="panel"><h2>Launch</h2><div class="body">
+      <div class="row"><span class="chip ok">HEADED</span><span class="chip">CDP :9222</span><span class="chip">pinned</span></div>
+      <div class="muted" style="font-size:11px;margin-top:8px">Profile: spike/profile/brave · 124 MB<br>Never attaches to your everyday browser.</div>
+      <div class="row" style="margin-top:10px"><button class="btn" data-act="Restart browser">Restart</button>
+      <button class="btn" data-act="Switch to Chrome">Chrome instead</button></div>
+    </div></div>
+    <div class="panel"><h2>Session survival — required</h2><div class="body">
+      <div class="row"><span class="chip ok">PASS</span> cookies survive close</div>
+      <div class="row"><span class="chip ok">PASS</span> history survives close</div>
+      <div class="row"><span class="chip ok">PASS</span> "continue where you left off"</div>
+      <div class="muted" style="font-size:11px;margin-top:8px">Checked through Brave's own settings API, not a toggle we hope exists.</div>
+      <div class="row" style="margin-top:10px"><button class="btn primary" data-act="Re-check now">Re-check now</button></div>
+    </div></div>
+    <div class="panel" style="grid-column:1/-1"><h2>Logged-out sites</h2><div class="body row">
+      <span class="chip bad">rekrute.com</span><span class="chip bad">linkedin.com</span><span class="chip ok">marocannonces.com</span>
+      <button class="btn" style="margin-left:auto" data-go="credentials">Open vault</button></div></div>
+  </div>`,
+
+credentials: () => `
+  <h1>Vault <span>· AES-256-GCM · never sent to a model</span></h1>
+  <div class="panel"><h2>Stored credentials</h2><table>
+    <thead><tr><th>Site</th><th>Account</th><th>Type</th><th>Last used</th><th>Uses</th><th></th></tr></thead>
+    <tbody>${D.credentials.map(c=>`<tr><td>${c.site}</td><td>${c.user}</td><td class="muted">${c.kind}</td>
+      <td class="muted">${c.lastUsed}</td><td>${c.uses}</td>
+      <td><button class="btn" data-act="Reveal ${c.site}">Reveal</button></td></tr>`).join('')}</tbody>
+  </table><div class="body row"><button class="btn" data-act="Lock vault">Lock vault</button>
+    <span class="muted" style="margin-left:auto">every reveal is audited</span></div></div>
+  <div class="panel" style="margin-top:10px"><h2>Audit</h2><div class="body log" style="grid-template-columns:64px 1fr">
+    <span class="t">14:04</span><span>credential.used rekrute.com — filled login form (run 41)</span>
+    <span class="t">13:58</span><span>credential.revealed marocannonces.com — vault passphrase</span>
+    <span class="t">09:12</span><span>credential.used gmail — OTP read requested</span>
+  </div></div>`,
+
+data: () => `
+  <h1>Data &amp; sync <span>· append-only, never a silent overwrite</span></h1>
+  <div class="grid c2">
+    ${D.hosts.map(h=>`<div class="panel"><h2>${h.id} · ${h.label}</h2><div class="body">
+      <div class="row"><i class="g ${h.state==='green'?'':'y'}"></i><b>${h.id}</b><span class="muted">heartbeat ${h.heartbeat}</span></div>
+      <div class="muted" style="font-size:11px;margin-top:6px">DB ${h.db} · ${h.events} events · last sync ${h.lastSync}</div>
+    </div></div>`).join('')}
+  </div>
+  <div class="panel" style="margin-top:10px"><h2>Sync</h2><div class="body">
+    <div class="row"><span class="chip warn">SYNCING</span><span>${D.sync.lastDelta}</span><span class="muted" style="margin-left:auto">${D.sync.hash}</span></div>
+    <div style="margin-top:10px;border:1px solid #4a3f28;background:#2a2418;border-radius:4px;padding:10px">
+      <b style="color:var(--warn)">Conflict · ${D.sync.conflict.field}</b>
+      <div class="muted" style="font-size:11px;margin:4px 0 8px">${D.sync.conflict.asked}</div>
+      <div class="row"><button class="btn" data-act="Keep PC value">PC ${D.sync.conflict.pc}</button>
+      <button class="btn" data-act="Keep VPS value">VPS ${D.sync.conflict.vps}</button></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="Sync now">Sync now</button>
+      <button class="btn" data-act="Export everything">Export</button>
+      <button class="btn danger" data-act="Delete everything on both hosts">Delete everything</button></div>
+  </div></div>`,
+
+onboarding: () => `
+  <h1>Setup <span>· 3 of 5 done · 2 min left</span></h1>
+  <div class="bar2" style="margin-bottom:12px"><i style="width:60%"></i></div>
+  <div class="steps">
+    <div class="step"><span class="no">01</span><div><b>OpenRouter key</b><span class="muted">valid · default model claude-haiku · 412 credits</span></div></div>
+    <div class="step"><span class="no">02</span><div><b>Resume</b><span class="muted">Resume v4 parsed · 82% profile fit · 3 fields to confirm</span></div></div>
+    <div class="step"><span class="no">03</span><div><b>Job type &amp; locations</b><span class="muted">internships + full-time · Casablanca, Rabat · Remote</span></div></div>
+    <div class="step" style="border-color:#3d5a8c"><span class="no">04</span><div><b>Agent browser <span class="chip warn">needs you</span></b>
+      <span class="muted">Brave detected. Confirm cookies survive close, then pick Brave or Chrome.</span>
+      <div class="row" style="margin-top:6px"><button class="btn primary" data-go="agent">Open browser check</button></div></div></div>
+    <div class="step"><span class="no">05</span><div><b>Risk acknowledgement</b><span class="muted">Automation can breach site terms; bans can be permanent. Nothing is submitted without your click.</span></div></div>
+  </div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" data-act="Run first scan">Run first scan</button>
+  <span class="muted">you can change every one of these later</span></div>`,
+
+pwa: () => `
+  <h1>Phone <span>· PWA · approvals and verification</span></h1>
+  <div class="phone"><div class="scr">
+    <div class="hd"><span><i class="g"></i> VPS · synced</span><span class="muted">76</span></div>
+    <div class="it"><span class="chip bad">FROZEN</span> <b>rekrute.com</b>
+      <div class="muted" style="font-size:11px;margin:4px 0 8px">security challenge · VPS · 2m ago</div>
+      <div class="row"><button class="btn primary" data-go="verification">Take control</button>
+        <button class="btn" data-act="Enter code">Code</button></div></div>
+    <div class="it"><b>Auto Hall</b> — Conseiller de service<div class="muted" style="font-size:11px">Casablanca · CDI · match 88</div>
+      <div class="row" style="margin-top:6px"><button class="btn primary" data-act="Approve">Approve</button>
+        <button class="btn" data-act="Skip">Skip</button></div></div>
+    <div class="it"><b>Alten Maroc</b> — Business développeur<div class="muted" style="font-size:11px">Rabat · CDI · match 84</div>
+      <div class="row" style="margin-top:6px"><button class="btn primary" data-act="Approve">Approve</button>
+        <button class="btn" data-act="Skip">Skip</button></div></div>
+    <div class="tabs"><div class="on">Queue</div><div>Jobs</div><div>Doctor</div><div>Run</div></div>
+  </div></div>
+  <p class="muted" style="text-align:center;font-size:11px">390×844 · one-thumb reach: actions sit in the lower third</p>`,
+}, render(id){ return shell(id, this.screens[id]()); } };
+</script>
+<script src="../../shared/app.js"></script>
+</body></html>
