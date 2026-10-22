@@ -9,7 +9,7 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
 - **Decisions now fixed:** `PLAN.md` v6 is PC-only. No VPS deployment target, no PC↔VPS sync, no Host Link, no conflict cards, no run-location setting, no laptop cookie-import wizard. If the app is ever installed elsewhere, that machine has its own `data/`; moving is stop → copy `data/` or Export → start there.
 - **W0:** GO. Brave 1.98.60 on headless aarch64 Ubuntu, Xvfb, CDP, adapters, freeze, take-control all proven (`SPIKE-REPORT.md`). Chrome could not be tested there (no Linux arm64 build); that test moves to this PC.
 - **P0:** 01 Command Deck chosen; tokens frozen (`DESIGN-DECISION.md`).
-- **P1 today:** event log + profile projection + resume storage + profile page. `npm test` = 13/13, `npm run test:e2e` = 54/54. No settings, no browser, no onboarding, no pipeline, no Doctor/Logs, no auth.
+- **P1 today:** event log + profile projection + resume storage + profile page. `npm test` = 13/13, `npm run test:e2e` = 54/54 on the PC with the hardened harness (CDP 9333, extensions disabled, foreign-port refusal). No settings, no browser, no onboarding, no pipeline, no Doctor/Logs, no auth.
 - **Target PC:** Omarchy Linux (Arch), i7, Hyprland/Wayland, headed browser. Verified over SSH on 2026-10-22:
   - host `neger7lost-archlinux`, Tailscale `100.71.69.111`; SSH key `~/.ssh/omarchy_fix` on the VPS is authorized.
   - Node **v26.12.0** (`/usr/bin/node`), npm 12.2.1; `node:sqlite` smoke test passes (`DatabaseSync`, create/insert/select).
@@ -20,9 +20,9 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
   - Hyprland session on tty1, `XDG_SESSION_TYPE=wayland`, socket `/run/user/1000/wayland-1`; SSH does **not** inherit `WAYLAND_DISPLAY`/`HYPRLAND_INSTANCE_SIGNATURE`, so browser tests over SSH must export `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1`, and the server itself should start from the graphical session (`uwsm-app` or a systemd user unit after `graphical-session.target`).
   - No repo at `~/Work/jobPilot`; port 4319 is free; no git remote on the VPS.
 - **Known correction:** Brave 1.98.60 has **no global "Forgetful Browsing" toggle**. The real gate is `browser.clear_data.cookies_on_exit=false`, `browser.clear_data.browsing_history_on_exit=false`, `session.restore_on_startup=1`, plus a behavioural cookie-survives-restart test. The UI must never claim a toggle that does not exist.
-- **No git remote** is configured in this repo. The PC needs a copy (clone from a new remote, or copy the working tree). This is a logistics blocker, not a design one.
+- **No git remote** is configured in this repo. History moves to the PC as a `git bundle`; a remote is convenient but not required.
 - **Phone access** is still undecided: same LAN only, or Tailscale `*.ts.net`. If the phone is to reach the PC, authentication must land before binding to anything but loopback.
-- **Baseline on Omarchy (verified 2026-10-22):** the source tree is copied to `/home/neger7lost/Work/jobPilot`; `npm ci` installed 1 package in 12s. With `DISPLAY=:0 WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000 BRAVE_PATH=/opt/brave-bin/brave CDP_PORT=9333`, **`npm test` = 13/13** and **`npm run test:e2e` = 54/54**. Two harness facts: `spike/08-take-control-test.js` is discovered by `npm test` and needs a real display + `BRAVE_PATH`; and `spike/lib/browser.js` defaults to `/opt/brave.com/brave/brave-browser` + port 9222, which are wrong/occupied here. The e2e hostname assertion was fixed in `4993e55` (`server1` → `os.hostname()`). The full `.git` history is a separate slow transfer; the working tree is complete.
+- **Baseline on Omarchy (verified 2026-10-22, final):** the source tree and full `.git` history are at `/home/neger7lost/Work/jobPilot`; `npm ci` installed 1 package. With only `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`, **`npm test` = 13/13** and **`npm run test:e2e` = 54/54**. Harness fixes in `788b114` and `18af507`: resolve Brave from Linux candidates, default to CDP **9333** (never 9222), probe the TCP port and refuse any occupied listener, use XWayland instead of spawning Xvfb on a desktop, and launch with `--disable-extensions --disable-component-extensions-with-background-pages --disable-save-password-bubble --password-store=basic` so the take-control fixture cannot trigger 1Password. `spike/08-take-control-test.js` is still discovered by `npm test`; it now starts its own browser safely and passes. The e2e hostname assertion was fixed in `4993e55` (`server1` → `os.hostname()`).
 
 ## Approach
 
@@ -49,10 +49,10 @@ Deliverable: PRD/MILESTONES/ADRs/README match `PLAN.md` v6; `npm test` and `npm 
 - [ ] 0.2 `PRD.md` — delete J7; remove FR-SYN-01..09; rewrite FR-DEP-01..04 as PC install/start-on-boot; change FR-BRW-02 to "Chromium-family fallback on the PC"; delete FR-BRW-07; fix FR-ONB-04/FR-BRW-03 to the three session-survival prefs; fix G5, DoD, §15 Q1/Q8.
 - [ ] 0.3 `MILESTONES.md` — P1 exit #1/#2/#6 (onboarding on PC, session-survival gate, PC status not "PC pill"); drop P4 sync/VPS and the P4b split; drop "both hosts" from DoD/P5/timeline.
 - [ ] 0.4 `README.md` + `DESIGN-DECISION.md` — replace VPS/deployment language, the two-host data screen, and the "Forgetful Browsing" copy.
-- [ ] 0.5 Node decision: run the baseline on the installed **Node 26.12.0** first; `node:sqlite` already passes a smoke test. Pin `22.22.1` with `mise` only if `npm test` or the runtime fails on 26. Record the chosen version in `.node-version`; pin `playwright-core` to the exact resolved version (no `^`).
-- [ ] 0.6 PC setup: copy the repo to `~/Work/jobPilot` (rsync over the Tailscale SSH key, exclude `node_modules` and `data/`), `npm ci`, then `npm test` and `npm run test:e2e`. Brave is already installed at `/opt/brave-bin/brave`; use Chromium 155 as the non-Brave arm (or `yay -S google-chrome` if exact Chrome is required). For e2e over SSH: `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 npm run test:e2e`, or run it from a terminal inside Hyprland.
-- [ ] 0.7 Fix the test harness: `spike/lib/browser.js` defaults to `/opt/brave.com/brave/brave-browser` and port 9222 (wrong/occupied on Omarchy), even though `BRAVE_PATH`/`CDP_PORT` overrides exist. Add a real `BROWSER_PATH`/`PROFILE_DIR` default on Linux; make `e2e/profile.e2e.mjs` use a free CDP port + temp profile; scope `npm test` to `test/` (or make `spike/08-take-control-test.js` skip/opt-in when there is no display) so the app unit baseline is not coupled to Xvfb/Brave. The e2e hostname fix is done (`4993e55`).
-- [ ] 0.8 W0b on the PC: run the smoke + trust + local adapter checks with Brave and Chrome; record login success, DOM cleanliness, submit-flow integrity, detection quirks, session stability in `SPIKE-REPORT.md` (addendum). Update ADR-0001 with the final browser decision.
+- [x] 0.5 Node decision: **Node 26.12.0 accepted** — `node:sqlite` and both suites pass; `.node-version` records it and `playwright-core` is pinned to the exact resolved version `1.64.1`. Revisit `22.22.1` only if a Node 26-specific regression appears.
+- [x] 0.6 PC setup: repo copied to `~/Work/jobPilot`, `npm ci` done, and both suites pass (13/13, 54/54). Tests run over SSH with `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`; `BRAVE_PATH`/`CDP_PORT`/`WAYLAND_DISPLAY` are no longer required. Brave is at `/opt/brave-bin/brave`; Chromium 155 remains the non-Brave arm.
+- [x] 0.7 Fix the test harness (safety parts): `spike/lib/browser.js` resolves Linux Brave candidates, defaults to CDP **9333**, probes the TCP port and refuses any occupied listener, uses XWayland when present, disables extensions/password bubbles in the test profile, and `spike/02-trust-score.js` no longer defaults to 9222. Commits `788b114`, `18af507`. Still open: e2e still uses the shared `spike/profile/brave` + a fixed 9333 rather than a throwaway temp profile/free port; M1.1.7's browser tests own that.
+- [ ] 0.8 W0b on the PC (partial): smoke (`01`), freeze (`05`), Arbeitnow (`03`), and generic extraction (`04`, 4/4 JSON-LD) pass with Brave. Trust (`02`) launches Brave on 9333 and reads prefs, but `https://www.marocannonces.com/` timed out after 45 s — an external-site/anti-bot result, not a harness failure. The Chromium arm has not been run; record it in `SPIKE-REPORT.md` and update ADR-0001 once done.
 
 ### Milestone 1: Owned browser + session-survival gate — the P1 browser gate is real
 Deliverable: from a clean `data/`, the user launches the agent browser, sees the three real prefs, passes a cookie-survives-restart test, and the gate is stored as an event. A forced FAIL keeps the gate closed.
@@ -96,10 +96,10 @@ Deliverable: a resumable 5-step onboarding that stores no secrets until the vaul
 
 **On the Omarchy PC:**
 ```bash
-node -v                      # 22.22.x
+node -v                      # v26.12.0 (accepted)
 npm ci
-npm test                     # 13/13 baseline
-npm run test:e2e             # 54/54 baseline; must use a free port + temp profile
+DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000 npm test       # 13/13
+DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000 npm run test:e2e  # 54/54
 
 # Browser gate (after M1)
 npm start                    # http://127.0.0.1:4319
@@ -109,6 +109,19 @@ npm start                    # http://127.0.0.1:4319
 npm run test:browser         # real Brave lifecycle + persistence
 npm run test:e2e:browser     # temp DB/profile, 390 px, no console errors
 ```
+
+**Test results — 2026-10-22, Omarchy PC (Brave 1.98.60, XWayland `:0`):**
+
+| Check | Result | Notes |
+|---|---|---|
+| `npm test` | **13/13 PASS** | includes `spike/08-take-control-test.js`; no 1Password prompt |
+| `npm run test:e2e` | **54/54 PASS** | profile flow, conflict, resume, validation |
+| `spike/01-smoke.js` | PASS | launch, CDP, screenshot; Brave process outlives the CDP client |
+| `spike/05-freeze.js` | PASS | 4/4 actions blocked, no false freeze |
+| `spike/03-arbeitnow.js` | PASS | 300 fetched, 300 normalized |
+| `spike/04-generic-extract.js` | PASS | 4/4 records via JSON-LD |
+| `spike/02-trust-score.js` | PARTIAL | Brave launches on 9333; marocannonces.com timed out (external) |
+| `spike/06-adapters.js` | NOT RUN | live sites/login; not part of the repeatable baseline |
 
 **Manual checks:**
 - Close the agent browser, relaunch: same profile, cookie test still passes.
@@ -121,12 +134,12 @@ npm run test:e2e:browser     # temp DB/profile, 390 px, no console errors
 ## Blockers
 
 - **[USER] Phone access:** same LAN only, or Tailscale `*.ts.net`? If the phone reaches the PC, token auth + Trusted Host + CSRF must land before binding beyond loopback. Not needed for M0/M1 if everything stays loopback.
-- **[USER] Repo transfer:** no git remote exists. Add one, or copy the working tree to the PC. The planning branch `planning/20261022-213623-pc-only-v6` contains the v6 `PLAN.md`.
+- **[USER] Repo transfer — resolved:** no remote is configured, so the VPS history is carried to the PC as a `git bundle`; the PC branch `planning/20261022-213623-pc-only-v6` now includes the harness fixes and this plan. A remote is still nice-to-have, not required.
 - **[AGENT] Omarchy specifics — resolved:** Brave binary is `/opt/brave-bin/brave` (the `/usr/bin/brave` wrapper is safe but reads a global flags file; launch the real binary for the owned profile). Chromium 155 is the non-Brave arm; Google Chrome is not installed. `tectonic` must be installed before the LaTeX slice.
-- **[AGENT] Node version — mostly resolved:** Node 26.12.0 is installed and `node:sqlite` works. The baseline test run decides whether to keep 26 or pin 22.22.1 via `mise`.
-- **[AGENT] Wayland launch env:** the graphical session is `wayland-1` on tty1, but SSH does not inherit `WAYLAND_DISPLAY`/`HYPRLAND_INSTANCE_SIGNATURE`. Tests over SSH must export them; the production server should start from the graphical session (`uwsm-app` or systemd user unit), not from a bare SSH shell.
-- **[AGENT] Cookie store:** decide `--password-store=basic` (deterministic, obfuscated at rest) vs the system keyring. v1 plan: basic + LUKS + `0700`; document the tradeoff.
-- **[AGENT] `browser.close()` behaviour:** the spike's `prefs.js` calls `browser.close()` after `connectOverCDP`. Run the 30-minute throwaway proof first to see whether that kills the owned browser; if it does, use SIGTERM to the owned pid for clean shutdown.
+- **[AGENT] Node version — resolved:** Node 26.12.0 is installed, `node:sqlite` works, and both suites pass. Keep 26; `.node-version` records it.
+- **[AGENT] Wayland launch env — tests resolved:** `ensureDisplay()` uses an existing XWayland `:0`, so SSH tests only need `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`. The production server should still start from the graphical session (`uwsm-app` or a systemd user unit after `graphical-session.target`), not a bare SSH shell.
+- **[AGENT] Cookie store:** v1 keeps `--password-store=basic` (deterministic, obfuscated at rest, not encrypted) under LUKS + `0700`; document the tradeoff in M1. The test harness already uses it.
+- **[AGENT] `browser.close()` behaviour — resolved:** closing the Playwright CDP connection does **not** terminate Brave. The spike tests leave the browser process alive; M1 `stop()` must SIGTERM/SIGKILL the owned pid and clear the runtime marker. Never kill a browser whose cmdline does not contain `data/agent-profile`.
 
 ## Plan Review Notes
 
