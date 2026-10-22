@@ -2,6 +2,7 @@
 // attaches over CDP. Never attaches to the user's everyday profile.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, openSync } from 'node:fs';
+import net from 'node:net';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -49,11 +50,19 @@ async function cdpVersion(port) {
   }
 }
 
+function portFree(port) {
+  return new Promise((resolve) => {
+    const probe = net.createServer();
+    probe.once('error', () => resolve(false));
+    probe.once('listening', () => probe.close(() => resolve(true)));
+    probe.listen(port, '127.0.0.1');
+  });
+}
+
 export async function launchBrave({ port = DEFAULT_PORT, timeoutMs = 25000, headless = false, userDataDir = PROFILE_DIR } = {}) {
   ensureDisplay();
   mkdirSync(OUT_DIR, { recursive: true });
-  const existing = await cdpVersion(port);
-  if (existing) {
+  if (!(await portFree(port))) {
     throw new Error(
       `CDP port ${port} is already in use; refusing to attach to a foreign browser. ` +
         'Close it or set CDP_PORT to a free port.',

@@ -6,7 +6,7 @@ import { collectSignals, scoreSignals } from './lib/probes.js';
 import { readBravePrefs, evaluateShieldChecks } from './lib/prefs.js';
 
 const headless = process.env.HEADLESS === '1';
-const port = Number(process.env.CDP_PORT || (headless ? 9223 : 9222));
+const port = Number(process.env.CDP_PORT || (headless ? 9223 : 9333));
 
 const geo = await fetch('https://ipinfo.io/json')
   .then((r) => r.json())
