@@ -35,24 +35,25 @@ async function cdpVersion(port) {
   }
 }
 
-export async function launchBrave({ port = DEFAULT_PORT, timeoutMs = 25000 } = {}) {
+export async function launchBrave({ port = DEFAULT_PORT, timeoutMs = 25000, headless = false, userDataDir = PROFILE_DIR } = {}) {
   ensureDisplay();
   mkdirSync(OUT_DIR, { recursive: true });
   const existing = await cdpVersion(port);
   if (existing) return { port, version: existing, proc: null, reused: true };
 
-  mkdirSync(PROFILE_DIR, { recursive: true });
+  mkdirSync(userDataDir, { recursive: true });
   const log = openSync(path.join(OUT_DIR, 'brave.log'), 'a');
   const proc = spawn(
     BRAVE,
     [
       `--remote-debugging-port=${port}`,
-      `--user-data-dir=${PROFILE_DIR}`,
+      `--user-data-dir=${userDataDir}`,
       '--no-first-run',
       '--no-default-browser-check',
       '--disable-sync',
       '--disable-translate',
       '--window-size=1440,900',
+      ...(headless ? ['--headless=new'] : []),
       'about:blank',
     ],
     { detached: true, stdio: ['ignore', log, log] },
