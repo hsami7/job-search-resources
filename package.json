@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "jobPilot — self-hosted job search operator (W0 spike in spike/)",
+  "description": "jobPilot \u2014 self-hosted job search operator (W0 spike in spike/)",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/main.js",
     "test": "node --disable-warning=ExperimentalWarning --test",
@@ -15,7 +15,8 @@
     "spike:takecontrol": "node spike/take-control/server.js",
     "spike:takecontrol:test": "node spike/08-take-control-test.js",
     "spike:rekrute": "SITE=rekrute node spike/06-adapters.js",
-    "spike:marocannonces": "SITE=marocannonces node spike/06-adapters.js"
+    "spike:marocannonces": "SITE=marocannonces node spike/06-adapters.js",
+    "test:e2e": "node e2e/profile.e2e.mjs"
   },
   "dependencies": {
     "playwright-core": "^1.56.0"

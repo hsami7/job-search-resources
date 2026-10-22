@@ -158,6 +158,7 @@ function addRole() {
   }
   state.titles.push(value);
   input.value = '';
+  clearFieldError('titles');
   renderChips();
   touched();
 }
@@ -181,6 +182,24 @@ function showFieldErrors(fields) {
 function clearErrors() {
   document.querySelectorAll('.err').forEach((node) => { node.textContent = ''; });
   document.querySelectorAll('[aria-invalid]').forEach((node) => node.removeAttribute('aria-invalid'));
+}
+
+function clearFieldError(key) {
+  const hint = document.querySelector(`.err[data-err="${key}"]`);
+  if (hint) hint.textContent = '';
+  const input = key === 'titles' ? $('role-input') : $(`f-${key}`);
+  if (input) input.removeAttribute('aria-invalid');
+}
+
+// Cheap checks that mirror the server rules, used only to clear a stale error
+// while the user types. The server remains the authority.
+function fieldLooksValid(key, value) {
+  if (key === 'name') return value.trim().length >= 2;
+  if (key === 'email') {
+    const text = value.trim();
+    return text === '' || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(text);
+  }
+  return true;
 }
 
 function applyServer(payload) {
@@ -365,7 +384,9 @@ async function loadHealth() {
   $('host-pill').textContent = health.host;
   $('host-dot').className = 'g';
   const chip = $('chain');
-  chip.textContent = health.events.chain === 'ok' ? 'chain ok' : `chain broken @${health.events.brokenAt}`;
+  chip.textContent = health.events.chain === 'ok'
+    ? `chain ok · ${health.events.count}`
+    : `chain broken @${health.events.brokenAt}`;
   chip.className = `chip ${health.events.chain === 'ok' ? 'ok' : 'bad'}`;
 }
 
@@ -415,8 +436,12 @@ $('form').addEventListener('submit', (event) => {
 });
 
 for (const field of TEXT_FIELDS) {
-  $(`f-${field}`).addEventListener('input', touched);
-  $(`f-${field}`).addEventListener('change', touched);
+  const input = $(`f-${field}`);
+  input.addEventListener('input', () => {
+    if (fieldLooksValid(field, input.value)) clearFieldError(field);
+    touched();
+  });
+  input.addEventListener('change', touched);
 }
 
 $('role-input').addEventListener('keydown', (event) => {

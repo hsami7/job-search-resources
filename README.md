@@ -9,6 +9,7 @@ agent prepares applications, a human clicks Submit. See `PRD.md`, `PLAN.md`,
 ```bash
 npm start          # http://127.0.0.1:4319
 npm test           # 13 tests: event log, validation, 409 conflict, resume, HTTP
+npm run test:e2e   # 54 user-flow checks in Brave; boots its own server + temp DB
 ```
 
 Requires **Node 22.22+** (`node:sqlite`). No runtime dependencies.
