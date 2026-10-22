@@ -1,0 +1,16 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>fixture: click mapping</title>
+<style>html,body{margin:0;height:100%;background:#222;color:#0f0;font:16px monospace}
+#log{padding:12px}#dot{position:fixed;width:12px;height:12px;border-radius:50%;background:#f0f;transform:translate(-6px,-6px);display:none}</style>
+<div id="log">click anywhere</div>
+<div id="dot"></div>
+<script>
+  document.addEventListener('click', (e) => {
+    document.getElementById('log').textContent = `click ${e.clientX},${e.clientY} at ${window.innerWidth}x${window.innerHeight}`;
+    const d = document.getElementById('dot');
+    d.style.left = e.clientX + 'px';
+    d.style.top = e.clientY + 'px';
+    d.style.display = 'block';
+  });
+</script>

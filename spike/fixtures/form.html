@@ -1,0 +1,16 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>fixture: login form</title>
+<style>
+  body{font:15px system-ui;padding:40px;max-width:420px}
+  input{display:block;width:100%;padding:8px;margin:8px 0}
+  button{padding:8px 16px}
+  #out{color:#060;margin-top:16px}
+</style>
+<h1>Sign in (fixture)</h1>
+<form onsubmit="document.getElementById('out').textContent='submitted: '+document.getElementById('u').value; return false">
+  <input id="u" placeholder="username" autocomplete="off" autofocus>
+  <input id="p" type="password" placeholder="password">
+  <button id="go" type="submit">Sign in</button>
+</form>
+<div id="out"></div>
