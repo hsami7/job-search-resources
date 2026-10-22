@@ -5,6 +5,8 @@
   "type": "module",
   "description": "jobPilot — self-hosted job search operator (W0 spike in spike/)",
   "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/main.js",
+    "test": "node --disable-warning=ExperimentalWarning --test",
     "spike:smoke": "node spike/01-smoke.js",
     "spike:trust": "node spike/02-trust-score.js",
     "spike:arbeitnow": "node spike/03-arbeitnow.js",
