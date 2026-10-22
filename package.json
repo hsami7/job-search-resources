@@ -1,0 +1,20 @@
+{
+  "name": "jobpilot",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "jobPilot — self-hosted job search operator (W0 spike in spike/)",
+  "scripts": {
+    "spike:smoke": "node spike/01-smoke.js",
+    "spike:trust": "node spike/02-trust-score.js",
+    "spike:arbeitnow": "node spike/03-arbeitnow.js",
+    "spike:generic": "node spike/04-generic-extract.js",
+    "spike:freeze": "node spike/05-freeze.js",
+    "spike:takecontrol": "node spike/take-control/server.js",
+    "spike:rekrute": "node spike/06-rekrute.js",
+    "spike:marocannonces": "node spike/07-marocannonces.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.56.0"
+  }
+}
