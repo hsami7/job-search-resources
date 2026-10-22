@@ -10,7 +10,15 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
 - **W0:** GO. Brave 1.98.60 on headless aarch64 Ubuntu, Xvfb, CDP, adapters, freeze, take-control all proven (`SPIKE-REPORT.md`). Chrome could not be tested there (no Linux arm64 build); that test moves to this PC.
 - **P0:** 01 Command Deck chosen; tokens frozen (`DESIGN-DECISION.md`).
 - **P1 today:** event log + profile projection + resume storage + profile page. `npm test` = 13/13, `npm run test:e2e` = 54/54. No settings, no browser, no onboarding, no pipeline, no Doctor/Logs, no auth.
-- **Target PC:** Omarchy Linux (Arch), i7, Hyprland/Wayland, headed browser. Brave and Google Chrome are both installable here, so W0 condition 2 can finally be closed.
+- **Target PC:** Omarchy Linux (Arch), i7, Hyprland/Wayland, headed browser. Verified over SSH on 2026-10-22:
+  - host `neger7lost-archlinux`, Tailscale `100.71.69.111`; SSH key `~/.ssh/omarchy_fix` on the VPS is authorized.
+  - Node **v26.12.0** (`/usr/bin/node`), npm 12.2.1; `node:sqlite` smoke test passes (`DatabaseSync`, create/insert/select).
+  - Brave **1.98.60** (`brave-bin`): `/usr/bin/brave` wrapper → `/opt/brave-bin/brave`; no `~/.config/brave-flags.conf`.
+  - **Chromium 155.0.8059.84** is installed; **Google Chrome is not** (no `google-chrome` package). Use Chromium for the non-Brave W0b arm, or install `google-chrome` from the AUR if exact Chrome parity matters.
+  - `yay`, `pdftotext`, `tailscale`, `ufw`, `rsync` present; **`tectonic` missing** (needed later for LaTeX, not for the browser gate).
+  - Disk 952G, 830G free; root is **LUKS** (`crypto_LUKS` → btrfs). Home is `0700`.
+  - Hyprland session on tty1, `XDG_SESSION_TYPE=wayland`, socket `/run/user/1000/wayland-1`; SSH does **not** inherit `WAYLAND_DISPLAY`/`HYPRLAND_INSTANCE_SIGNATURE`, so browser tests over SSH must export `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1`, and the server itself should start from the graphical session (`uwsm-app` or a systemd user unit after `graphical-session.target`).
+  - No repo at `~/Work/jobPilot`; port 4319 is free; no git remote on the VPS.
 - **Known correction:** Brave 1.98.60 has **no global "Forgetful Browsing" toggle**. The real gate is `browser.clear_data.cookies_on_exit=false`, `browser.clear_data.browsing_history_on_exit=false`, `session.restore_on_startup=1`, plus a behavioural cookie-survives-restart test. The UI must never claim a toggle that does not exist.
 - **No git remote** is configured in this repo. The PC needs a copy (clone from a new remote, or copy the working tree). This is a logistics blocker, not a design one.
 - **Phone access** is still undecided: same LAN only, or Tailscale `*.ts.net`. If the phone is to reach the PC, authentication must land before binding to anything but loopback.
@@ -40,8 +48,8 @@ Deliverable: PRD/MILESTONES/ADRs/README match `PLAN.md` v6; `npm test` and `npm 
 - [ ] 0.2 `PRD.md` — delete J7; remove FR-SYN-01..09; rewrite FR-DEP-01..04 as PC install/start-on-boot; change FR-BRW-02 to "Chromium-family fallback on the PC"; delete FR-BRW-07; fix FR-ONB-04/FR-BRW-03 to the three session-survival prefs; fix G5, DoD, §15 Q1/Q8.
 - [ ] 0.3 `MILESTONES.md` — P1 exit #1/#2/#6 (onboarding on PC, session-survival gate, PC status not "PC pill"); drop P4 sync/VPS and the P4b split; drop "both hosts" from DoD/P5/timeline.
 - [ ] 0.4 `README.md` + `DESIGN-DECISION.md` — replace VPS/deployment language, the two-host data screen, and the "Forgetful Browsing" copy.
-- [ ] 0.5 `.node-version` = `22.22.1`; pin `playwright-core` to the exact version already resolved (no `^`); document the Arch install commands.
-- [ ] 0.6 PC setup: Node 22.22.x via `fnm`/`nvm` (or system Node only if `node:sqlite` behaves), `npm ci`, Brave (`brave-bin` AUR, expected `/opt/brave-bin/brave`) and Google Chrome (`google-chrome` AUR, expected `/usr/bin/google-chrome-stable`). Run `npm test` and `npm run test:e2e`.
+- [ ] 0.5 Node decision: run the baseline on the installed **Node 26.12.0** first; `node:sqlite` already passes a smoke test. Pin `22.22.1` with `mise` only if `npm test` or the runtime fails on 26. Record the chosen version in `.node-version`; pin `playwright-core` to the exact resolved version (no `^`).
+- [ ] 0.6 PC setup: copy the repo to `~/Work/jobPilot` (rsync over the Tailscale SSH key, exclude `node_modules` and `data/`), `npm ci`, then `npm test` and `npm run test:e2e`. Brave is already installed at `/opt/brave-bin/brave`; use Chromium 155 as the non-Brave arm (or `yay -S google-chrome` if exact Chrome is required). For e2e over SSH: `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 npm run test:e2e`, or run it from a terminal inside Hyprland.
 - [ ] 0.7 Fix the test harness: `spike/lib/browser.js` currently hardcodes port 9222 and `spike/profile/brave`. Add `BROWSER_PATH`/`PROFILE_DIR`/`CDP_PORT` env overrides; make `e2e/profile.e2e.mjs` use a free port + temp profile so it never fights a real Brave session. Do not spawn Xvfb when `WAYLAND_DISPLAY` or `DISPLAY` is set.
 - [ ] 0.8 W0b on the PC: run the smoke + trust + local adapter checks with Brave and Chrome; record login success, DOM cleanliness, submit-flow integrity, detection quirks, session stability in `SPIKE-REPORT.md` (addendum). Update ADR-0001 with the final browser decision.
 
@@ -113,8 +121,9 @@ npm run test:e2e:browser     # temp DB/profile, 390 px, no console errors
 
 - **[USER] Phone access:** same LAN only, or Tailscale `*.ts.net`? If the phone reaches the PC, token auth + Trusted Host + CSRF must land before binding beyond loopback. Not needed for M0/M1 if everything stays loopback.
 - **[USER] Repo transfer:** no git remote exists. Add one, or copy the working tree to the PC. The planning branch `planning/20261022-213623-pc-only-v6` contains the v6 `PLAN.md`.
-- **[AGENT] Omarchy specifics:** confirm the Brave binary path (`brave-bin` → `/opt/brave-bin/brave` vs `/usr/bin/brave`), Chrome AUR package, and whether Hyprland exposes `DISPLAY` (XWayland) or only `WAYLAND_DISPLAY`.
-- **[AGENT] Node version:** Arch's `nodejs` may be newer than 22.22. If `node:sqlite` behaves differently, pin 22.22.1 via `fnm` before touching code.
+- **[AGENT] Omarchy specifics — resolved:** Brave binary is `/opt/brave-bin/brave` (the `/usr/bin/brave` wrapper is safe but reads a global flags file; launch the real binary for the owned profile). Chromium 155 is the non-Brave arm; Google Chrome is not installed. `tectonic` must be installed before the LaTeX slice.
+- **[AGENT] Node version — mostly resolved:** Node 26.12.0 is installed and `node:sqlite` works. The baseline test run decides whether to keep 26 or pin 22.22.1 via `mise`.
+- **[AGENT] Wayland launch env:** the graphical session is `wayland-1` on tty1, but SSH does not inherit `WAYLAND_DISPLAY`/`HYPRLAND_INSTANCE_SIGNATURE`. Tests over SSH must export them; the production server should start from the graphical session (`uwsm-app` or systemd user unit), not from a bare SSH shell.
 - **[AGENT] Cookie store:** decide `--password-store=basic` (deterministic, obfuscated at rest) vs the system keyring. v1 plan: basic + LUKS + `0700`; document the tradeoff.
 - **[AGENT] `browser.close()` behaviour:** the spike's `prefs.js` calls `browser.close()` after `connectOverCDP`. Run the 30-minute throwaway proof first to see whether that kills the owned browser; if it does, use SIGTERM to the owned pid for clean shutdown.
 
