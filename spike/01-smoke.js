@@ -8,9 +8,8 @@ console.log(`[smoke] browser: ${version.Browser}`);
 console.log(`[smoke] protocol: ${version['Protocol-Version']}`);
 
 const { browser, context } = await connect(port);
-const pages = context.pages();
-const page = pages[0] ?? (await context.newPage());
-console.log(`[smoke] contexts=${browser.contexts().length} pages=${pages.length}`);
+const page = await context.newPage();
+console.log(`[smoke] contexts=${browser.contexts().length} pages=${context.pages().length}`);
 
 await page.goto('about:blank');
 const ua = await page.evaluate(() => navigator.userAgent);

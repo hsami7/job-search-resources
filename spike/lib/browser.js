@@ -78,15 +78,16 @@ export async function connect(port = DEFAULT_PORT) {
   return { browser, context };
 }
 
-export async function stopBrave(port = DEFAULT_PORT) {
-  try {
-    await fetch(`http://127.0.0.1:${port}/json/close`, { method: 'PUT' });
-  } catch {}
-}
-
 export async function shot(page, name) {
   mkdirSync(OUT_DIR, { recursive: true });
   const file = path.join(OUT_DIR, `${name}.png`);
-  await page.screenshot({ path: file, fullPage: false });
+  // Heavy/lazy pages can stall a PNG capture; JPEG with a timeout is the fallback.
+  try {
+    await page.screenshot({ path: file, timeout: 15000 });
+  } catch {
+    const jpeg = file.replace(/\.png$/, '.jpg');
+    await page.screenshot({ path: jpeg, type: 'jpeg', quality: 70, timeout: 15000 });
+    return jpeg;
+  }
   return file;
 }

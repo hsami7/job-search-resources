@@ -11,8 +11,9 @@
     "spike:generic": "node spike/04-generic-extract.js",
     "spike:freeze": "node spike/05-freeze.js",
     "spike:takecontrol": "node spike/take-control/server.js",
-    "spike:rekrute": "node spike/06-rekrute.js",
-    "spike:marocannonces": "node spike/07-marocannonces.js"
+    "spike:takecontrol:test": "node spike/08-take-control-test.js",
+    "spike:rekrute": "SITE=rekrute node spike/06-adapters.js",
+    "spike:marocannonces": "SITE=marocannonces node spike/06-adapters.js"
   },
   "dependencies": {
     "playwright-core": "^1.56.0"

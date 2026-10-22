@@ -56,7 +56,6 @@ const server = createServer(async (req, res) => {
       text: await page.evaluate(() => document.body?.innerText?.slice(0, 400)).catch(() => ''),
       inner: await page.evaluate(() => [window.innerWidth, window.innerHeight]).catch(() => null),
       browser: version.Browser,
-      viewport: page.viewportSize(),
       clients: clients.size,
     });
   }

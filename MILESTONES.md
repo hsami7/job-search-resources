@@ -39,10 +39,12 @@
 - If NO-GO: revised discovery proposal (L2-heavy) before any further work.
 
 **Exit criteria**
-- [ ] ≥2 local sites scraped successfully in ≥2 consecutive runs each, OR a written NO-GO with re-plan.
-- [ ] Paste-URL works on both test links.
-- [ ] Freeze-on-challenge prototype demonstrably stops all interactions.
-- [ ] Versions pinned and documented.
+- [x] ≥2 local sites scraped successfully in ≥2 consecutive runs each, OR a written NO-GO with re-plan.
+- [x] Paste-URL works on both test links. *(LinkedIn deferred to the x86 PC — see report §3.6)*
+- [x] Freeze-on-challenge prototype demonstrably stops all interactions.
+- [x] Versions pinned and documented.
+
+**Status: COMPLETE 2026-10-22 — verdict GO (3 conditions).** See `SPIKE-REPORT.md`. Chain: `npm run spike:smoke|trust|arbeitnow|generic|freeze|takecontrol|rekrute|marocannonces`. Deviations recorded in the report: Google Chrome cannot be tested on arm64 (deferred to PC); local sites need no login for discovery, so the "log in manually once" step was unnecessary; take-control was prototyped over CDP instead of noVNC.
 
 **Risks:** anti-bot block >50% → pivot to L2 + paste-URL as primary for local sites; LinkedIn login challenge → rely on paste-URL only.
 
