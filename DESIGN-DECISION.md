@@ -114,7 +114,7 @@ Drawn in all ten directions unless stated.
 
 **Coverage:** all 15 PRD §7 screens, in 14 screens per direction (job detail and employer preview are one screen), plus **screen 16 Profile** drawn in 01 at the owner's request. All 141 variant/screen pairs render without a JS error (`node design/check.js`).
 `job` is reached from a listing row; `settings` from the nav, or from the Browser screen in 04 and 05 where the fixed F-key / numbered-section model has no spare slot. That is an IA decision, not a gap: a detail view is a drill-down, and 04's twelve function keys are the point of 04.
-`profile` is the only screen with behaviour: edits save to `localStorage` (this browser), Export downloads the JSON, Reset clears it. In P1 the same shape writes to the event log and the resume file is parsed server-side.
+`profile` is the only screen with behaviour: in the mockup, edits save to `localStorage` (this browser), Export downloads the JSON, Reset clears it. The real page now lives in `web/` (P1, 2026-10-22): same layout and tokens, writes through the event log, stores the resume under its SHA-256, and returns 409 instead of overwriting a newer version. Parsing is still not implemented.
 
 ---
 
@@ -142,7 +142,7 @@ Drawn in all ten directions unless stated.
 - Trust score 76 comes from the real headless host; on your x86 PC with Mesa the same screen will show a different number.
 - The Brave "Forgetful Browsing" copy is the corrected version: three real preferences (`cookies_on_exit`, `browsing_history_on_exit`, `restore_on_startup`), not a toggle that does not exist. An ADR is owed at P1.
 - No dark/light twin: each direction commits to one. 07 and 09 are the natural pair if you want both.
-- 01's Profile form is the one screen that does something: values persist in `localStorage` for that browser and origin. It is not a database, it does not sync, and it will be replaced by the event log in P1 without changing the field names.
+- 01's Profile form in the mockup persists to `localStorage` for that browser and origin — not a database and not synced. The product page (`web/`) replaces it with the event log and keeps the same field names.
 
 ---
 
@@ -160,7 +160,7 @@ Keep:              ⌘K palette, icon rail, dense tables, monospace, dark surfac
                    status chips that always carry a word.
 
 Change:            Profile / my data added as screen 16 — identity, target roles,
-                   resume file, parsed facts. Live locally in the mockup.
+                   resume file, parsed facts. Implemented in web/ (P1).
 
 Signed:            product owner (chat)   Date: 2026-10-22
 ```

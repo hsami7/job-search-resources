@@ -22,5 +22,6 @@ Format: [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-archi
 | [0016](0016-notification-tiers.md) | Three notification tiers with quiet hours | Accepted |
 | [0017](0017-skills-v1-hardcoded.md) | Skills v1 are hardcoded prompt packs; runtime deferred | Accepted |
 | [0018](0018-generic-extraction-and-run-host-setting.md) | Generic extraction as a third mode; run host + per-site mode are settings (supersedes part of 0005) | Accepted |
+| [0019](0019-p1-runtime-node-sqlite-no-framework.md) | P1 runtime uses built-in `node:sqlite` + `node:http`; no framework, no native module | Accepted |
 
 **Adding an ADR:** copy the template in any file, use the next number, add a row above. Never edit an accepted decision's substance — supersede it with a new ADR.

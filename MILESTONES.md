@@ -102,6 +102,8 @@
 
 **Dependencies:** W0 GO; P0 chosen design. **Risks:** browser launch quirks per OS; resume parsing quality (mitigate with side-by-side correction).
 
+**Progress 2026-10-22 — profile slice shipped.** Real server (`server/`), event log + profile projection, optimistic concurrency, resume storage under SHA-256, and the profile page (`web/`) in the chosen design. 13 tests pass (`npm test`). Decisions: ADR-0019 (built-in `node:sqlite`, `node:http`). Remaining for P1: onboarding, Brave profile/lease, pipeline, OpenRouter adapter, WebSocket, Doctor, Logs, backups.
+
 ---
 
 ## P2 — Discovery
