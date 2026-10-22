@@ -111,9 +111,9 @@
 <script src="../../shared/data.js"></script>
 <script>
 const D = window.JOBPILOT;
-const nav = [['dashboard','Today'],['jobs','Jobs'],['triage','Approve'],['verification','Verify'],
+const nav = [['dashboard','Today'],['jobs','Jobs'],['job','Job'],['triage','Approve'],['verification','Verify'],
   ['doctor','Health'],['logs','Activity'],['scope','Sites'],['agent','Browser'],
-  ['credentials','Vault'],['data','Sync'],['onboarding','Setup'],['pwa','Phone']];
+  ['credentials','Vault'],['data','Sync'],['onboarding','Setup'],['pwa','Phone'],['settings','Settings']];
 
 const shell = (id, inner, drawer) => `
 <div class="navwrap"><nav class="seg" aria-label="sections">
@@ -171,7 +171,7 @@ jobs: () => [`
   ${D.jobs.filter(j=>j.signal!=='low').map(j=>`<tr><td><b>${j.title}</b></td><td class="m">${j.company ?? '—'}</td>
     <td>${j.city}</td><td class="m">${j.source}</td><td>${j.salary ?? '—'}</td>
     <td><span class="tag ${j.signal==='high'?'g':'a'}">${j.signal}</span></td>
-    <td><button class="btn" data-act="Tailor ${j.title}">Tailor</button></td></tr>`).join('')}</table></div>
+    <td><button class="btn" data-go="job">Open</button></td></tr>`).join('')}</table></div>
   <div class="card"><h2>Dropped</h2>
     <div class="item"><div class="score r">0</div><div style="flex:1"><div class="t">(no title)</div>
       <div class="m">marocannonces · a banner advertisement, not a job</div></div>
@@ -395,6 +395,47 @@ pwa: () => [`
   `<h3>Push</h3><div class="m">One device subscribed.</div>
   <dl class="dl" style="margin-top:10px"><dt>delivered</dt><dd>1.4s</dd><dt>quiet hours</dt><dd>none</dd></dl>
   <div style="margin-top:12px"><button class="btn" data-act="Send test push">Send a test</button></div>`],
+job: () => [`
+  <h1>Conseiller de service</h1><p class="sub">Auto Hall · Casablanca · match 88 · posted today</p>
+  <div class="grid2">
+    <div class="card"><h2>Posting</h2>
+      <dl class="dl"><dt>contract</dt><dd>CDI, junior 1–3</dd><dt>education</dt><dd>Bac +2</dd>
+        <dt>sector</dt><dd>automobile</dd><dt>pay</dt><dd>not stated</dd><dt>source</dt><dd>rekrute.com</dd></dl>
+      <div class="row" style="margin-top:12px"><button class="btn p" data-act="Approve">Approve</button>
+        <button class="btn" data-act="Tailor again">Tailor again</button><button class="btn" data-act="Skip">Skip</button></div></div>
+    <div class="card"><h2>What the employer sees<span class="r">prefill only</span></h2>
+      <div class="shot">resume v3 + letter · 1 page</div>
+      <dl class="dl"><dt>name</dt><dd>Yassine M.</dd><dt>email</dt><dd>yassine.m@…</dd>
+        <dt>phone</dt><dd>+212 6•• ••• •••</dd><dt>salary</dt><dd>blank</dd>
+        <dt>files</dt><dd>resume-v3.pdf · letter.pdf</dd></dl></div>
+  </div>`,
+  `<h3>Match 88</h3><div class="m">title strong · city exact · seniority exact · sector adjacent</div>
+   <div class="track" style="margin-top:10px"><i style="width:88%;background:linear-gradient(90deg,#238636,#3fb950)"></i></div>
+   <dl class="dl" style="margin-top:12px"><dt>letter</dt><dd>v3 · 182 words</dd><dt>claims</dt><dd>3, all traced</dd>
+     <dt>salary</dt><dd>not stated</dd></dl>
+   <div class="m" style="margin-top:8px">The message field carries one line asking for the range.</div>
+   <div class="row" style="margin-top:12px"><button class="btn" data-act="Preview PDF">Preview PDF</button>
+     <button class="btn" data-act="Open the real form">Open form</button></div>`],
+settings: () => [`
+  <h1>Settings</h1><p class="sub">Visible, editable, and never applied silently.</p>
+  <div class="grid2">
+    <div class="card"><h2>Model</h2><dl class="dl">
+      <dt>key</dt><dd>sk-or-••••7c <span class="tag g">valid</span></dd>
+      <dt>primary</dt><dd>claude-haiku</dd><dt>fallback</dt><dd>none</dd></dl></div>
+    <div class="card"><h2>Schedule</h2><dl class="dl">
+      <dt>scan</dt><dd>08:00 – 20:00</dd><dt>send</dt><dd>09:00 – 18:00 Casablanca</dd>
+      <dt>pacing</dt><dd>2.4 s</dd></dl></div>
+    <div class="card"><h2>Preferences</h2><dl class="dl">
+      <dt>interface</dt><dd>English</dd><dt>letters</dt><dd>French</dd>
+      <dt>run host</dt><dd>VPS <span class="tag a">restart</span></dd></dl></div>
+    <div class="card"><h2>Notifications</h2><dl class="dl">
+      <dt>push</dt><dd>walls + approvals</dd><dt>quiet</dt><dd>22:00 – 07:00</dd>
+      <dt>devices</dt><dd>1</dd></dl></div>
+  </div>
+  <div class="row"><button class="btn p" data-act="Save settings">Save</button>
+    <button class="btn" data-act="Discard changes">Discard</button></div>`,
+  `<h3>Changes are events</h3><div class="m">Every edit is appended to the log with the old and the new value. Nothing is overwritten silently.</div>
+   <dl class="dl" style="margin-top:12px"><dt>last change</dt><dd>send hours, yesterday</dd><dt>from</dt><dd>the PC</dd></dl>`],
 }, render(id){ const [main, drawer] = this.screens[id](); return shell(id, main, drawer); } };
 </script>
 <script src="../../shared/app.js"></script>

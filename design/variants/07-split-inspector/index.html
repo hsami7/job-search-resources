@@ -122,9 +122,9 @@
 <script>
 const D = window.JOBPILOT;
 const groups = [
-  ['Work', [['dashboard','Today','▤',''],['jobs','Jobs','≡','7'],['triage','Triage','✓','5'],['verification','Verification','!','1']]],
+  ['Work', [['dashboard','Today','▤',''],['jobs','Jobs','≡','7'],['job','Job detail','▥',''],['triage','Triage','✓','5'],['verification','Verification','!','1']]],
   ['System', [['doctor','Doctor','+','4'],['logs','Logs','»',''],['scope','Sites','◎','6'],['agent','Browser','◫','']]],
-  ['Account', [['credentials','Vault','⌘','4'],['data','Data','⇄',''],['onboarding','Setup','↦','4/5'],['pwa','Phone','▭','']]],
+  ['Account', [['credentials','Vault','⌘','4'],['data','Data','⇄',''],['onboarding','Setup','↦','4/5'],['pwa','Phone','▭',''],['settings','Settings','⚙','']]],
 ];
 
 const shell = (id, main, aside) => `
@@ -222,7 +222,7 @@ jobs: () => [`
   <div style="border-top:1px solid var(--line2)">${asideHead('Cover letter','Resume v3 · 182 words')}
     <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">
       “Your service advisor role matches the two years I spent handling customer intake and warranty files at…”</div>
-    <div style="padding:0 12px 12px;display:flex;gap:6px"><button data-act="Open letter">Open</button>
+    <div style="padding:0 12px 12px;display:flex;gap:6px"><button data-go="job">Full record</button>
       <button class="p" data-act="Approve">Approve</button></div></div>`],
 
 triage: () => [`
@@ -489,6 +489,62 @@ pwa: () => [`
     <div style="padding:10px 12px;font-size:11.5px">
       <div>1 device subscribed</div><div class="dim">delivered in 1.4 s</div>
       <div style="margin-top:6px"><button data-act="Send test push">Send a test</button></div></div></div>`],
+job: () => [`
+  <div class="crumb"><b>Work</b><span>/</span><span>Jobs</span><span>/</span><span>Conseiller de service</span></div>
+  <div class="h"><h1>Conseiller de service</h1><div class="r"><span class="tag">match 88</span>
+    <button class="p" data-act="Approve">Approve</button></div></div>
+  <div class="panel"><header><b>Posting</b><span class="dim">Auto Hall · Casablanca · rekrute.com · posted today</span></header>
+    <div class="c"><div class="kv" style="grid-template-columns:96px 1fr 96px 1fr">
+      <dt>contract</dt><dd>CDI</dd><dt>seniority</dt><dd>junior, 1–3 years</dd>
+      <dt>education</dt><dd>Bac +2</dd><dt>sector</dt><dd>automobile</dd>
+      <dt>pay</dt><dd class="dim">not stated</dd><dt>source</dt><dd>rekrute.com, 3 of 10</dd></div>
+      <div class="dim" style="margin-top:6px">Fit: title strong · city exact · seniority exact · sector adjacent</div></div></div>
+  <div class="panel"><header><b>What the employer sees</b><span class="dim">prefill only — you press submit</span></header>
+    <div class="c"><div class="shot">resume v3 + letter-auto-hall.pdf · page 1 of 1</div>
+      <div class="kv"><dt>name</dt><dd>Yassine M.</dd><dt>email</dt><dd>yassine.m@…</dd>
+        <dt>phone</dt><dd>+212 6•• ••• •••</dd><dt>salary</dt><dd class="dim">left blank</dd>
+        <dt>files</dt><dd class="mono">resume-v3.pdf · letter-auto-hall.pdf</dd></div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        <span class="tag b">FR</span><button data-act="Preview in English">English</button>
+        <button data-act="Open the real form">Open the form</button></div></div></div>`,
+  `${asideHead('Reviewer note','before you approve')}
+  <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">
+    The salary is not stated. The message field carries one line asking for the range, so you are not guessing.
+    <div style="margin-top:8px" class="dim">3 claims · every one traceable to a resume line</div></div>
+  <div style="border-top:1px solid var(--line2)">${asideHead('Actions','nothing sends itself')}
+    <div style="padding:10px 12px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="p" data-act="Approve">Approve</button><button data-act="Tailor again">Tailor again</button>
+      <button data-act="Skip">Skip</button><button class="d" data-act="Report bad match">Bad match</button></div></div>`],
+settings: () => [`
+  <div class="crumb"><b>Account</b><span>/</span><span>Settings</span></div>
+  <div class="h"><h1>Settings</h1><div class="r"><span class="dim">every change is logged</span>
+    <button class="p" data-act="Save settings">Save</button></div></div>
+  <div class="panel"><header><b>Models</b><span class="dim">keys stay on this host</span></header>
+    <div class="c tight"><table><tbody>
+      <tr><td class="dim">openrouter key</td><td class="mono">sk-or-••••7c</td><td><span class="tag b">valid</span></td></tr>
+      <tr><td class="dim">primary</td><td>claude-haiku</td><td class="dim">$0.0004 / job</td></tr>
+      <tr><td class="dim">fallback</td><td class="dim">none</td><td><button data-act="Add fallback">Add</button></td></tr>
+    </tbody></table></div></div>
+  <div class="panel"><header><b>Schedule</b><span class="dim">Africa/Casablanca</span></header>
+    <div class="c tight"><table><tbody>
+      <tr><td class="dim">scan window</td><td>08:00 – 20:00</td><td class="dim">no volume cap</td></tr>
+      <tr><td class="dim">send hours</td><td>09:00 – 18:00</td><td class="dim">human pace</td></tr>
+      <tr><td class="dim">pacing</td><td>2.4 s</td><td class="dim">between actions</td></tr>
+    </tbody></table></div></div>
+  <div class="panel"><header><b>Preferences</b><span class="dim">applies on save</span></header>
+    <div class="c tight"><table><tbody>
+      <tr><td class="dim">interface</td><td>English</td><td></td></tr>
+      <tr><td class="dim">letters</td><td>French</td><td class="dim">posting language</td></tr>
+      <tr><td class="dim">run host</td><td>VPS</td><td><span class="tag">restart to move</span></td></tr>
+      <tr><td class="dim">push</td><td>walls + approvals</td><td class="dim">1 device</td></tr>
+      <tr><td class="dim">quiet hours</td><td>22:00 – 07:00</td><td></td></tr>
+    </tbody></table></div></div>`,
+  `${asideHead('Effect','what happens on save')}
+  <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">Values apply to the next run. Moving the run host needs a restart and a sync first — the agent will not do it silently.
+    <div class="dim" style="margin-top:8px">last change · send hours, yesterday, from the PC</div></div>
+  <div style="border-top:1px solid var(--line2)">${asideHead('Reset','danger zone')}
+    <div style="padding:10px 12px"><button class="d" data-act="Reset settings to defaults">Reset to defaults</button>
+      <div class="dim" style="margin-top:6px">The old values stay in the log.</div></div></div>`],
 }, render(id){ const [main, aside] = this.screens[id](); return shell(id, main, aside); } };
 </script>
 <script src="../../shared/app.js"></script>

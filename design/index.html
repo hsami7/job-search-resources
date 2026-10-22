@@ -35,11 +35,11 @@
 <header>
   <h1>jobPilot — ten design directions</h1>
   <p class="sub">Same product, same real job records from the W0 scrape, ten different answers.
-  Every direction is a clickable mockup with all twelve P0 screens. Nothing here is product code:
+  Every direction is a clickable mockup with all fourteen P0 screens. Nothing here is product code:
   the chosen direction gets rebuilt properly in P1.</p>
   <div class="rules">
     <span><b>P0 gate</b> — pick one, or mix parts</span>
-    <span><b>12 screens each</b> — dashboard, jobs, triage, verification, doctor, logs, scope, agent setup, credentials, data, onboarding, PWA</span>
+    <span><b>14 screens each</b> — dashboard, jobs, job detail, triage, verification, doctor, logs, scope, agent setup, credentials, data, onboarding, PWA, settings</span>
     <span><b>PC + PWA</b> — resize to 390px wide to see the phone layout</span>
   </div>
 </header>
@@ -61,9 +61,12 @@
   </ul>
 
   <p class="sub" style="margin-top:26px">
-    Every direction has twelve screens: append <code>#dashboard</code>, <code>#jobs</code>, <code>#triage</code>,
-    <code>#verification</code>, <code>#doctor</code>, <code>#logs</code>, <code>#scope</code>, <code>#agent</code>,
-    <code>#credentials</code>, <code>#data</code>, <code>#onboarding</code> or <code>#pwa</code> to its address.
+    Every direction has fourteen screens: append <code>#dashboard</code>, <code>#jobs</code>, <code>#job</code>,
+    <code>#triage</code>, <code>#verification</code>, <code>#doctor</code>, <code>#logs</code>, <code>#scope</code>,
+    <code>#agent</code>, <code>#credentials</code>, <code>#data</code>, <code>#onboarding</code>,
+    <code>#pwa</code> or <code>#settings</code> to its address.
+    In the mockups, <code>#job</code> opens from any listing and <code>#settings</code> from the nav
+    (or from the Browser screen where the nav model has no room for it).
     Resize the window to 390px to see the phone layout. Buttons only raise a “not wired in P0” notice.
     The comparison, recommendation, tokens and component inventory live in
     <a href="../DESIGN-DECISION.md"><code>DESIGN-DECISION.md</code></a>.

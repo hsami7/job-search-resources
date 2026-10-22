@@ -75,7 +75,7 @@
 <script src="../../shared/data.js"></script>
 <script>
 const D = window.JOBPILOT;
-const items = [['dashboard','The situation'],['jobs','Listings'],['triage','Queue'],['verification','Verification'],['doctor','Doctor'],['logs','Logbook'],['scope','Scope'],['agent','Browser'],['credentials','Vault'],['data','Archive'],['onboarding','First run'],['pwa','Phone']];
+const items = [['dashboard','The situation'],['jobs','Listings'],['job','One job'],['triage','Queue'],['verification','Verification'],['doctor','Doctor'],['logs','Logbook'],['scope','Scope'],['agent','Browser'],['credentials','Vault'],['data','Archive'],['onboarding','First run'],['pwa','Phone'],['settings','Settings']];
 
 const shell = (id, inner) => `
 <div class="frame">
@@ -139,7 +139,7 @@ jobs: () => `
     ${D.jobs.filter(j=>j.signal!=='low').map(j=>`<tr>
       <td>${j.title}</td><td>${j.company}</td><td>${j.city}</td>
       <td style="color:var(--dim)">${j.source}</td><td>${j.salary ?? '—'}</td>
-      <td><button data-act="Tailor ${j.title}">tailor</button></td></tr>`).join('')}
+      <td><button data-go="job">open</button></td></tr>`).join('')}
   </table>
   <p style="margin-top:18px"><button data-act="Show low signal">Show the two hidden</button></p>`,
 
@@ -333,6 +333,69 @@ pwa: () => `
         <button data-act="Skip">Skip</button></div></div>
   </div>`,
 
+job: () => `
+  <h1>Conseiller de service</h1>
+  <p class="deck">Auto Hall, Casablanca · rekrute.com · posted today · match 88</p>
+  <div class="cols">
+    <div>
+      <table>
+        <tr><td style="color:var(--dim);width:120px">Contract</td><td>CDI, junior, 1–3 years</td></tr>
+        <tr><td style="color:var(--dim)">Education</td><td>Bac +2</td></tr>
+        <tr><td style="color:var(--dim)">Sector</td><td>Automobile</td></tr>
+        <tr><td style="color:var(--dim)">Pay</td><td>not stated — ask in the message field</td></tr>
+        <tr><td style="color:var(--dim)">Source</td><td>rekrute.com, listing 3 of 10</td></tr>
+      </table>
+      <h2>The letter</h2>
+      <p style="font-size:14.5px">182 words, three claims, each traced to a line in Resume v4. Nothing is invented;
+      the tools named are the ones already in your file.</p>
+      <p><button class="solid" data-act="Approve">Approve</button>
+        <button data-act="Tailor again">Tailor again</button>
+        <button data-act="Skip">Skip</button>
+        <button data-act="Open the posting">Read the posting</button></p>
+    </div>
+    <div>
+      <div class="note"><b>What the employer sees</b>A one-page PDF and a short letter.<br>
+        resume-v3.pdf, letter-auto-hall.pdf</div>
+      <div class="shot">PDF preview · page 1 of 1</div>
+      <table style="font-size:13px">
+        <tr><td style="color:var(--dim)">Name</td><td>Yassine M.</td></tr>
+        <tr><td style="color:var(--dim)">Email</td><td>yassine.m@…</td></tr>
+        <tr><td style="color:var(--dim)">Phone</td><td>+212 6•• ••• •••</td></tr>
+        <tr><td style="color:var(--dim)">Salary</td><td>left blank</td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--dim);margin-top:10px">French, the language of the posting.
+        <button data-act="Preview in English">English preview</button></p>
+      <p style="font-size:13px;color:var(--dim)">Filled, not sent. You press submit in the browser.</p>
+    </div>
+  </div>`,
+settings: () => `
+  <h1>Settings</h1>
+  <p class="deck">Every value here is yours, visible, and changeable without starting over.</p>
+  <div class="cols">
+    <div>
+      <h2>Model</h2>
+      <table>
+        <tr><td style="color:var(--dim);width:130px">OpenRouter</td><td>sk-or-••••7c <em>valid</em></td></tr>
+        <tr><td style="color:var(--dim)">Primary</td><td>claude-haiku</td></tr>
+        <tr><td style="color:var(--dim)">Fallback</td><td>none configured</td></tr>
+        <tr><td style="color:var(--dim)">Local</td><td>Ollama not installed</td></tr>
+      </table>
+      <h2>Schedule</h2>
+      <table>
+        <tr><td style="color:var(--dim);width:130px">Scan</td><td>08:00 – 20:00</td></tr>
+        <tr><td style="color:var(--dim)">Send hours</td><td>09:00 – 18:00, Africa/Casablanca</td></tr>
+        <tr><td style="color:var(--dim)">Pacing</td><td>2.4 s between actions</td></tr>
+      </table>
+      <p><button class="solid" data-act="Save settings">Save</button>
+        <button data-act="Discard changes">Discard</button></p>
+    </div>
+    <div>
+      <div class="note"><b>Language</b>Interface in English, letters in French, the language of the posting.</div>
+      <div class="note"><b>Run host</b>VPS. Moving to the PC requires a restart and a sync first.</div>
+      <div class="note"><b>Notifications</b>Verification walls and approvals only. Quiet 22:00 – 07:00.</div>
+      <div class="note"><b>Retention</b>Logs 30 days, backups every 6 hours.</div>
+    </div>
+  </div>`,
 }, render(id){ return shell(id, this.screens[id]()); } };
 </script>
 <script src="../../shared/app.js"></script>

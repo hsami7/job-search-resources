@@ -7,7 +7,7 @@
 
 ## 1. What was built
 
-Ten clickable mockups, each covering the twelve P0 screens with its own layout, navigation model, density and visual language. All ten render the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
+Ten clickable mockups, each covering the **fourteen** drawing units that cover all fifteen P0 screens (PRD #3 job detail and #5 employer preview are one screen) with its own layout, navigation model, density and visual language. All ten render the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
 
 Open `design/index.html` in a browser, or a single direction directly:
 
@@ -30,10 +30,10 @@ Screenshots: `design/shots/<variant>-<screen>.png` and `<variant>-mobile.png` (r
 | 02 | **Le Dossier** | section sidebar + running head, single 68ch column | comfortable (1 record per block) | serif body, editorial | cool newsprint / ink blue / vermilion | reads like a personnel file, margin notes | slow to scan 20+ listings; no side-by-side compare |
 | 03 | **Pipeline** | stage bar with counts, kanban board as home | medium (cards) | humanist sans | white / slate / violet | the state machine *is* the interface | cards hide detail; 4 columns fight for width |
 | 04 | **Ops Terminal** | F1–F12 bar (one key per screen) | very dense | monospace, amber phosphor | charcoal / amber / red | answers "what is it doing and what broke" at 3am | intimidating; amber narrows the palette |
-| 05 | **Swiss Ledger** | numbered 12-column top sections | dense (tables + big numerals) | grotesk, tight tracking | black / white / one red | information design as the aesthetic | severe; no warmth, no iconography |
+| 05 | **Swiss Ledger** | numbered sections, 7 per row, hairline rules | dense (tables + big numerals) | grotesk, tight tracking | black / white / one red | information design as the aesthetic | severe; no warmth, no iconography |
 | 06 | **Soft Stack** | pill row on desktop, bottom tabs on phone | airy (large targets) | system sans | off-white / lilac / mint | one-thumb approval on Android | low information density on desktop |
 | 07 | **Split Inspector** | tree navigator + content + inspector + status bar | very dense (IDE-like) | 12 px system sans | #fafafa / blue | list and detail visible at once; nothing moves | three columns need ≥1100 px; right pane is secondary on phone |
-| 08 | **Guided** | 12-step stepper with progress ticks | airy (one decision per screen) | large sans (38 px headings) | white / teal | turns stress moments (OTP, freeze) into one clear action | slow for routine scanning; stepper implies false linearity |
+| 08 | **Guided** | 14-step stepper with progress ticks | airy (one decision per screen) | large sans (38 px headings) | white / teal | turns stress moments (OTP, freeze) into one clear action | slow for routine scanning; stepper implies false linearity |
 | 09 | **Nightwatch** | floating segmented control + right drawer | medium (big numerals) | sans, tabular figures | #0e1116 / blue / glow | ambient monitoring of a VPS that runs while you sleep | dark-only; glow can read as decoration |
 | 10 | **Sheet** | workbook tab strip at the bottom + formula bar | very dense (spreadsheet) | 12 px sans + mono figures | white / grid grey / blue | every field visible, sortable, editable in place | hostile at 390 px (columns collapse to label + action) |
 
@@ -100,21 +100,22 @@ Drawn in all ten directions unless stated.
 |---|---|---|
 | 1 Dashboard | AppShell, RunStatusCard (state/site/page/elapsed/progress), StatTile, StatusPill, TrustBadge, BlockedBanner, KillSwitch | all ten |
 | 2 Jobs / Results | FilterBar, SavedFilterChip, RecordTable or JobCard, GroupHeader (country→city), SourceCount, SignalTag, LowSignalBucket, **ZeroResultCard** (what was checked + next action) | all ten |
-| 3 Job detail | JobHeader, FactGrid, FitBreakdown, TailorAction, ReviewerNotes, SourceLink, RawPostingDisclosure | **specified, not drawn** — composed from rows/panels above |
+| 3 Job detail | JobHeader, FactGrid, FitBreakdown, TailorAction, ReviewerNotes, SourceLink, RawPostingDisclosure | all ten — same screen as #5 |
 | 4 Triage / Approval | QueueGroup (Ready / Needs-you / Skip), BulkActionBar, ApprovalCard, HonestyBadge, SkipReason, PreviewDrawer | all ten |
-| 5 What the employer sees | DocumentPreview (PDF frame), PayloadFieldTable, TranslationPreview, SubmitWarning | **specified, not drawn** — PDF frame + field table |
+| 5 What the employer sees | DocumentPreview (PDF frame), PayloadFieldTable, TranslationPreview, SubmitWarning | all ten — right half of the job screen |
 | 6 Verification | FreezeBanner, PausedTabScreenshot, OTPInput, GuidanceList (account/search/phone/validity), TakeControl, Resume, AbandonConfirm, VerificationHistory, PushNotice | all ten |
 | 7 Doctor | CheckTable (state / why / fix), TrustScore + signal breakdown, RunAnywayConfirm (logged), FixAction, CopyDiagnostics | all ten |
 | 8 Logs | LogRow (time/level/agent/site/msg/duration), LevelBadge, Filters, RunTimeline, ExplainError, ExportBundle, RedactionNote | all ten |
 | 9 Search Scope | SiteTable, ModeChip (`adapter`/`generic`/`api`/`paste`), AdapterState, LastScan, LocationPicker (country→city), AddSite, **NoCrawlNotice** | all ten |
 | 10 Credentials | CredentialRow (masked), Reveal + audit, VaultLock, RotatePassphrase, NeverInPromptNotice | all ten |
 | 11 Data & Sync | HostCard (state/heartbeat/db/events), SyncStatus, ConflictCard (both values, keep one), BackupFreshness, ExportAll, DeleteAllConfirm, ReplayNote | all ten |
-| 12 Settings | SettingsSection, KeyField, ModelSelect, ScheduleEditor, SendHoursEditor, LanguageSelect, DeploymentTarget, SaveBar + restart notice | **specified, not drawn** — plain form rows; send-hours already appears in the sync conflict card |
+| 12 Settings | SettingsSection, KeyField, ModelSelect, ScheduleEditor, SendHoursEditor, LanguageSelect, DeploymentTarget, SaveBar + restart notice | all ten |
 | 13 Agent setup | BrowserChoice (Brave/Chrome), ProfilePath, SessionSurvivalChecklist (cookies / history / restore), Recheck, SignedOutList, RiskNote | all ten |
 | 14 Onboarding | Stepper, SetupStepCard, ProgressBar, DefaultsNote (editable later), RiskAcknowledgement, FirstRunCTA | all ten |
 | 15 PWA mirror | PhoneFrame, BottomTabs, CompactApprovalCard, FreezeCard, OTPEntry, TrustPill, PushTest | all ten |
 
-**Coverage:** 12 of 15 drawn, 3 (job detail, employer preview, settings) specified as compositions of components that already exist in every direction. P0 scope froze the twelve drawn screens, so these three were not invented. Say the word and I will draw them in the chosen direction (≈2–3 hours) before P1 starts.
+**Coverage:** 15 of 15 PRD §7 screens drawn, in 14 screens per direction (job detail and employer preview are one screen). All 140 variant/screen pairs render without a JS error (`node design/check.js`).
+`job` is reached from a listing row; `settings` from the nav, or from the Browser screen in 04 and 05 where the fixed F-key / numbered-section model has no spare slot. That is an IA decision, not a gap: a detail view is a drill-down, and 04's twelve function keys are the point of 04.
 
 ---
 
@@ -157,8 +158,6 @@ Mix:               primary ............  + status from ............  + phone fro
 Keep:              ..............................................................................
 
 Change:            ..............................................................................
-
-Draw the three missing screens first?   [ ] yes   [ ] no, specify in P1
 
 Signed:            ............................................   Date: ......................
 ```

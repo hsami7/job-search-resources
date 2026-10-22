@@ -8,7 +8,7 @@ mkdirSync(SHOTS, { recursive: true });
 
 const only = process.argv.slice(2);
 const dirs = readdirSync('design/variants').filter((d) => !only.length || only.some((o) => d.includes(o)));
-const screens = ['dashboard', 'triage', 'verification', 'doctor', 'logs', 'pwa'];
+const screens = ['dashboard', 'jobs', 'job', 'triage', 'verification', 'doctor', 'logs', 'settings', 'pwa'];
 
 const { port } = await launchBrave();
 const { browser, context } = await connect(port);

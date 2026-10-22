@@ -3,8 +3,8 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { launchBrave, connect } from '../spike/lib/browser.js';
 
-const screens = ['dashboard', 'jobs', 'triage', 'verification', 'doctor', 'logs',
-  'scope', 'agent', 'credentials', 'data', 'onboarding', 'pwa'];
+const screens = ['dashboard', 'jobs', 'job', 'triage', 'verification', 'doctor', 'logs',
+  'scope', 'agent', 'credentials', 'data', 'onboarding', 'pwa', 'settings'];
 
 const { port } = await launchBrave();
 const { browser, context } = await connect(port);

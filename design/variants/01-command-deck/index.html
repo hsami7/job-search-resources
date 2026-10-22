@@ -111,7 +111,7 @@
 <script>
 const D = window.JOBPILOT;
 const host = (h) => `<span class="host"><i class="g ${h.state === 'green' ? '' : h.state === 'yellow' ? 'y' : 'r'}"></i><b>${h.id}</b> ${h.label}</span>`;
-const navItems = [['dashboard','▚','Overview'],['jobs','≡','Jobs'],['triage','✓','Triage'],['verification','!','Verify'],['doctor','+','Doctor'],['logs','»','Logs'],['scope','◎','Scope'],['agent','◈','Browser'],['credentials','⌘','Vault'],['data','⇄','Data'],['onboarding','↦','Setup'],['pwa','▭','Phone']];
+const navItems = [['dashboard','▚','Overview'],['jobs','≡','Jobs'],['job','▤','Job'],['triage','✓','Triage'],['verification','!','Verify'],['doctor','+','Doctor'],['logs','»','Logs'],['scope','◎','Scope'],['agent','◈','Browser'],['credentials','⌘','Vault'],['data','⇄','Data'],['onboarding','↦','Setup'],['pwa','▭','Phone'],['settings','⚙','Settings']];
 const shell = (id, inner) => `
 <div class="app">
   <nav class="rail" aria-label="sections">
@@ -182,7 +182,7 @@ jobs: () => `
         <td>${j.title}</td><td class="muted">${j.company}</td><td>${j.city}</td>
         <td class="muted">${j.source}</td><td>${j.salary ?? '—'}</td>
         <td><span class="chip ${j.signal==='high'?'ok':'warn'}">${j.signal}</span></td>
-        <td><button class="btn" data-act="Tailor for ${j.title}">Tailor</button></td></tr>`).join('')}
+        <td><button class="btn" data-go="job">Open</button></td></tr>`).join('')}
       </tbody>
     </table>
     <div class="body"><button class="btn" data-act="Show 2 low-signal listings">Show low signal (2)</button></div>
@@ -379,6 +379,63 @@ pwa: () => `
     <div class="tabs"><div class="on">Queue</div><div>Jobs</div><div>Doctor</div><div>Run</div></div>
   </div></div>
   <p class="muted" style="text-align:center;font-size:11px">390×844 · one-thumb reach: actions sit in the lower third</p>`,
+job: () => `
+  <h1>Conseiller de service <span>· Auto Hall · Casablanca</span></h1>
+  <div class="grid c2">
+    <div class="panel"><h2>Posting</h2><div class="body">
+      <div class="row"><span class="chip ok">match 88</span><span class="chip">CDI</span><span class="chip">junior 1–3</span><span class="chip">Bac +2</span></div>
+      <table style="margin-top:8px">
+        <tr><td class="muted">source</td><td>rekrute.com</td><td class="muted">posted</td><td>today</td></tr>
+        <tr><td class="muted">sector</td><td>automobile</td><td class="muted">salary</td><td>not stated</td></tr>
+      </table>
+      <div class="muted" style="margin-top:8px">Fit: title strong · city exact · seniority exact · sector adjacent</div>
+      <div style="margin-top:8px">Letter v3 · 182 words · 3 claims, each traced to a resume line.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" data-act="Approve">Approve</button>
+        <button class="btn" data-act="Tailor again">Tailor again</button>
+        <button class="btn" data-act="Skip">Skip</button>
+        <button class="btn" data-act="Open the real posting">Source</button></div>
+    </div></div>
+    <div class="panel"><h2>What the employer sees</h2><div class="body">
+      <div class="shot">resume v3 + letter · 1 page pdf</div>
+      <table>
+        <tr><td class="muted">name</td><td>Yassine M.</td></tr>
+        <tr><td class="muted">email</td><td>yassine.m@…</td></tr>
+        <tr><td class="muted">phone</td><td>+212 6•• ••• •••</td></tr>
+        <tr><td class="muted">salary expectation</td><td class="muted">left blank</td></tr>
+        <tr><td class="muted">files</td><td>resume-v3.pdf · letter-auto-hall.pdf</td></tr>
+      </table>
+      <div class="row" style="margin-top:8px"><span class="chip">FR</span><span class="chip">EN</span>
+        <span class="muted" style="margin-left:auto">prefill only — you press submit</span></div>
+    </div></div>
+  </div>`,
+settings: () => `
+  <h1>Settings <span>· all of it editable, none of it silent</span></h1>
+  <div class="grid c2">
+    <div class="panel"><h2>Models</h2><div class="body">
+      <table><tr><td class="muted">OpenRouter key</td><td>sk-or-••••7c</td><td><span class="chip ok">valid</span></td></tr>
+      <tr><td class="muted">primary</td><td>claude-haiku</td><td class="muted">$0.0004 / job</td></tr>
+      <tr><td class="muted">fallback</td><td>none</td><td><button class="btn" data-act="Add fallback">Add</button></td></tr></table>
+    </div></div>
+    <div class="panel"><h2>Schedule</h2><div class="body">
+      <table><tr><td class="muted">scan window</td><td>08:00 – 20:00</td></tr>
+      <tr><td class="muted">send hours</td><td>09:00 – 18:00 Africa/Casablanca</td></tr>
+      <tr><td class="muted">pacing</td><td>2.4s between actions</td></tr>
+      <tr><td class="muted">per run</td><td>10 listings</td></tr></table>
+    </div></div>
+    <div class="panel"><h2>Language &amp; host</h2><div class="body">
+      <table><tr><td class="muted">interface</td><td>English</td></tr>
+      <tr><td class="muted">letters</td><td>French</td></tr>
+      <tr><td class="muted">run on</td><td>VPS <span class="chip warn">restart to move</span></td></tr></table>
+    </div></div>
+    <div class="panel"><h2>Notifications</h2><div class="body">
+      <table><tr><td class="muted">push</td><td>walls + approvals</td></tr>
+      <tr><td class="muted">quiet hours</td><td>22:00 – 07:00</td></tr>
+      <tr><td class="muted">devices</td><td>1</td></tr></table>
+      <div class="row" style="margin-top:8px"><button class="btn primary" data-act="Save settings">Save</button>
+        <button class="btn" data-act="Discard changes">Discard</button></div>
+    </div></div>
+  </div>`,
 }, render(id){ return shell(id, this.screens[id]()); } };
 </script>
 <script src="../../shared/app.js"></script>

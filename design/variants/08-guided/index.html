@@ -20,7 +20,7 @@
   .mark span{color:var(--teal)}
   .where{margin-left:auto;font-size:13px;color:var(--dim)}
   .where b{color:var(--ink)}
-  .ticks{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:repeat(12,1fr);gap:4px;padding:0 24px 10px}
+  .ticks{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:repeat(14,1fr);gap:4px;padding:0 24px 10px}
   .ticks a{height:4px;background:#e5e7eb;border-radius:2px;display:block}
   .ticks a.done{background:#9ed3ca}
   .ticks a.is-active{background:var(--teal)}
@@ -107,9 +107,9 @@
 <script src="../../shared/data.js"></script>
 <script>
 const D = window.JOBPILOT;
-const order = [['dashboard','Today'],['jobs','Listings'],['triage','Approve'],['verification','Verification'],
+const order = [['dashboard','Today'],['jobs','Listings'],['job','The job'],['triage','Approve'],['verification','Verification'],
   ['doctor','Health'],['logs','Activity'],['scope','Sites'],['agent','Browser'],
-  ['credentials','Passwords'],['data','Backup'],['onboarding','Setup'],['pwa','Phone']];
+  ['credentials','Passwords'],['data','Backup'],['onboarding','Setup'],['pwa','Phone'],['settings','Settings']];
 
 const shell = (id, inner, opts={}) => {
   const i = order.findIndex(([k])=>k===id);
@@ -117,7 +117,7 @@ const shell = (id, inner, opts={}) => {
   return `
 <header class="top">
   <div class="in"><div class="mark">job<span>Pilot</span></div>
-    <div class="where">${D.user.name} · ${D.hosts[1].id} synced · step <b>${i+1}</b> of 12 · <b>${label}</b></div></div>
+    <div class="where">${D.user.name} · ${D.hosts[1].id} synced · step <b>${i+1}</b> of ${order.length} · <b>${label}</b></div></div>
   <div class="ticks">${order.map(([sk],j)=>`<a href="#${sk}" data-go="${sk}" class="${j<i?'done':''}"></a>`).join('')}</div>
 </header>
 <main>${inner}</main>
@@ -147,9 +147,9 @@ jobs: () => `<div class="narrow">
   <div class="stepno">Step 2 · listings</div>
   <h1>Six listings are in play.</h1>
   <p class="lede">Two were dropped automatically. Keep them out, or bring them back one by one.</p>
-  ${D.jobs.filter(j=>j.signal!=='low').slice(0,5).map(j=>`<div class="choice"><div class="ic">${j.signal==='high'?'✓':'~'}</div>
+  ${D.jobs.filter(j=>j.signal!=='low').slice(0,5).map(j=>`<a class="choice" style="color:inherit" href="#job" data-go="job"><div class="ic">${j.signal==='high'?'✓':'~'}</div>
     <div><div class="t">${j.title}</div><div class="d">${j.company ?? 'employer not named'} · ${j.city} · ${j.source}${j.salary?` · ${j.salary}`:''}</div></div>
-    <div class="go">›</div></div>`).join('')}
+    <div class="go">›</div></a>`).join('')}
   <h2>Dropped as noise</h2>
   <div class="grid2">
     <div class="card"><h3>(no title)</h3><p>marocannonces · a banner advertisement, not a job</p>
@@ -160,7 +160,7 @@ jobs: () => `<div class="narrow">
 </div>`,
 
 triage: () => `<div class="narrow">
-  <div class="stepno">Step 3 · approval · 1 of 5</div>
+  <div class="stepno">Step 4 · approval · 1 of 5</div>
   <h1>Conseiller de service</h1>
   <p class="lede">Auto Hall, Casablanca. CDI, junior, automobile sector. Match 88 of 100.</p>
   <div class="kv">
@@ -176,7 +176,7 @@ triage: () => `<div class="narrow">
 </div>`,
 
 verification: () => `<div class="narrow">
-  <div class="stepno">Step 4 · verification</div>
+  <div class="stepno">Step 5 · verification</div>
   <h1>The agent is stuck on a security check.</h1>
   <p class="lede">rekrute.com asked for a human check at 14:04 on the VPS. Everything stopped. It will not guess, retry, or move on.</p>
   <div class="shot">screenshot of the paused tab · one-time values redacted</div>
@@ -195,7 +195,7 @@ verification: () => `<div class="narrow">
 </div>`,
 
 doctor: () => `<div class="narrow">
-  <div class="stepno">Step 5 · health</div>
+  <div class="stepno">Step 6 · health</div>
   <h1>Eleven checks pass. Two are worth fixing.</h1>
   <p class="lede">Neither stops a run today, and neither is hidden. If you run anyway, both failures are written to the log.</p>
   <div class="row" style="gap:26px;margin-bottom:22px">
@@ -210,7 +210,7 @@ doctor: () => `<div class="narrow">
 </div>`,
 
 logs: () => `<div class="narrow">
-  <div class="stepno">Step 6 · activity</div>
+  <div class="stepno">Step 7 · activity</div>
   <h1>What happened, in order.</h1>
   <p class="lede">One run, ten events. Secrets and codes are removed before anything is written here.</p>
   <div class="timeline">
@@ -225,7 +225,7 @@ logs: () => `<div class="narrow">
 </div>`,
 
 scope: () => `<div class="narrow">
-  <div class="stepno">Step 7 · where to look</div>
+  <div class="stepno">Step 8 · where to look</div>
   <h1>Six sites, three places.</h1>
   <p class="lede">You chose these at setup. Change them any time — the agent never goes outside this list.</p>
   ${D.sites.map(s=>`<div class="choice"><div class="ic">${s.mode==='api'?'{}':s.mode==='paste'?'⌘':'◈'}</div>
@@ -241,7 +241,7 @@ scope: () => `<div class="narrow">
 </div>`,
 
 agent: () => `<div class="narrow">
-  <div class="stepno">Step 8 · browser</div>
+  <div class="stepno">Step 9 · browser</div>
   <h1>Which browser should drive?</h1>
   <p class="lede">A dedicated profile, never your everyday browser. Brave is detected on this machine.</p>
   <div class="grid2" style="margin-bottom:20px">
@@ -263,7 +263,7 @@ agent: () => `<div class="narrow">
 </div>`,
 
 credentials: () => `<div class="narrow">
-  <div class="stepno">Step 9 · passwords</div>
+  <div class="stepno">Step 10 · passwords</div>
   <h1>Four sign-ins, stored on this machine.</h1>
   <p class="lede">Encrypted with your passphrase. Values are used only to fill a form, and never appear in a prompt or a log.</p>
   ${D.credentials.map(c=>`<div class="choice"><div class="ic">${c.site.startsWith('gmail')?'@':'⌘'}</div>
@@ -280,7 +280,7 @@ credentials: () => `<div class="narrow">
 </div>`,
 
 data: () => `<div class="narrow">
-  <div class="stepno">Step 10 · backup</div>
+  <div class="stepno">Step 11 · backup</div>
   <h1>Two machines disagree about one thing.</h1>
   <p class="lede">Both changed the send hours while offline. Because it decides when the agent may act, it will not resolve itself.</p>
   <div class="grid2" style="margin-bottom:18px">
@@ -299,7 +299,7 @@ data: () => `<div class="narrow">
 </div>`,
 
 onboarding: () => `<div class="narrow">
-  <div class="stepno">Step 11 · setup · 3 of 5 done</div>
+  <div class="stepno">Step 12 · setup · 3 of 5 done</div>
   <h1>Two minutes left.</h1>
   <p class="lede">Everything here can be changed later, without starting over.</p>
   ${[['OpenRouter key','Valid · claude-haiku · 412 credits',true],
@@ -315,7 +315,7 @@ onboarding: () => `<div class="narrow">
 </div>`,
 
 pwa: () => `<div class="narrow">
-  <div class="stepno">Step 12 · phone</div>
+  <div class="stepno">Step 13 · phone</div>
   <h1>Two jobs for the phone.</h1>
   <p class="lede">Unblock the agent, and approve or skip a letter. Everything else is better on a bigger screen.</p>
   <div class="phone"><div class="scr">
@@ -333,6 +333,39 @@ pwa: () => `<div class="narrow">
         <button data-act="Skip">Skip</button></div></div>
     <div class="tabs"><div class="on">Queue</div><div>Jobs</div><div>Health</div><div>Run</div></div>
   </div></div>
+</div>`,
+job: () => `<div class="narrow">
+  <div class="stepno">The job · before you approve</div>
+  <h1>Conseiller de service</h1>
+  <p class="lede">Auto Hall, Casablanca. CDI, junior, match 88. Posted today on rekrute.com.</p>
+  <div class="kv">
+    <div><span>Why it fits</span><b>Title, city and seniority match exactly; the sector is adjacent</b></div>
+    <div><span>What is honest</span><b>182 words, every claim traced to a line in your resume</b></div>
+    <div><span>What is missing</span><b>No salary — the message field asks for the range</b></div>
+    <div><span>What is sent</span><b>A one-page PDF and that letter. Nothing else.</b></div>
+  </div>
+  <h2>What the employer sees</h2>
+  <div class="shot">resume v3 + letter · page 1 of 1</div>
+  <div class="grid2" style="margin-bottom:18px">
+    <div class="card"><h3>Files</h3><p>resume-v3.pdf, letter-auto-hall.pdf</p></div>
+    <div class="card"><h3>Fields</h3><p>Name, email and phone filled. Salary left blank on purpose.</p></div>
+  </div>
+  <div class="row"><button class="primary" data-act="Approve">Approve this one</button>
+    <button data-act="Tailor again">Tailor again</button><button data-act="Skip">Skip</button>
+    <button class="ghost" data-act="Open the real form">Open the form</button></div>
+  <p class="lede" style="font-size:14px;margin-top:20px">Prefill only. You press submit in the real form, every time.</p>
+</div>`,
+settings: () => `<div class="narrow">
+  <div class="stepno">Settings</div>
+  <h1>Five things you can change.</h1>
+  <p class="lede">Everything here is visible, editable, and takes effect without redoing setup.</p>
+  ${choice('{}','Model','claude-haiku via OpenRouter · key valid · no fallback')}
+  ${choice('⏱','Schedule','scan 08:00–20:00 · send 09:00–18:00 Casablanca · 2.4 s pacing')}
+  ${choice('A','Language','interface English · letters French, the language of the posting')}
+  ${choice('▣','Run host','VPS · moving to the PC needs a restart and a sync first')}
+  ${choice('!','Notifications','walls and approvals · quiet 22:00–07:00')}
+  <div class="row" style="margin-top:18px"><button class="primary" data-act="Save settings">Save</button>
+    <button data-act="Discard changes">Discard</button></div>
 </div>`,
 }, render(id){ return shell(id, this.screens[id]()); } };
 </script>
