@@ -65,14 +65,14 @@
 - `DESIGN-DECISION.md`: chosen direction, tokens (color/type/spacing), navigation model, accessibility notes.
 - Component inventory mapped to PRD screens.
 
-**Status: BUILT 2026-10-22 — awaiting user review.** Ten directions in `design/` (gallery at `design/index.html`), shared real fixtures, screenshots in `design/shots/`, decision record in `DESIGN-DECISION.md` (comparison matrix, recommended hybrid, tokens, 15-screen component inventory). All 15 PRD §7 screens are drawn in every direction (14 screens each; job detail and employer preview share one), and all 140 variant/screen pairs pass `node design/check.js`.
+**Status: CHOSEN 2026-10-22 — 01 Command Deck, by the product owner.** Ten directions in `design/` (gallery at `design/index.html`, 01 marked chosen), shared real fixtures, screenshots in `design/shots/`, decision record in `DESIGN-DECISION.md` (frozen tokens, component inventory, comparison matrix kept for the record). All 15 PRD §7 screens are drawn in every direction (14 screens each; job detail and employer preview share one), plus screen 16 **Profile / my data** in 01; all 141 variant/screen pairs pass `node design/check.js`.
 
 **Exit criteria**
-- [ ] 10 variants genuinely distinct (review checklist).
-- [ ] User sign-off recorded in `DESIGN-DECISION.md`.
-- [ ] Tokens + components cover 100% of PRD §7 screens.
+- [x] 10 variants genuinely distinct (review checklist).
+- [x] User sign-off recorded in `DESIGN-DECISION.md` §8.
+- [x] Tokens + components cover 100% of PRD §7 screens (+16).
 
-**Risks:** design churn → freeze scope at PRD screens; no new screens without a PRD change.
+**Risks:** design churn → scope frozen; no new screens without a PRD change. The phone layout is the open question: 01 at 390 px works but is untested with real data, and 06 Soft Stack stays the documented fallback for the PWA only.
 
 ---
 

@@ -263,6 +263,7 @@ Priority: **P0** = v1 must; **P1** = v1 should; **P2** = effort permitting. Ever
 13. **Agent setup** — browser choice, Forgetful-OFF gate, cookie import guide.
 14. **Onboarding wizard** — 5-minute path with defaults.
 15. **PWA mirror** — approvals, verification/OTP, pills, run trigger, scope edit.
+16. **Profile / my data** — identity (name, email, phone, city, links), target roles and contract preferences, resume file plus the facts parsed from it, and the resume version history. Every letter and every filled form is generated from these fields, so they are editable at any time; a change is an event, never an overwrite. *(Added 2026-10-22 at the product owner's request; drawn in the chosen direction only.)*
 
 Required UX behaviors:
 - Every long-running action shows progress + host + current site.

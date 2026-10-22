@@ -19,6 +19,8 @@
   a.card{display:block;text-decoration:none;color:inherit;background:var(--card);
     border:1px solid var(--line);padding:16px 18px 14px;transition:transform .12s,border-color .12s}
   a.card:hover{transform:translateY(-2px);border-color:#b9bfcb}
+  a.card.picked{border-color:#1a73e8;box-shadow:0 0 0 1px #1a73e8}
+  a.card.picked .n{color:#1a73e8;font-weight:600}
   .n{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--dim)}
   a.card h2{margin:2px 0 4px;font-size:18px;letter-spacing:-.01em}
   a.card p{margin:0 0 12px;color:var(--dim);font-size:13.5px;min-height:3.1em}
@@ -35,11 +37,12 @@
 <header>
   <h1>jobPilot — ten design directions</h1>
   <p class="sub">Same product, same real job records from the W0 scrape, ten different answers.
-  Every direction is a clickable mockup with all fourteen P0 screens. Nothing here is product code:
+  Every direction is a clickable mockup with all fourteen P0 screens; 01, the chosen direction,
+  adds a fifteenth: Profile. Nothing else here is product code:
   the chosen direction gets rebuilt properly in P1.</p>
   <div class="rules">
-    <span><b>P0 gate</b> — pick one, or mix parts</span>
-    <span><b>14 screens each</b> — dashboard, jobs, job detail, triage, verification, doctor, logs, scope, agent setup, credentials, data, onboarding, PWA, settings</span>
+    <span><b>Chosen: 01 Command Deck</b> — 2026-10-22</span>
+    <span><b>14 screens each</b> — dashboard, jobs, job detail, triage, verification, doctor, logs, scope, agent setup, credentials, data, onboarding, PWA, settings; 01 also has profile</span>
     <span><b>PC + PWA</b> — resize to 390px wide to see the phone layout</span>
   </div>
 </header>
@@ -67,7 +70,9 @@
     <code>#pwa</code> or <code>#settings</code> to its address.
     In the mockups, <code>#job</code> opens from any listing and <code>#settings</code> from the nav
     (or from the Browser screen where the nav model has no room for it).
-    Resize the window to 390px to see the phone layout. Buttons only raise a “not wired in P0” notice.
+    The chosen direction also has <a href="variants/01-command-deck/index.html#profile"><code>#profile</code></a> —
+    name, target roles and resume can be typed there and save in your browser.
+    Resize the window to 390px to see the phone layout. Everything else only raises a “not wired in P0” notice.
     The comparison, recommendation, tokens and component inventory live in
     <a href="DESIGN-DECISION.md"><code>DESIGN-DECISION.md</code></a>.
   </p>
@@ -78,7 +83,7 @@ const variants = [
   ['02-le-dossier','Le Dossier','Print-editorial. Reads like a personnel file: serif column, margin notes, one job per page-turn, everything documented.','section sidebar + running head','comfortable',['#f2f3ef','#16180f','#1e3a5f','#b23a2e']],
   ['03-pipeline','Pipeline','The state machine is the interface. Columns are DISCOVERED → TAILORED → REVIEWED → AWAITING_APPROVAL; you move work, not records.','stage bar with counts','medium',['#ffffff','#0f172a','#e2e8f0','#7c3aed']],
   ['04-ops-terminal','Ops Terminal','Amber phosphor console for the 3am question: what is the agent doing and what just broke. Log stream is the home screen.','function-key bar','very dense',['#171512','#ffb000','#8a8578','#e5484d']],
-  ['05-swiss-ledger','Swiss Ledger','Grid, rules and big numerals. Information design as the aesthetic; zero decoration, zero radius, one red accent.','numbered top sections + 12-col grid','dense',['#ffffff','#000000','#d7263d','#767676']],
+  ['05-swiss-ledger','Swiss Ledger','Grid, rules and big numerals. Information design as the aesthetic; zero decoration, zero radius, one red accent.','numbered sections, 7 per row','dense',['#ffffff','#000000','#d7263d','#767676']],
   ['06-soft-stack','Soft Stack','Phone-first cards with room to breathe. Built for one-thumb approval on Android, scales up to a calm desktop.','bottom tabs (mobile) / pill row','airy',['#f7f7fa','#23252b','#6c63ff','#2fbf71']],
   ['07-split-inspector','Split Inspector','Master-detail workbench. List stays put on the left, inspector on the right, status bar at the bottom. Nothing moves.','list pane + inspector + status bar','very dense',['#fafafa','#1f2328','#dddddd','#1a73e8']],
   ['08-guided','Guided','One decision per screen, large type, explicit progress. Ideal for the 5-minute onboarding and for OTP moments under stress.','stepper','airy',['#ffffff','#111827','#0f766e','#e5e7eb']],
@@ -86,8 +91,8 @@ const variants = [
   ['10-sheet','Sheet','Spreadsheet honesty. Ruled rows, sortable columns, sticky totals — for people who want to see every field and edit inline.','workbook tab strip','very dense',['#ffffff','#1f2328','#d0d7de','#0550ae']],
 ];
 document.getElementById('grid').innerHTML = variants.map(([slug,name,thesis,nav,density,colors]) => `
-  <a class="card" href="variants/${slug}/index.html">
-    <div class="n">${slug.slice(0,2)}</div>
+  <a class="card${slug === '01-command-deck' ? ' picked' : ''}" href="variants/${slug}/index.html">
+    <div class="n">${slug.slice(0,2)}${slug === '01-command-deck' ? ' · chosen' : ''}</div>
     <h2>${name}</h2>
     <p>${thesis}</p>
     <div class="swatches">${colors.map(c=>`<i style="background:${c}"></i>`).join('')}</div>

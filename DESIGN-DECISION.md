@@ -7,16 +7,16 @@
 
 ## 1. What was built
 
-Ten clickable mockups, each covering the **fourteen** drawing units that cover all fifteen P0 screens (PRD #3 job detail and #5 employer preview are one screen) with its own layout, navigation model, density and visual language. All ten render the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
+Ten clickable mockups, each covering the **fourteen** drawing units that cover all fifteen P0 screens (PRD #3 job detail and #5 employer preview are one screen) with its own layout, navigation model, density and visual language. **01 Command Deck is the chosen direction** and carries the extra screen 16 (Profile). All ten render the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
 
 Open `design/index.html` in a browser, or a single direction directly:
 
 ```
-design/variants/07-split-inspector/index.html
+design/variants/01-command-deck/index.html
 ```
 
-Screens are hash routes: `#dashboard #jobs #triage #verification #doctor #logs #scope #agent #credentials #data #onboarding #pwa`.
-Every screen works at 390 px. Buttons are deliberately inert — they raise a "not wired in P0" toast — so nothing here pretends to be product code. P1 rebuilds the chosen direction properly.
+Screens are hash routes: `#dashboard #jobs #job #triage #verification #doctor #logs #scope #agent #profile #credentials #data #onboarding #pwa #settings`.
+Every screen works at 390 px. Buttons are deliberately inert — they raise a "not wired in P0" toast — except the Profile form, which saves locally. P1 rebuilds the chosen direction properly.
 
 Screenshots: `design/shots/<variant>-<screen>.png` and `<variant>-mobile.png` (regenerate with `node design/shoot.js`).
 
@@ -52,41 +52,38 @@ Screenshots: `design/shots/<variant>-<screen>.png` and `<variant>-mobile.png` (r
 
 ---
 
-## 3. Recommendation
+## 3. Decision
 
-**Primary: 07 Split Inspector.** Reasons: the product's core loop is *scan → inspect → approve*, which is exactly list + detail side by side; a power user on a PC will have 20–60 live records, and only 07 lets you compare without losing your place; the persistent status bar carries the run/host/trust information the PRD demands on every screen; and its component vocabulary (rows, panels, status pills) is the cheapest to implement in P1.
+**Chosen: 01 Command Deck** — product owner, 2026-10-22. Keyboard-first operator console: ⌘K palette, icon rail, dense tables, monospace throughout. It wins because the product is an operator tool used in short bursts on a PC, and 01 makes every screen reachable from the keyboard without a new layout per task. The profile editor was then added in the same language (§5, screen 16).
 
-**Mobile: 06 Soft Stack**, used only for the PWA mirror. 07 at 390 px degrades exactly where it matters least (the phone is for approvals and unblocking), while 06's card stack and bottom tabs are built for that.
+**Not taken:** the earlier hybrid recommendation (07 + 09 + 06) — kept below for the record. If the phone proves cramped once real data lands, 06's card stack is the fallback for the PWA only.
 
-**Monitoring flavour: 09 Nightwatch**, borrowed as a *treatment*, not a layout — big tabular numerals, a pulse on the live run, and the blocked banner at the top of the dashboard. It answers "is the VPS healthy" faster than any table.
-
-**Proposed hybrid:** 07's structure and density + 09's status numerals and blocked banner + 06's phone screens. Everything else (sidebar nav, kanban, stepper) is dropped.
-
-If you prefer a single direction unmodified, say so and I will build exactly that.
+**Recorded recommendation (superseded):** 07's structure and density + 09's status numerals and blocked banner + 06's phone screens.
 
 ---
 
-## 4. Design tokens (provisional, for the 07 + 09 + 06 hybrid)
+## 4. Design tokens — frozen for 01 Command Deck
 
-Filled in P1 once the direction is signed; names are the contract, values are the starting point.
+P1 builds these. Names are the contract; values can still be nudged for contrast, but not for taste.
 
 | Token | Value | Use |
 |---|---|---|
-| `--surface` | `#fafafa` | app background (desktop) |
-| `--panel` | `#ffffff` | rows, panels, cards |
-| `--ink` | `#1f2328` | primary text |
-| `--muted` | `#656d76` | secondary text, metadata |
-| `--line` | `#d8dee4` | borders, table rules |
-| `--accent` | `#1a73e8` | primary action, selection, links |
-| `--ok` | `#1a7f37` | pass, synced, ready |
-| `--warn` | `#9a6700` | needs-you, warnings, conflicts |
-| `--danger` | `#cf222e` | frozen, blocked, destructive |
-| `--radius` | `4px` (desktop) / `16px` (phone cards) | panel corners |
-| `--space-1…6` | `4 8 12 16 24 32` | layout scale |
-| `--text-xs…xl` | `11 12 14 16 22` | type scale |
-| `--row-h` | `26px` | dense table row |
-| `--mono` | `ui-monospace, Menlo` | ids, hashes, timestamps, figures |
-| `--status-dark` | `#0e1116 / #58a6ff` | Nightwatch dashboard surface |
+| `--bg` | `#15171a` | app background |
+| `--panel` | `#1c1f24` | panels, tables |
+| `--panel-2` | `#22262c` | raised rows, active control |
+| `--ink` | `#e8eaed` | primary text |
+| `--dim` | `#8b93a1` | secondary text, labels, metadata |
+| `--line` | `#2b3037` | borders, table rules |
+| `--accent` | `#7aa2f7` | focus, selection, primary action |
+| `--ok` | `#9ece6a` | pass, synced, ready |
+| `--warn` | `#e0af68` | needs-you, warnings, conflicts, unsaved |
+| `--bad` | `#f7768e` | frozen, blocked, destructive |
+| `--radius` | `3px` (panels, inputs) / `4px` (panels) | corners; no pills except status chips |
+| `--space-1…5` | `4 8 10 14 16` | layout scale |
+| `--text-xs…lg` | `11 12 13 15` | type scale; headings 15 px, KPI 26 px |
+| `--row-h` | `26px` | dense table row (10 px cell padding) |
+| `--mono` | `ui-monospace, "SF Mono", Menlo` | everything |
+| `--font-ui` | same mono stack | intentional: no second family |
 
 Hard rules carried into P1, from the PRD: colour is never the only signal (every pill carries a word); every long-running action names its host and current site; destructive actions require typing or an explicit second click; secrets never render in mockups, logs or prompts.
 
@@ -113,9 +110,11 @@ Drawn in all ten directions unless stated.
 | 13 Agent setup | BrowserChoice (Brave/Chrome), ProfilePath, SessionSurvivalChecklist (cookies / history / restore), Recheck, SignedOutList, RiskNote | all ten |
 | 14 Onboarding | Stepper, SetupStepCard, ProgressBar, DefaultsNote (editable later), RiskAcknowledgement, FirstRunCTA | all ten |
 | 15 PWA mirror | PhoneFrame, BottomTabs, CompactApprovalCard, FreezeCard, OTPEntry, TrustPill, PushTest | all ten |
+| 16 Profile / my data | ProfileForm (identity, links), RoleChips (add/remove), TargetSelects, ResumeDrop, ParsedFactTable, VersionTable, SaveBar (save / revert / export JSON / reset) | **01 only** — added after sign-off, at the product owner's request |
 
-**Coverage:** 15 of 15 PRD §7 screens drawn, in 14 screens per direction (job detail and employer preview are one screen). All 140 variant/screen pairs render without a JS error (`node design/check.js`).
+**Coverage:** all 15 PRD §7 screens, in 14 screens per direction (job detail and employer preview are one screen), plus **screen 16 Profile** drawn in 01 at the owner's request. All 141 variant/screen pairs render without a JS error (`node design/check.js`).
 `job` is reached from a listing row; `settings` from the nav, or from the Browser screen in 04 and 05 where the fixed F-key / numbered-section model has no spare slot. That is an IA decision, not a gap: a detail view is a drill-down, and 04's twelve function keys are the point of 04.
+`profile` is the only screen with behaviour: edits save to `localStorage` (this browser), Export downloads the JSON, Reset clears it. In P1 the same shape writes to the event log and the resume file is parsed server-side.
 
 ---
 
@@ -143,6 +142,7 @@ Drawn in all ten directions unless stated.
 - Trust score 76 comes from the real headless host; on your x86 PC with Mesa the same screen will show a different number.
 - The Brave "Forgetful Browsing" copy is the corrected version: three real preferences (`cookies_on_exit`, `browsing_history_on_exit`, `restore_on_startup`), not a toggle that does not exist. An ADR is owed at P1.
 - No dark/light twin: each direction commits to one. 07 and 09 are the natural pair if you want both.
+- 01's Profile form is the one screen that does something: values persist in `localStorage` for that browser and origin. It is not a database, it does not sync, and it will be replaced by the event log in P1 without changing the field names.
 
 ---
 
@@ -151,15 +151,18 @@ Drawn in all ten directions unless stated.
 Fill this in (or reply in chat with the same information):
 
 ```
-Chosen direction: ................................................  (07 recommended)
+Chosen direction: 01 Command Deck ........................................  (2026-10-22)
 
-Mix:               primary ............  + status from ............  + phone from ............
+Mix:               none. 01 as-is; phone layout to be revisited with real data
+                   (06 Soft Stack stays the fallback for the PWA only).
 
-Keep:              ..............................................................................
+Keep:              ⌘K palette, icon rail, dense tables, monospace, dark surface,
+                   status chips that always carry a word.
 
-Change:            ..............................................................................
+Change:            Profile / my data added as screen 16 — identity, target roles,
+                   resume file, parsed facts. Live locally in the mockup.
 
-Signed:            ............................................   Date: ......................
+Signed:            product owner (chat)   Date: 2026-10-22
 ```
 
 Once signed: tokens above are frozen, the component inventory becomes the P1 build order, and no new screens are added without a PRD change.

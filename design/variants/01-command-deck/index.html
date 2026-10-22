@@ -90,6 +90,23 @@
   .tabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);text-align:center;font-size:10px;color:var(--dim)}
   .tabs div{padding:8px 0}
   .tabs .on{color:var(--accent)}
+  .field{display:grid;gap:3px}
+  .field label{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+  .field input,.field select,.field textarea{background:#0e1013;border:1px solid #3a4048;color:var(--ink);
+    padding:6px 8px;border-radius:3px;font:12.5px/1.45 var(--mono);width:100%;letter-spacing:normal;resize:vertical}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px #1d2b45}
+  .f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .chip.acc b{cursor:pointer;margin-left:5px;color:var(--dim);font-weight:400}
+  .chip.acc b:hover{color:var(--bad)}
+  .chipin{background:#0e1013;border:1px dashed #3a4048;color:var(--ink);border-radius:3px;
+    padding:2px 6px;font:11px var(--mono);width:160px}
+  .chipin:focus{outline:none;border-color:var(--accent)}
+  .drop{display:block;border:1px dashed #3a4048;border-radius:3px;background:#0b0d10;padding:14px 10px;
+    text-align:center;color:var(--dim);cursor:pointer}
+  .drop:hover{border-color:var(--accent);color:var(--ink)}
+  .dirty{color:var(--warn)}
+  .savebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
   .mock-toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#232a33;
     border:1px solid #3b4450;color:#dfe4ec;padding:8px 12px;border-radius:4px;font:12px var(--mono);z-index:99}
   @media (max-width:760px){
@@ -103,6 +120,8 @@
   }
   @media (max-width:560px){
     .c4,.c3,.c2{grid-template-columns:1fr}
+    .f2{grid-template-columns:1fr}
+    .savebar .muted{margin-left:0;width:100%}
     .log{grid-template-columns:58px 46px 1fr;row-gap:2px}
     .log > span:nth-child(3){display:none}
   }
@@ -111,7 +130,7 @@
 <script>
 const D = window.JOBPILOT;
 const host = (h) => `<span class="host"><i class="g ${h.state === 'green' ? '' : h.state === 'yellow' ? 'y' : 'r'}"></i><b>${h.id}</b> ${h.label}</span>`;
-const navItems = [['dashboard','▚','Overview'],['jobs','≡','Jobs'],['job','▤','Job'],['triage','✓','Triage'],['verification','!','Verify'],['doctor','+','Doctor'],['logs','»','Logs'],['scope','◎','Scope'],['agent','◈','Browser'],['credentials','⌘','Vault'],['data','⇄','Data'],['onboarding','↦','Setup'],['pwa','▭','Phone'],['settings','⚙','Settings']];
+const navItems = [['dashboard','▚','Overview'],['jobs','≡','Jobs'],['job','▤','Job'],['triage','✓','Triage'],['verification','!','Verify'],['doctor','+','Doctor'],['logs','»','Logs'],['scope','◎','Scope'],['agent','◈','Browser'],['profile','◉','Profile'],['credentials','⌘','Vault'],['data','⇄','Data'],['onboarding','↦','Setup'],['pwa','▭','Phone'],['settings','⚙','Settings']];
 const shell = (id, inner) => `
 <div class="app">
   <nav class="rail" aria-label="sections">
@@ -127,6 +146,94 @@ const shell = (id, inner) => `
     <div class="wrap">${inner}</div>
   </div>
 </div>`;
+
+/* ---- profile data -------------------------------------------------------
+   P0 keeps it in this browser so the form is actually usable. P1 replaces
+   localStorage with the event log; the shape stays the same.              */
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const P_DEFAULTS = {
+  name: 'Yassine M.', headline: 'Service advisor · 2 years',
+  email: 'yassine.m@example.com', phone: '+212 6 12 34 56 78',
+  city: 'Casablanca', country: 'Morocco',
+  links: 'linkedin.com/in/yassine-m',
+  titles: ['Conseiller de service', 'Business développeur'],
+  contract: 'CDI', seniority: 'Junior, 1–3 years',
+  salary: '', remote: 'Hybrid ok',
+  languages: 'French, English, Arabic',
+  resumeFile: 'resume-v4.pdf', resumeSize: '184 KB',
+};
+const pLoad = () => {
+  try { return { ...P_DEFAULTS, ...JSON.parse(localStorage.getItem('jobpilot.profile') || '{}') }; }
+  catch { return { ...P_DEFAULTS }; }
+};
+window.P = pLoad();
+const P = window.P;
+let pDirty = false;
+
+const flash = (msg) => {
+  document.querySelectorAll('.mock-toast').forEach((n) => n.remove());
+  const el = document.createElement('div');
+  el.className = 'mock-toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1800);
+};
+const markDirty = () => {
+  pDirty = true;
+  const n = document.getElementById('save-state');
+  if (n) { n.textContent = 'unsaved changes'; n.className = 'muted dirty'; }
+};
+const field = (k, label, val, ph = '') => `<div class="field"><label for="p-${k}">${label}</label>
+  <input id="p-${k}" type="text" value="${esc(val)}" placeholder="${esc(ph)}" oninput="setField('${k}',this.value)"></div>`;
+const area = (k, label, val) => `<div class="field"><label for="p-${k}">${label}</label>
+  <textarea id="p-${k}" rows="2" oninput="setField('${k}',this.value)">${esc(val)}</textarea></div>`;
+const select = (k, label, opts, val) => `<div class="field"><label for="p-${k}">${label}</label>
+  <select id="p-${k}" onchange="setField('${k}',this.value)">${opts.map((o) => `<option${o === val ? ' selected' : ''}>${o}</option>`).join('')}</select></div>`;
+const rolesHtml = () => P.titles.map((t, i) => `<span class="chip acc">${esc(t)}<b onclick="dropRole(${i})" title="remove">×</b></span>`).join('');
+
+window.setField = (k, v) => { P[k] = v; markDirty(); };
+window.saveProfile = () => {
+  try { localStorage.setItem('jobpilot.profile', JSON.stringify(P)); } catch { /* private mode */ }
+  pDirty = false;
+  const n = document.getElementById('save-state');
+  if (n) { n.textContent = 'saved in this browser · P1 writes it to the local database'; n.className = 'muted'; }
+  flash('profile saved');
+};
+window.revertProfile = () => location.reload();
+window.resetProfile = () => {
+  if (!confirm('Reset every field to the starting values?')) return;
+  try { localStorage.removeItem('jobpilot.profile'); } catch { /* ignore */ }
+  location.reload();
+};
+window.exportProfile = () => {
+  const blob = new Blob([JSON.stringify(P, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jobpilot-profile.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+window.addRole = (inp) => {
+  const v = inp.value.trim();
+  if (!v) return;
+  P.titles.push(v);
+  inp.value = '';
+  document.getElementById('roles').innerHTML = rolesHtml();
+  markDirty();
+};
+window.dropRole = (i) => {
+  P.titles.splice(i, 1);
+  document.getElementById('roles').innerHTML = rolesHtml();
+  markDirty();
+};
+window.setResume = (inp) => {
+  const f = inp.files && inp.files[0];
+  if (!f) return;
+  P.resumeFile = f.name;
+  P.resumeSize = `${Math.max(1, Math.round(f.size / 1024))} KB`;
+  document.getElementById('resume-meta').innerHTML = `${esc(P.resumeFile)} · ${esc(P.resumeSize)}`;
+  markDirty();
+};
 
 const kpi = (n, label, tone='') => `<div class="panel"><div class="body"><div class="kpi" style="${tone}">${n}<small>${label}</small></div></div></div>`;
 
@@ -435,6 +542,79 @@ settings: () => `
       <div class="row" style="margin-top:8px"><button class="btn primary" data-act="Save settings">Save</button>
         <button class="btn" data-act="Discard changes">Discard</button></div>
     </div></div>
+  </div>`,
+profile: () => `
+  <h1>Profile <span>· the facts every letter is built from</span></h1>
+  <div class="grid c2">
+    <div class="panel"><h2>Identity</h2><div class="body">
+      <div class="f2">
+        ${field('name','Full name',P.name)}
+        ${field('headline','Current role / headline',P.headline)}
+        ${field('email','Email',P.email)}
+        ${field('phone','Phone',P.phone)}
+        ${field('city','City',P.city)}
+        ${field('country','Country',P.country)}
+      </div>
+      <div style="margin-top:10px">${area('links','Links · one per line',P.links)}</div>
+      <div class="muted" style="font-size:11px;margin-top:8px">Fills forms. Only the facts a letter actually uses reach the model.</div>
+    </div></div>
+    <div class="panel"><h2>What you are looking for</h2><div class="body">
+      <div class="chips" id="roles">${rolesHtml()}</div>
+      <input class="chipin" style="margin-top:6px" placeholder="+ job title" title="Type a title and press Enter"
+        onkeydown="if(event.key==='Enter'){addRole(this);event.preventDefault()}">
+      <div class="f2" style="margin-top:10px">
+        ${select('contract','Contract',['CDI','CDD','Internship','Freelance','Any'],P.contract)}
+        ${select('seniority','Seniority',['Intern','Junior, 1–3 years','Mid, 3–5 years','Senior'],P.seniority)}
+        ${field('salary','Salary expectation · optional',P.salary,'blank skips the field')}
+        ${field('remote','Remote / hybrid',P.remote)}
+      </div>
+      <div style="margin-top:10px">${field('languages','Languages',P.languages)}</div>
+    </div></div>
+  </div>
+
+  <div class="panel" style="margin-top:10px"><h2>Resume</h2><div class="body">
+    <div class="grid c3">
+      <div>
+        <label class="drop" for="resume-file">
+          <div id="resume-meta" style="color:var(--ink)">${esc(P.resumeFile)} · ${esc(P.resumeSize)}</div>
+          <div style="font-size:11px;margin-top:4px">click to replace · PDF or DOCX</div>
+          <input id="resume-file" type="file" accept=".pdf,.doc,.docx" style="display:none" onchange="setResume(this)">
+        </label>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" data-act="Re-parse the resume">Re-parse</button>
+          <button class="btn" data-act="Open the PDF">Open</button>
+          <span class="chip ok">v4 in use</span>
+        </div>
+      </div>
+      <div>
+        <table>
+          <tr><th>Parsed fact</th><th>Value</th></tr>
+          <tr><td class="muted">name</td><td>${esc(P.name)}</td></tr>
+          <tr><td class="muted">email</td><td>${esc(P.email)}</td></tr>
+          <tr><td class="muted">city</td><td>${esc(P.city)}</td></tr>
+          <tr><td class="muted">latest role</td><td>${esc(P.headline)}</td></tr>
+          <tr><td class="muted">languages</td><td>${esc(P.languages)}</td></tr>
+        </table>
+        <div class="muted" style="font-size:11px;margin-top:6px">Re-read on save. Parsing runs on the host, not in this mockup.</div>
+      </div>
+      <div>
+        <table>
+          <tr><th>Version</th><th>When</th><th></th></tr>
+          <tr><td>v4</td><td class="muted">22 Oct</td><td><span class="chip ok">in use</span></td></tr>
+          <tr><td>v3</td><td class="muted">18 Oct</td><td><span class="chip">archive</span></td></tr>
+          <tr><td>v2</td><td class="muted">11 Oct</td><td><span class="chip">archive</span></td></tr>
+        </table>
+        <div class="muted" style="font-size:11px;margin-top:6px">Old versions are kept. Nothing is overwritten in place.</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="savebar">
+    <button class="btn primary" onclick="saveProfile()">Save</button>
+    <button class="btn" onclick="revertProfile()">Revert</button>
+    <button class="btn" onclick="exportProfile()">Export JSON</button>
+    <button class="btn danger" onclick="resetProfile()">Reset</button>
+    <span class="muted" id="save-state" style="margin-left:auto">saved in this browser · P1 writes it to the local database</span>
   </div>`,
 }, render(id){ return shell(id, this.screens[id]()); } };
 </script>
