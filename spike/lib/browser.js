@@ -5,21 +5,35 @@ import { existsSync, mkdirSync, openSync } from 'node:fs';
 import path from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-export const BRAVE =
-  process.env.BRAVE_PATH || '/opt/brave.com/brave/brave-browser';
-export const PROFILE_DIR = path.resolve('spike/profile/brave');
+const BRAVE_CANDIDATES = [
+  process.env.BRAVE_PATH,
+  '/opt/brave-bin/brave',
+  '/usr/bin/brave',
+  '/opt/brave.com/brave/brave-browser',
+].filter(Boolean);
+export const BRAVE = BRAVE_CANDIDATES.find((candidate) => existsSync(candidate)) ?? BRAVE_CANDIDATES[0];
+export const PROFILE_DIR = path.resolve(process.env.SPIKE_PROFILE_DIR || 'spike/profile/brave');
 export const OUT_DIR = path.resolve('spike/out');
-const DEFAULT_PORT = Number(process.env.CDP_PORT || 9222);
+const DEFAULT_PORT = Number(process.env.CDP_PORT || 9333);
 
 export function ensureDisplay(display = process.env.SPIKE_DISPLAY || ':99') {
   if (process.env.DISPLAY) return process.env.DISPLAY;
+  // A Wayland desktop with XWayland already has an X socket; never spawn Xvfb there.
+  if (process.env.WAYLAND_DISPLAY && existsSync('/tmp/.X11-unix/X0')) {
+    process.env.DISPLAY = ':0';
+    return ':0';
+  }
   const sock = `/tmp/.X11-unix/X${display.replace(':', '')}`;
   if (!existsSync(sock)) {
+    if (!existsSync('/usr/bin/Xvfb') && !existsSync('/bin/Xvfb')) {
+      throw new Error('no DISPLAY/WAYLAND_DISPLAY and Xvfb is not installed; run inside a graphical session or install Xvfb');
+    }
     const xvfb = spawn(
       'Xvfb',
       [display, '-screen', '0', '1440x900x24', '-nolisten', 'tcp'],
       { detached: true, stdio: 'ignore' },
     );
+    xvfb.on('error', () => {});
     xvfb.unref();
   }
   process.env.DISPLAY = display;
@@ -39,7 +53,12 @@ export async function launchBrave({ port = DEFAULT_PORT, timeoutMs = 25000, head
   ensureDisplay();
   mkdirSync(OUT_DIR, { recursive: true });
   const existing = await cdpVersion(port);
-  if (existing) return { port, version: existing, proc: null, reused: true };
+  if (existing) {
+    throw new Error(
+      `CDP port ${port} is already in use; refusing to attach to a foreign browser. ` +
+        'Close it or set CDP_PORT to a free port.',
+    );
+  }
 
   mkdirSync(userDataDir, { recursive: true });
   const log = openSync(path.join(OUT_DIR, 'brave.log'), 'a');
@@ -52,6 +71,10 @@ export async function launchBrave({ port = DEFAULT_PORT, timeoutMs = 25000, head
       '--no-default-browser-check',
       '--disable-sync',
       '--disable-translate',
+      '--disable-extensions',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-save-password-bubble',
+      '--password-store=basic',
       '--window-size=1440,900',
       ...(headless ? ['--headless=new'] : []),
       'about:blank',
