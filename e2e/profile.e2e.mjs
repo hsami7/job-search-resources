@@ -84,7 +84,7 @@ try {
   check('first run shows an empty profile', (await fieldValue('#f-name')) === '' && (await page.isDisabled('#save')));
   check('empty resume state is honest', (await page.locator('#resume-current').innerText()).includes('No resume stored yet'));
   check('empty facts show placeholders', (await page.locator('#facts').innerText()).includes('—'));
-  check('health pills loaded', (await page.locator('#db-pill').innerText()).startsWith('db ok') && (await page.locator('#host-pill').innerText()) === 'server1');
+  check('health pills loaded', (await page.locator('#db-pill').innerText()).startsWith('db ok') && (await page.locator('#host-pill').innerText()) === os.hostname());
 
   // ---------- typing like a user ----------
   await page.click('#f-name');
