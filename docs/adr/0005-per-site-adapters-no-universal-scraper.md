@@ -1,6 +1,6 @@
 # ADR-0005 — Per-site adapters + paste-URL; no universal scraper or "full internet" mode
 
-- **Status:** Accepted — superseded in part by [ADR-0018](0018-generic-extraction-and-run-host-setting.md) (generic structured-data extraction added as a third mode; "no universal scraper / no full-internet mode" still stands)
+- **Status:** Accepted — superseded in part by [ADR-0018](0018-generic-extraction-and-site-mode.md) (generic structured-data extraction added as a third mode; "no universal scraper / no full-internet mode" still stands)
 - **Date:** 2026-10-22
 - **Related:** PLAN §3/§3.1, PRD FR-SCP-01/02, FR-DSC-01..05
 

@@ -12,7 +12,8 @@ npm test           # 13 tests: event log, validation, 409 conflict, resume, HTTP
 npm run test:e2e   # 54 user-flow checks in Brave; boots its own server + temp DB
 ```
 
-Requires **Node 22.22+** (`node:sqlite`). No runtime dependencies.
+Requires **Node 26.12.0** (`node:sqlite`; pinned in `.node-version`). The only
+dependency is `playwright-core` for the browser harness.
 
 - **Profile page** (`web/`) in the chosen 01 Command Deck style: identity, target
   roles, contract preferences, resume upload.
@@ -48,18 +49,21 @@ with `JOBPILOT_DATA=/path`, `PORT`, `HOST`.
 - Logs are one-line JSON with method/path/status only — no profile payloads,
   emails or phone numbers.
 
-To use it from another machine:
+The app is designed to run on the user's PC only. There is no remote-host
+deployment, no second data store, and no sync. For the phone, the planned
+transport is Tailscale Serve (tailnet-only) or LAN, with token auth, a Trusted
+Host allowlist, and CSRF protection added **before** any non-loopback bind. Do
+not port-forward it or put it behind a public tunnel.
 
-```bash
-ssh -N -L 4319:127.0.0.1:4319 ubuntu@server1
-# then open http://127.0.0.1:4319
-```
+If the app is ever installed on another machine, stop it, copy `data/` (or use
+Export), and start it there. The old copy is not merged.
 
 ## Not built yet
 
 Resume parsing (the page says so), onboarding, Brave agent, discovery adapters,
-tailoring, approvals, Doctor, Logs, WebSocket status, backups, sync. The P1
-milestone lists them; `docs/adr/` records the decisions taken so far.
+tailoring, approvals, Doctor, Logs, WebSocket status, backups, phone access and
+app authentication. The P1 milestone lists them; `docs/adr/` records the
+decisions taken so far.
 
 ## Design
 

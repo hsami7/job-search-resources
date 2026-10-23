@@ -12,16 +12,18 @@ Format: [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-archi
 | [0006](0006-llm-failover-pause-not-downgrade.md) | Failover pauses the run instead of downgrading mid-batch; Ollama is draft-tier | Accepted |
 | [0007](0007-verification-freeze-and-handoff.md) | Verification walls freeze the agent and hand control to the user | Accepted |
 | [0008](0008-doctor-and-heuristic-trust-score.md) | Doctor environment checks + heuristic browser trust score (non-blocking) | Accepted |
-| [0009](0009-event-sourced-local-first-data.md) | Event-sourced core with local-first SQLite on every host | Accepted |
-| [0010](0010-pc-vps-host-link-sync.md) | PC↔VPS sync via WebSocket Host Link, single run-host, conflict cards | Accepted |
-| [0011](0011-secrets-encryption-and-redaction.md) | AES-256-GCM vault, E2E-encrypted sync blobs, enforced log redaction | Accepted |
-| [0012](0012-deployment-and-pwa-transport.md) | BYO PC/VPS deployment; Tailscale + Let's Encrypt + VAPID for PWA | Accepted |
+| [0009](0009-event-sourced-local-first-data.md) | Event-sourced core with one local SQLite database on the PC | Accepted (amended) |
+| [0010](0010-single-host-local-data.md) | Single host, single local data store; no Host Link | Superseded by [ADR-0020](0020-pc-is-the-only-run-host.md) |
+| [0011](0011-secrets-encryption-and-redaction.md) | AES-256-GCM vault and enforced log redaction; local only | Accepted (amended) |
+| [0012](0012-pc-pwa-transport.md) | PC-hosted PWA transport: Tailscale Serve or LAN, trusted TLS, VAPID | Accepted (amended) |
 | [0013](0013-latex-tectonic-and-pdf-path.md) | LaTeX via Tectonic, with Markdown→PDF as the first shipping path | Accepted |
 | [0014](0014-triage-queue-and-rejection-taxonomy.md) | Triage queue + rejection taxonomy instead of raw approval cards | Accepted |
 | [0015](0015-delivery-gates-spike-and-design.md) | W0 feasibility spike gate; P0 design gate with 10 variants | Accepted |
 | [0016](0016-notification-tiers.md) | Three notification tiers with quiet hours | Accepted |
 | [0017](0017-skills-v1-hardcoded.md) | Skills v1 are hardcoded prompt packs; runtime deferred | Accepted |
-| [0018](0018-generic-extraction-and-run-host-setting.md) | Generic extraction as a third mode; run host + per-site mode are settings (supersedes part of 0005) | Accepted |
+| [0018](0018-generic-extraction-and-site-mode.md) | Generic extraction as a third mode; per-site mode is a setting (supersedes part of 0005) | Accepted (amended) |
 | [0019](0019-p1-runtime-node-sqlite-no-framework.md) | P1 runtime uses built-in `node:sqlite` + `node:http`; no framework, no native module | Accepted |
+| [0020](0020-pc-is-the-only-run-host.md) | The PC is the only run host; one local data store, no sync | Accepted |
+| [0021](0021-browser-session-survival-gate.md) | Browser session-survival gate; no v1 cookie import | Accepted |
 
 **Adding an ADR:** copy the template in any file, use the next number, add a row above. Never edit an accepted decision's substance — supersede it with a new ADR.

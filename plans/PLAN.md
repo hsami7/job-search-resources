@@ -6,27 +6,27 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
 
 ## Context
 
-- **Decisions now fixed:** `PLAN.md` v6 is PC-only. No VPS deployment target, no PC↔VPS sync, no Host Link, no conflict cards, no run-location setting, no laptop cookie-import wizard. If the app is ever installed elsewhere, that machine has its own `data/`; moving is stop → copy `data/` or Export → start there.
+- **Decisions now fixed:** `PLAN.md` v6 is PC-only. No remote-host deployment target, no multi-machine sync, no Host Link, no conflict cards, no run-location setting, no laptop cookie-import wizard. If the app is ever installed elsewhere, that machine has its own `data/`; moving is stop → copy `data/` or Export → start there.
 - **W0:** GO. Brave 1.98.60 on headless aarch64 Ubuntu, Xvfb, CDP, adapters, freeze, take-control all proven (`SPIKE-REPORT.md`). Chrome could not be tested there (no Linux arm64 build); that test moves to this PC.
 - **P0:** 01 Command Deck chosen; tokens frozen (`DESIGN-DECISION.md`).
 - **P1 today:** event log + profile projection + resume storage + profile page. `npm test` = 13/13, `npm run test:e2e` = 54/54 on the PC with the hardened harness (CDP 9333, extensions disabled, foreign-port refusal). No settings, no browser, no onboarding, no pipeline, no Doctor/Logs, no auth.
 - **Target PC:** Omarchy Linux (Arch), i7, Hyprland/Wayland, headed browser. Verified over SSH on 2026-10-22:
-  - host `neger7lost-archlinux`, Tailscale `100.71.69.111`; SSH key `~/.ssh/omarchy_fix` on the VPS is authorized.
+  - host `neger7lost-archlinux`, Tailscale `100.71.69.111`; the development machine's SSH key `~/.ssh/omarchy_fix` is authorized.
   - Node **v26.12.0** (`/usr/bin/node`), npm 12.2.1; `node:sqlite` smoke test passes (`DatabaseSync`, create/insert/select).
   - Brave **1.98.60** (`brave-bin`): `/usr/bin/brave` wrapper → `/opt/brave-bin/brave`; no `~/.config/brave-flags.conf`.
   - **Chromium 155.0.8059.84** is installed; **Google Chrome is not** (no `google-chrome` package). Use Chromium for the non-Brave W0b arm, or install `google-chrome` from the AUR if exact Chrome parity matters.
   - `yay`, `pdftotext`, `tailscale`, `ufw`, `rsync` present; **`tectonic` missing** (needed later for LaTeX, not for the browser gate).
   - Disk 952G, 830G free; root is **LUKS** (`crypto_LUKS` → btrfs). Home is `0700`.
   - Hyprland session on tty1, `XDG_SESSION_TYPE=wayland`, socket `/run/user/1000/wayland-1`; SSH does **not** inherit `WAYLAND_DISPLAY`/`HYPRLAND_INSTANCE_SIGNATURE`, so browser tests over SSH must export `XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1`, and the server itself should start from the graphical session (`uwsm-app` or a systemd user unit after `graphical-session.target`).
-  - No repo at `~/Work/jobPilot`; port 4319 is free; no git remote on the VPS.
+  - Repo now at `~/Work/jobPilot`; port 4319 is free; no git remote in the repository.
 - **Known correction:** Brave 1.98.60 has **no global "Forgetful Browsing" toggle**. The real gate is `browser.clear_data.cookies_on_exit=false`, `browser.clear_data.browsing_history_on_exit=false`, `session.restore_on_startup=1`, plus a behavioural cookie-survives-restart test. The UI must never claim a toggle that does not exist.
 - **No git remote** is configured in this repo. History moves to the PC as a `git bundle`; a remote is convenient but not required.
 - **Phone access** is still undecided: same LAN only, or Tailscale `*.ts.net`. If the phone is to reach the PC, authentication must land before binding to anything but loopback.
-- **Baseline on Omarchy (verified 2026-10-22, final):** the source tree and full `.git` history are at `/home/neger7lost/Work/jobPilot`; `npm ci` installed 1 package. With only `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`, **`npm test` = 13/13** and **`npm run test:e2e` = 54/54**. Harness fixes in `788b114` and `18af507`: resolve Brave from Linux candidates, default to CDP **9333** (never 9222), probe the TCP port and refuse any occupied listener, use XWayland instead of spawning Xvfb on a desktop, and launch with `--disable-extensions --disable-component-extensions-with-background-pages --disable-save-password-bubble --password-store=basic` so the take-control fixture cannot trigger 1Password. `spike/08-take-control-test.js` is still discovered by `npm test`; it now starts its own browser safely and passes. The e2e hostname assertion was fixed in `4993e55` (`server1` → `os.hostname()`).
+- **Baseline on Omarchy (verified 2026-10-22, final):** the source tree and full `.git` history are at `/home/neger7lost/Work/jobPilot`; `npm ci` installed 1 package. With only `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`, **`npm test` = 13/13** and **`npm run test:e2e` = 54/54**. Harness fixes in `788b114` and `18af507`: resolve Brave from Linux candidates, default to CDP **9333** (never 9222), probe the TCP port and refuse any occupied listener, use XWayland instead of spawning Xvfb on a desktop, and launch with `--disable-extensions --disable-component-extensions-with-background-pages --disable-save-password-bubble --password-store=basic` so the take-control fixture cannot trigger 1Password. `spike/08-take-control-test.js` is still discovered by `npm test`; it now starts its own browser safely and passes. The e2e hostname assertion was fixed in `4993e55` (hard-coded name → `os.hostname()`).
 
 ## Approach
 
-**Browser-first, on the PC.** The only P1 unknown with a measured failure mode is the owned browser's lifecycle and session survival. W0 proved launch/extract/freeze on a headless VPS; it did not prove the same on a Wayland desktop, and it did not test Chrome. Close that first, then onboarding can use a real gate instead of a fake checkbox.
+**Browser-first, on the PC.** The only P1 unknown with a measured failure mode is the owned browser's lifecycle and session survival. W0 proved launch/extract/freeze on a headless test host; it did not prove the same on a Wayland desktop, and it did not test Chrome. Close that first, then onboarding can use a real gate instead of a fake checkbox.
 
 **Docs first, then one vertical slice.** The PRD/MILESTONES/ADRs still describe the removed dual-host design. Sync them before code so the acceptance contract matches `PLAN.md` v6. Then build the smallest end-to-end browser slice: settings → launch/status → real prefs → cookie restart test → server-side gate → Browser screen → e2e.
 
@@ -36,7 +36,7 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
 
 - **Onboarding first (rejected):** steps 1–3 need an encrypted key store, a resume parser, and a search-scope model that do not exist. Step 4 would be a fake gate. It produces UI, not a verified capability.
 - **Cookie import from the user's everyday browser (rejected):** Windows `v20`/DPAPI, macOS Keychain, and DBSC device-bound sessions make it unreliable; on the same PC the honest path is one manual login in the agent browser. The spike already moved import to P4 importance.
-- **VPS-first with remote take-control (rejected by user):** removed from v6. No sync, no remote host.
+- **Remote-host-first with take-control (rejected by user):** removed from v6. No sync, no remote host.
 - **Full browser lease + pipeline together (rejected for this slice):** a pid/profile marker + single-flight launch is enough to prove lifecycle. The SQLite lease/heartbeat belongs with the pipeline state machine.
 - **Trust score / Doctor page now (deferred):** the score is advisory and environment-dependent. The gate needs hard checks, not a 0–100 number. Doctor v1 comes after the browser slice.
 
@@ -45,10 +45,10 @@ Make jobPilot runnable and verifiable on the user's **Omarchy Linux (Arch-based,
 ### Milestone 0: Doc sync + PC baseline — every downstream doc says PC-only, and the repo runs on the PC
 Deliverable: PRD/MILESTONES/ADRs/README match `PLAN.md` v6; `npm test` and `npm run test:e2e` are green on Omarchy; Brave vs Chrome is measured on the PC.
 
-- [ ] 0.1 `docs/adr/0020-pc-only-v1.md` (new) — record the decision, mark ADR-0010 **Superseded**, amend ADR-0012 (PC + LAN/Tailscale for phone, no VPS path), remove the run-host decision from ADR-0018 §3, add ADR-0021 for the session-survival gate + no v1 cookie import.
-- [ ] 0.2 `PRD.md` — delete J7; remove FR-SYN-01..09; rewrite FR-DEP-01..04 as PC install/start-on-boot; change FR-BRW-02 to "Chromium-family fallback on the PC"; delete FR-BRW-07; fix FR-ONB-04/FR-BRW-03 to the three session-survival prefs; fix G5, DoD, §15 Q1/Q8.
-- [ ] 0.3 `MILESTONES.md` — P1 exit #1/#2/#6 (onboarding on PC, session-survival gate, PC status not "PC pill"); drop P4 sync/VPS and the P4b split; drop "both hosts" from DoD/P5/timeline.
-- [ ] 0.4 `README.md` + `DESIGN-DECISION.md` — replace VPS/deployment language, the two-host data screen, and the "Forgetful Browsing" copy.
+- [x] 0.1 ADRs: ADR-0010 is now `0010-single-host-local-data.md`, **Superseded by ADR-0020**; ADR-0012 is PC-hosted PWA transport; ADR-0018 no longer has a run-host setting; `0020-pc-is-the-only-run-host.md` and `0021-browser-session-survival-gate.md` are added.
+- [x] 0.2 `PRD.md` — removed the two-machine journey and all sync/deployment requirements; the run target is the PC, the phone is a client, and moving installs is copy/export → start.
+- [x] 0.3 `MILESTONES.md` — P1 uses the session-survival gate, P4 is apply/verification/phone access, P5 is PC-only, and the timeline no longer has a sync/deploy phase.
+- [x] 0.4 `README.md` + `DESIGN-DECISION.md` + `design/` — removed remote-host/deployment language, the two-host data screen, conflict cards, cookie import, and the "Forgetful Browsing" claim.
 - [x] 0.5 Node decision: **Node 26.12.0 accepted** — `node:sqlite` and both suites pass; `.node-version` records it and `playwright-core` is pinned to the exact resolved version `1.64.1`. Revisit `22.22.1` only if a Node 26-specific regression appears.
 - [x] 0.6 PC setup: repo copied to `~/Work/jobPilot`, `npm ci` done, and both suites pass (13/13, 54/54). Tests run over SSH with `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`; `BRAVE_PATH`/`CDP_PORT`/`WAYLAND_DISPLAY` are no longer required. Brave is at `/opt/brave-bin/brave`; Chromium 155 remains the non-Brave arm.
 - [x] 0.7 Fix the test harness (safety parts): `spike/lib/browser.js` resolves Linux Brave candidates, defaults to CDP **9333**, probes the TCP port and refuses any occupied listener, uses XWayland when present, disables extensions/password bubbles in the test profile, and `spike/02-trust-score.js` no longer defaults to 9222. Commits `788b114`, `18af507`. Still open: e2e still uses the shared `spike/profile/brave` + a fixed 9333 rather than a throwaway temp profile/free port; M1.1.7's browser tests own that.
@@ -67,7 +67,7 @@ Deliverable: from a clean `data/`, the user launches the agent browser, sees the
   - `status()` (running/stopped/frozen, pid, port, profile, version), `openPage(url)`, `readPrefs()` via `chrome.settingsPrivate.getAllPrefs`, `checkPersistence()`.
   - no Xvfb: if no `WAYLAND_DISPLAY` and no `DISPLAY`, return `no_display` with a clear fix.
 - [ ] 1.4 `server/browser-checks.js` (new) — pure `evaluateSessionPrefs(prefs)` returning `{id, status, detail, fix}`:
-  - FAIL if `cookies_on_exit !== false`; WARN for history/site-settings; WARN for `restore_on_startup !== 1` (1 = continue where you left off; 4/5 are not the same); WARN/informational for `hasForgetfulPref`; FAIL closed if `settingsPrivate` is unavailable.
+  - FAIL if `cookies_on_exit !== false`; WARN for history/site-settings; WARN for `restore_on_startup !== 1` (1 = continue where you left off; 4/5 are not the same); FAIL closed if `settingsPrivate` is unavailable.
   - persisted gate record `{gate:'prefs-v1', passedAt, checksHash, engine}`; no cookie values.
 - [ ] 1.5 `server/app.js` + `server/http.js` — endpoints and guards:
   - `GET /api/browser/status` (cheap, never launches), `POST /api/browser/launch`, `POST /api/browser/stop`, `POST /api/browser/checks`, `POST /api/browser/persistence`, `POST /api/onboarding/browser/confirm`.
@@ -134,7 +134,7 @@ npm run test:e2e:browser     # temp DB/profile, 390 px, no console errors
 ## Blockers
 
 - **[USER] Phone access:** same LAN only, or Tailscale `*.ts.net`? If the phone reaches the PC, token auth + Trusted Host + CSRF must land before binding beyond loopback. Not needed for M0/M1 if everything stays loopback.
-- **[USER] Repo transfer — resolved:** no remote is configured, so the VPS history is carried to the PC as a `git bundle`; the PC branch `planning/20261022-213623-pc-only-v6` now includes the harness fixes and this plan. A remote is still nice-to-have, not required.
+- **[USER] Repo transfer — resolved:** no remote is configured, so the repository history is carried to the PC as a `git bundle`; the PC branch `planning/20261022-213623-pc-only-v6` now includes the harness fixes and this plan. A remote is still nice-to-have, not required.
 - **[AGENT] Omarchy specifics — resolved:** Brave binary is `/opt/brave-bin/brave` (the `/usr/bin/brave` wrapper is safe but reads a global flags file; launch the real binary for the owned profile). Chromium 155 is the non-Brave arm; Google Chrome is not installed. `tectonic` must be installed before the LaTeX slice.
 - **[AGENT] Node version — resolved:** Node 26.12.0 is installed, `node:sqlite` works, and both suites pass. Keep 26; `.node-version` records it.
 - **[AGENT] Wayland launch env — tests resolved:** `ensureDisplay()` uses an existing XWayland `:0`, so SSH tests only need `DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000`. The production server should still start from the graphical session (`uwsm-app` or a systemd user unit after `graphical-session.target`), not a bare SSH shell.
@@ -143,9 +143,9 @@ npm run test:e2e:browser     # temp DB/profile, 390 px, no console errors
 
 ## Plan Review Notes
 
-The earlier recommendation ("browser gate first on the VPS") was challenged by four subagents and then superseded by the user's decision to run **100% on the PC**. What changed:
+The earlier recommendation ("browser gate first on the remote host") was challenged by four subagents and then superseded by the user's decision to run **100% on the PC**. What changed:
 
-- **VPS/remote-host work removed** (user decision): no deployment, sync, conflict cards, host pills, run-location, cookie migration. `PLAN.md` v6 records it; §14 lists the downstream doc edits.
+- **Remote-host work removed** (user decision): no deployment, sync, conflict cards, host pills, run-location, cookie migration. `PLAN.md` v6 records it; §14 records the completed doc sync.
 - **Cookie import rejected as a v1 path** (all four agents): OS-bound encryption, DBSC, IP-bound `cf_clearance`, session cookies. On the same PC, one manual login in the agent browser is simpler and honest.
 - **"Forgetful Browsing OFF" corrected:** the toggle does not exist; the gate is the three prefs + a restart test. The earlier UI copy and PRD requirement would have shipped a lie.
 - **Onboarding moved behind the gate:** steps 1–3 depend on stores that do not exist; a fake step 4 is worse than no wizard.

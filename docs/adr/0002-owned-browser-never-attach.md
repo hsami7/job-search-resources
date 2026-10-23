@@ -17,8 +17,8 @@ The backend **launches and owns** a dedicated Chromium-family process (Brave) wi
 
 ## Consequences
 - Positive: deterministic lifecycle; no contention with user browsing; simpler recovery; the "agent window" is isolated and inspectable; enabling Take-Control is straightforward.
-- Negative: imported sessions may expire on a new machine/IP (especially VPS), requiring one manual login per site; not the exact "same browser instance" the user uses daily.
-- Mitigations: import wizard + per-account session tests; verification center for challenges; session longevity over fingerprint spoofing.
+- Negative: sessions can expire after long idle periods or site-side invalidation, requiring one manual login per site; not the exact "same browser instance" the user uses daily.
+- Mitigations: persistent owned profile + one manual login per site; verification center for challenges; session longevity over fingerprint spoofing.
 
 ## Alternatives considered
 - Attach to user's Chrome via CDP: rejected (contention, update fragility, privacy).

@@ -1,6 +1,6 @@
 # jobPilot — Milestones & Delivery Plan v1.0
 
-**Source:** `PLAN.md` v5.2 + `PRD.md` v1.0
+**Source:** `PLAN.md` v6 + `PRD.md` v1.0
 **Model:** single developer, part-time realistic view; durations assume ~15–20 focused hours/week. Add **+20% buffer**.
 **Hard gates:** W0 (feasibility) and P0 (design pick) must pass before P1. No milestone ships without its **Exit Criteria** checked.
 
@@ -8,7 +8,7 @@
 
 ## Global Definition of Done (every milestone)
 
-- [ ] All milestone P0 FRs demoed end-to-end on **PC and, where applicable, VPS**.
+- [ ] All milestone P0 FRs demoed end-to-end on **the user's PC**.
 - [ ] Structured logs + run trace exist for the new flows; no secret/OTP in logs (redaction test).
 - [ ] Doctor includes checks for any new external dependency.
 - [ ] Unit tests for deterministic logic (validators, dedupe, event replay); integration test for the milestone's main flow; adapter smoke tests with golden fixtures.
@@ -56,7 +56,7 @@
 **Goal:** Choose one coherent design system for PC + PWA before writing UI code.
 
 **Scope**
-- 10 **distinctly different** design directions (layout, navigation model, density, visual language) as clickable mockups for: Dashboard, Jobs list, Triage/Approval, Verification card + OTP, Doctor, Logs, Search Scope, Agent setup (Forgetful gate), Credentials, Data/Sync, Onboarding, PWA approvals.
+- 10 **distinctly different** design directions (layout, navigation model, density, visual language) as clickable mockups for: Dashboard, Jobs list, Triage/Approval, Verification card + OTP, Doctor, Logs, Search Scope, Agent setup (session-survival gate), Credentials, Data/backup, Onboarding, PWA approvals.
 - Each direction presented with: rationale, tradeoffs, mobile behavior, component list.
 - User picks one (or a mix); resulting **design tokens + component inventory** documented.
 
@@ -83,22 +83,22 @@
 
 **Scope (PRD refs)**
 - Node/Express + SQLite (WAL, busy_timeout), event log + projections, migrations.
-- Onboarding wizard (≤5 min): OpenRouter key + default model, resume upload/parse + fit check, job type + locations, ToS/risk acknowledgement, **Forgetful-Browsing OFF hard gate**.
-- Agent browser: launch Brave with persistent profile; lease TTL/heartbeat; boot orphan cleanup; version pin check; **laptop cookie import wizard** (source detection, per-account test).
+- Onboarding wizard (≤5 min): OpenRouter key + default model, resume upload/parse + fit check, job type + locations, ToS/risk acknowledgement, **session-survival hard gate** (three prefs + cookie-restart test).
+- Agent browser: launch Brave with persistent profile; lease TTL/heartbeat; boot orphan cleanup; version pin check; one manual login per site inside the owned profile.
 - Manual run trigger + pipeline state machine (`DISCOVERED → …`, persisted-before-side-effect, idempotent steps, `INTERRUPTED` resume).
 - OpenRouter adapter (structured output validation).
-- Live WebSocket channel: run status, "doing now" panel, host pills.
+- Live WebSocket channel: run status, "doing now" panel, PC status.
 - Doctor v1: all environment checks + browser trust score v1 + header display + run-anyway logging.
 - Logs v1: structured logs + event log + live tail + basic filters + export bundle + redaction.
 - Backups on by default; backup freshness in Doctor.
 
 **Exit criteria**
 - [ ] Fresh install → onboarding complete in ≤5 min (timed demo).
-- [ ] Brave launches, profile persists across restarts; Forgetful gate blocks bypass.
+- [ ] Brave launches, profile persists across restarts; the session-survival gate blocks bypass.
 - [ ] Manual run produces a persisted job pipeline record; kill -9 mid-run resumes to `INTERRUPTED` and recovers.
 - [ ] Doctor catches induced failures (missing Tectonic, bad key, wrong cert) with PASS/WARN/FAIL.
 - [ ] Logs show the run trace; export bundle opens; redaction test passes.
-- [ ] PC host pill is green; status transitions logged.
+- [ ] PC status is visible and accurate; status transitions logged.
 
 **Dependencies:** W0 GO; P0 chosen design. **Risks:** browser launch quirks per OS; resume parsing quality (mitigate with side-by-side correction).
 
@@ -158,30 +158,28 @@
 
 ---
 
-## P4 — Apply, Verification Center, Deployment & Sync
+## P4 — Apply, Verification Center & Phone Access
 **Window:** Weeks 17–22 · **Estimate:** 5–6 weeks (largest)
 
-**Goal:** Complete the loop safely and make the app usable from anywhere, on either host.
+**Goal:** Complete the loop safely on the PC and make the phone a usable approval surface while the PC is on.
 
 **Scope**
 - Prefill-in-browser (hard rule: human Submit); form-field mapping per adapter; "doing now" panel.
 - Approval rule engine (auto-approve = prepare prefills only) + bulk actions; send-hours; kill switch.
 - Email: Gmail/Outlook OAuth, send + read, reply matching + unmatched lane, modes 1–2, content gate, translation preview, follow-ups draft, interview handoff card.
-- **Verification Center:** freeze, tier-1 push with site/URL/type/host/screenshot, take-control deep link, resume/abandon, OTP entry + "where to find the code", history.
-- Credential manager UI + audit trail; vault (AES-256-GCM) + encrypted sync blobs.
-- **VPS deployment** (Docker/install script) + PWA (ts.net + Let's Encrypt + VAPID) + push tiers.
-- **PC↔VPS Host Link sync**: event exchange, hashes, conflict cards, data page, run-host handoff.
-- Migration: laptop→target cookies; PC→VPS DB/profile relocation.
+- **Verification Center:** freeze, tier-1 push with site/URL/type/screenshot, take-control deep link, resume/abandon, OTP entry + "where to find the code", history.
+- Credential manager UI + audit trail; vault (AES-256-GCM), local only.
+- **Phone access:** PWA over Tailscale Serve (preferred) or LAN, trusted TLS + VAPID + push tiers; auth before any non-loopback bind.
+- PC install/start-on-boot; backup restore test; export/import for moving to another machine.
 
 **Exit criteria**
-- [ ] End-to-end: discover → tailor → approve → prefill → human submit → status/history, on PC and VPS.
+- [ ] End-to-end: discover → tailor → approve → prefill → human submit → status/history, on the PC.
 - [ ] Real verification event: agent freezes, push arrives ≤5 s with all required fields, OTP entry resumes the run.
-- [ ] VPS deployment from clean machine in ≤30 min with documented steps.
-- [ ] Sync: both hosts online → green; PC offline edits → reconnect merge; forced security-setting conflict → card; no silent overwrite; hashes match.
-- [ ] Credentials: stored encrypted, never in logs/LLM prompt; audit entries exist; sync transfers only ciphertext.
-- [ ] PWA installable on Android; tier-1 push delivered; digest scheduled; quiet hours respected.
+- [ ] Phone PWA reachable over the chosen transport with authentication; tier-1 push delivered; digest scheduled; quiet hours respected.
+- [ ] Credentials: stored encrypted, never in logs/LLM prompt; audit entries exist.
+- [ ] Backup restore returns the app to the last saved state; export/import moves it to another machine with no merge.
 
-**Risks:** OAuth app review delays; push reliability; sync edge cases; this milestone is the schedule risk — split into P4a (apply/verification) and P4b (deploy/sync) if needed.
+**Risks:** OAuth app review delays; push reliability; phone TLS/auth setup; this milestone is the schedule risk — split into P4a (apply/verification) and P4b (phone access) if needed.
 
 ---
 
@@ -193,15 +191,15 @@
 **Scope**
 - Skills toggles (hardcoded prompts; runtime deferred).
 - Replies: modes 1–2 polished; interview handoff; follow-ups.
-- Export/delete everything on both hosts; backup restore test; retention/purge.
+- Export/delete everything on this PC; backup restore test; retention/purge.
 - Android push polish + battery-optimization setup screen.
 - Analytics: sent/replies/interviews; source yield; approval time.
 - Log retention/rotation polish; run timeline replay; error explainer improvements.
 - Performance pass, accessibility pass (WCAG AA), docs, release checklist.
 
 **Exit criteria**
-- [ ] Full export → wipe → import restores the app state on both hosts.
-- [ ] Delete-everything verified (DB + profile + logs + artifacts) on PC and VPS.
+- [ ] Full export → wipe → import restores the app state on the PC.
+- [ ] Delete-everything verified (DB + profile + logs + artifacts) on the PC.
 - [ ] Accessibility audit passes for triage, verification, logs.
 - [ ] 2-week dogfood log: 0 silent failures; Doctor explains every blocked run.
 - [ ] Release checklist signed; version tagged v1.0.
@@ -222,7 +220,7 @@ Full Skills runtime (install-from-repo), networking mode, referral emails, compe
 | P1 Core | 4–6 | ~8.5 | demo + crash recovery |
 | P2 Discovery | 3–4 | ~12.5 | multi-source run |
 | P3 Tailoring | 3–4 | ~16.5 | honesty gate |
-| P4 Apply/Sync/Deploy | 5–6 | ~22.5 | E2E + verification + sync |
+| P4 Apply/Verification/Phone | 5–6 | ~22.5 | E2E + verification + phone access |
 | P5 Polish | 3–4 | ~26.5 | release checklist |
 
 **Honest note:** ~26 weeks at 15–20 h/week. If the target is faster, cut P5 items and ship P1+P2+P3+P4a; do not compress W0 or the verification/prefill safety work.

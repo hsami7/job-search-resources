@@ -125,7 +125,7 @@ export function scoreSignals(s, host) {
     item('plugins populated', s.plugins > 0 ? 'PASS' : 'FAIL', 3, `plugins=${s.plugins}`),
   ]);
 
-  // Software rendering (llvmpipe/Mesa) on a VPS is the loudest coherence signal we can see.
+  // Software rendering (llvmpipe/Mesa) on a headless host is the loudest coherence signal we can see.
   const softwareGl = /llvmpipe|swiftshader|software/i.test(`${s.webglVendor} ${s.webglRenderer}`);
   const noGl = !s.webglRenderer;
   cat('fingerprint', 25, [

@@ -12,7 +12,7 @@ Five notification classes (approvals, replies, captcha, missed-run, zero-results
 - **Tier 2 — daily digest:** approvals waiting and recruiter replies, delivered in one push at a user-chosen time.
 - **Tier 3 — silent, in-app only:** zero-result follow-ups, learning updates, non-critical status.
 - Quiet hours are configurable per tier; tier-1 always delivers.
-- On a PC host, push only works while the PC is on — the UI says so and offers a catch-up digest on wake. On a VPS, pushes work 24/7.
+- Push only works while the PC is on — the UI says so and offers a catch-up digest on wake.
 - Every push delivery/failure is logged and visible in Doctor (VAPID/service-worker checks).
 
 ## Consequences

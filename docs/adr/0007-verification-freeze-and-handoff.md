@@ -10,8 +10,8 @@ Job sites present captchas, Cloudflare challenges, OTP/2FA, "unusual activity" a
 ## Decision
 On detecting any verification wall:
 1. **Freeze immediately** — stop all browser actions, no retries, no clicks, no auto-solve. The page state is preserved.
-2. **Notify instantly** (tier-1 push ≤5 s) with: site, full URL, verification type, **host (PC or VPS)**, run/job context, timestamp, screenshot.
-3. **In-app card** offers "Take control" (deep link to the paused browser on that host) and "I finished — resume". No timeout auto-continue; the run stays parked.
+2. **Notify instantly** (tier-1 push ≤5 s) with: site, full URL, verification type, **the PC**, run/job context, timestamp, screenshot.
+3. **In-app card** offers "Take control" (deep link to the paused browser) and "I finished — resume". No timeout auto-continue; the run stays parked.
 4. **OTP form** (web + PWA) with guidance: which mailbox account, search string, masked phone/email, validity window. Codes are redacted from logs and discarded after use.
 5. **Verification Center** keeps active + past events per host with resume/abandon/re-check-session actions.
 

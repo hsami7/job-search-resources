@@ -1,7 +1,7 @@
 # SPIKE-REPORT — W0 feasibility spike
 
 **Date:** 2026-10-22
-**Host:** `server1` — Ubuntu 26.04.1 LTS, **aarch64**, headless VPS (no display)
+**Host:** development test host — Ubuntu 26.04.1 LTS, **aarch64**, headless (no display)
 **Verdict:** **GO**, with 3 conditions (§7). Local discovery works on both target sites without a login, the freeze handoff holds, and generic extraction reaches most global boards.
 
 ---
@@ -95,7 +95,7 @@ Prototype at `spike/take-control/`: CDP screencast → SSE → browser panel, wi
 
 1. **"Forgetful Browsing OFF" is not a global setting on Brave desktop 1.98.60.** `chrome.settingsPrivate.getAllPrefs()` exposes no `forgetful` pref. The only "forget" surface is the **per-site** shield toggle *"Forget me when I close this site"*. The cookie-wipe risk the plan cares about is governed by `browser.clear_data.cookies_on_exit` (**false**), `browser.clear_data.browsing_history_on_exit` (**false**), and `session.restore_on_startup` (**1 = continue where you left off**).
    → **P1 action:** the onboarding hard gate must verify *those* prefs, not a toggle that does not exist. The §10 UI copy needs rewording (ADR needed at P1, not now).
-2. **Local discovery does not require a login.** Both listings are public and server-rendered. Login/cookie-import work is **only** on the critical path for *applying*, not for *discovering*. This removes a week of assumed dependency from P2 and moves the cookie-import wizard to P4's importance.
+2. **Local discovery does not require a login.** Both listings are public and server-rendered. Login/cookie-import work is **only** on the critical path for *applying*, not for *discovering*. This removes a week of assumed dependency from P2 and makes login seeding a P1 concern; v6 uses one manual login in the owned profile (ADR-0021), not a cookie-import wizard.
 3. **ReKrute and MarocAnnonces cannot be covered by generic extraction** (§2). Adapters stay; that is now measured, not assumed.
 4. **MarocAnnonces cards never name the employer** (0/21). Employer requires a detail-page fetch per job. Budget for that in the adapter contract: `collectFromListing` + `enrichDetail`.
 5. **ReKrute serves 10 cards per listing page.** Full coverage needs pagination + dedupe, not one fetch.

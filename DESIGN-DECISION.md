@@ -34,7 +34,7 @@ Screenshots: `design/shots/<variant>-<screen>.png` and `<variant>-mobile.png` (r
 | 06 | **Soft Stack** | pill row on desktop, bottom tabs on phone | airy (large targets) | system sans | off-white / lilac / mint | one-thumb approval on Android | low information density on desktop |
 | 07 | **Split Inspector** | tree navigator + content + inspector + status bar | very dense (IDE-like) | 12 px system sans | #fafafa / blue | list and detail visible at once; nothing moves | three columns need ≥1100 px; right pane is secondary on phone |
 | 08 | **Guided** | 14-step stepper with progress ticks | airy (one decision per screen) | large sans (38 px headings) | white / teal | turns stress moments (OTP, freeze) into one clear action | slow for routine scanning; stepper implies false linearity |
-| 09 | **Nightwatch** | floating segmented control + right drawer | medium (big numerals) | sans, tabular figures | #0e1116 / blue / glow | ambient monitoring of a VPS that runs while you sleep | dark-only; glow can read as decoration |
+| 09 | **Nightwatch** | floating segmented control + right drawer | medium (big numerals) | sans, tabular figures | #0e1116 / blue / glow | ambient monitoring of a PC that runs while you sleep | dark-only; glow can read as decoration |
 | 10 | **Sheet** | workbook tab strip at the bottom + formula bar | very dense (spreadsheet) | 12 px sans + mono figures | white / grid grey / blue | every field visible, sortable, editable in place | hostile at 390 px (columns collapse to label + action) |
 
 ### Mobile behaviour (390 px)
@@ -75,8 +75,8 @@ P1 builds these. Names are the contract; values can still be nudged for contrast
 | `--dim` | `#8b93a1` | secondary text, labels, metadata |
 | `--line` | `#2b3037` | borders, table rules |
 | `--accent` | `#7aa2f7` | focus, selection, primary action |
-| `--ok` | `#9ece6a` | pass, synced, ready |
-| `--warn` | `#e0af68` | needs-you, warnings, conflicts, unsaved |
+| `--ok` | `#9ece6a` | pass, backed up, ready |
+| `--warn` | `#e0af68` | needs-you, warnings, unsaved |
 | `--bad` | `#f7768e` | frozen, blocked, destructive |
 | `--radius` | `3px` (panels, inputs) / `4px` (panels) | corners; no pills except status chips |
 | `--space-1…5` | `4 8 10 14 16` | layout scale |
@@ -85,7 +85,7 @@ P1 builds these. Names are the contract; values can still be nudged for contrast
 | `--mono` | `ui-monospace, "SF Mono", Menlo` | everything |
 | `--font-ui` | same mono stack | intentional: no second family |
 
-Hard rules carried into P1, from the PRD: colour is never the only signal (every pill carries a word); every long-running action names its host and current site; destructive actions require typing or an explicit second click; secrets never render in mockups, logs or prompts.
+Hard rules carried into P1, from the PRD: colour is never the only signal (every pill carries a word); every long-running action names the PC state and current site; destructive actions require typing or an explicit second click; secrets never render in mockups, logs or prompts.
 
 ---
 
@@ -105,8 +105,8 @@ Drawn in all ten directions unless stated.
 | 8 Logs | LogRow (time/level/agent/site/msg/duration), LevelBadge, Filters, RunTimeline, ExplainError, ExportBundle, RedactionNote | all ten |
 | 9 Search Scope | SiteTable, ModeChip (`adapter`/`generic`/`api`/`paste`), AdapterState, LastScan, LocationPicker (country→city), AddSite, **NoCrawlNotice** | all ten |
 | 10 Credentials | CredentialRow (masked), Reveal + audit, VaultLock, RotatePassphrase, NeverInPromptNotice | all ten |
-| 11 Data & Sync | HostCard (state/heartbeat/db/events), SyncStatus, ConflictCard (both values, keep one), BackupFreshness, ExportAll, DeleteAllConfirm, ReplayNote | all ten |
-| 12 Settings | SettingsSection, KeyField, ModelSelect, ScheduleEditor, SendHoursEditor, LanguageSelect, DeploymentTarget, SaveBar + restart notice | all ten |
+| 11 Data & backup | PCStatusCard (state/heartbeat/db/events), BackupFreshness, ExportAll, DeleteAllConfirm, ReplayNote | all ten |
+| 12 Settings | SettingsSection, KeyField, ModelSelect, ScheduleEditor, SendHoursEditor, LanguageSelect, SaveBar + restart notice | all ten |
 | 13 Agent setup | BrowserChoice (Brave/Chrome), ProfilePath, SessionSurvivalChecklist (cookies / history / restore), Recheck, SignedOutList, RiskNote | all ten |
 | 14 Onboarding | Stepper, SetupStepCard, ProgressBar, DefaultsNote (editable later), RiskAcknowledgement, FirstRunCTA | all ten |
 | 15 PWA mirror | PhoneFrame, BottomTabs, CompactApprovalCard, FreezeCard, OTPEntry, TrustPill, PushTest | all ten |
@@ -128,7 +128,7 @@ Drawn in all ten directions unless stated.
 | Radius and borders differ | 0 px (04, 05, 10) → 4 px (01, 07) → 12–18 px (03, 06, 08) → 26 px phone frames |
 | Dashboard answers a different question first | 01 "what is running", 02 "what needs a signature", 03 "where is the work", 04 "what broke", 05 "the numbers", 06 "what needs you", 07 "run 41", 08 "one next action", 09 "is it healthy", 10 "the whole dataset" |
 | Verification cannot be reached by accident | every direction freezes and blocks navigation to a submit action |
-| Status never colour-only | every pill carries a word (`PASS`, `frozen`, `READY`, `sync`, …) |
+| Status never colour-only | every pill carries a word (`PASS`, `frozen`, `READY`, `backed up`, …) |
 | 390 px without horizontal page scroll | verified in screenshots for all ten; 10 collapses spreadsheet columns by design |
 | Keyboard focus visible | default focus rings kept; 01/04 additionally advertise shortcuts |
 | No direction is a recolour of another | confirmed against the table above |
@@ -140,9 +140,9 @@ Drawn in all ten directions unless stated.
 - Data is a fixture; nothing reads or writes a database.
 - "Take control" is a still frame — in the product it is a CDP screencast with forwarded input (see `SPIKE-REPORT.md` §5).
 - Trust score 76 comes from the real headless host; on your x86 PC with Mesa the same screen will show a different number.
-- The Brave "Forgetful Browsing" copy is the corrected version: three real preferences (`cookies_on_exit`, `browsing_history_on_exit`, `restore_on_startup`), not a toggle that does not exist. An ADR is owed at P1.
+- The browser gate copy is the corrected version: three real preferences (`cookies_on_exit`, `browsing_history_on_exit`, `restore_on_startup`) plus a cookie-restart test; there is no "Forgetful Browsing" toggle. ADR-0021 records it.
 - No dark/light twin: each direction commits to one. 07 and 09 are the natural pair if you want both.
-- 01's Profile form in the mockup persists to `localStorage` for that browser and origin — not a database and not synced. The product page (`web/`) replaces it with the event log and keeps the same field names.
+- 01's Profile form in the mockup persists to `localStorage` for that browser and origin — not a database and local only. The product page (`web/`) replaces it with the event log and keeps the same field names.
 
 ---
 

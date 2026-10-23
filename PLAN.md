@@ -1,12 +1,12 @@
-# jobPilot — PLAN v6 (PC-only; VPS and sync removed, Oct 22 2026)
-**Status:** v6 supersedes v5.2's dual-host design. **The app runs on the user's PC only.** There is no VPS deployment target, no PC↔VPS sync, no Host Link, no conflict cards, and no run-location setting in v1. If the user later wants to run the same app on a VPS, he installs it there and that machine keeps its own local data; moving hosts is a manual export/import, never a live sync. Any remaining "VPS", "both hosts", "sync", "Host Link", "run location", or "conflict card" clause below is superseded by this header.
+# jobPilot — PLAN v6 (PC-only; one local data store, Oct 22 2026)
+**Status:** v6 supersedes v5.2's two-machine design. **The app runs on the user's PC only.** There is no remote-host deployment target, no multi-machine sync, no Host Link, no conflict cards, and no run-location setting in v1. If the user later wants to run the same app on another machine, he installs it there and that machine keeps its own local data; moving is a manual stop → copy/export → start, never a live merge.
 **v6 principles:** (1) prove the browser drive works before any design; (2) NO artificial volume caps — pacing + send-hours + approval gate; (3) per-site adapters, not a magic universal scraper; (4) every crash state has a defined recovery; (5) the user approves everything by default; (6) the app must SHOW its own health and history (doctor + full logs); (7) when a human check appears (captcha/OTP/security challenge), the agent FREEZES and hands control to the user immediately — never auto-solves anything; (8) **one host, one local data set**: the append-only event log is the source of truth on this PC, with no second writer and no silent overwrite path.
 
 **What changed in v6 (the only deltas that matter):**
-- Backend target: **PC only**. VPS is not part of the v1 architecture, deployment, onboarding, or tests.
-- Removed: PC↔VPS sync, Host Link, watermarks, conflict cards, dual host pills, "Where is my data" two-host page, run-host handoff, relocation wizard, VPS deployment.
+- Backend target: **PC only**. No remote host is part of the v1 architecture, deployment, onboarding, or tests.
+- Removed: multi-machine sync, Host Link, watermarks, conflict cards, multiple host pills, two-host data pages, run-host handoff, relocation wizard, remote-host packaging.
 - Cookie import from a laptop is not needed: the agent browser runs on the same PC as the user's everyday browser. The v1 login story is **one manual login in the agent browser**, persisted in its own profile.
-- Portability if the user ever changes machine: stop the app, copy `data/` (SQLite + artifacts) or use Export, start the app there. No merge, no sync.
+- Portability if the user ever changes machine: stop the app, copy `data/` (SQLite + artifacts) or use Export, start the app there. No merge, no live sync.
 - Phone access remains: the PWA reaches the PC over the LAN or Tailscale while the PC is on. Push only fires while the PC is on; missed runs are offered once on wake.
 
 ---
@@ -68,7 +68,7 @@ Node.js backend (Express) — single user, runs on the user's PC
 - Runs happen while the PC is on. If the PC was asleep/off at a scheduled time, the next boot offers **"run the missed scan now?"** once; it never bursts or backfills silently.
 - The agent browser is launched and owned by the backend on this PC, with its own persistent profile. It never attaches to the user's everyday browser.
 - **Login story:** sign in once in the agent browser for each site that needs it; the session persists in the agent profile. If a site challenges it, the Verification Center freezes and hands control to the user (§2.8). No cookie-copy wizard in v1 — the browser is already on the same machine.
-- **If the user later decides to run the app on a VPS**, he installs the same code there. That host keeps its own `data/` and its own agent profile. Moving means stop → copy `data/` (or Export) → start there. There is no live sync and no dual-write.
+- **If the user later decides to run the app on another machine**, he installs the same code there. That machine keeps its own `data/` and its own agent profile. Moving means stop → copy `data/` (or Export) → start there. There is no live sync and no dual-write.
 - **Security:** profile + SQLite on the user's own disk; secrets AES-256-GCM (§6); phone access over LAN or Tailscale `*.ts.net`; no third-party hosting.
 
 ### 2.5 Single local data store (no sync)
@@ -191,13 +191,13 @@ Export/delete everything (profile, jobs, applications, resume versions, memory, 
 - **P2 — Discovery:** L1 adapters for spike-validated sites; **[ADR-0018] generic structured-data extraction + per-site mode setting**; L2 APIs; L3 paste-URL; WhatsApp/Facebook paste-forward extraction; signal/noise + scam filters; zero-result ask-first; dedupe + history import; Ollama adapter + failover-pause; **browser trust score v1 wired to the header + run-start logs.**
 - **P3 — Tailoring + review:** Markdown→PDF then Tectonic LaTeX; honesty checks; reviewer loop (3-iter → triaged queue); "what employer sees" preview; triage queue + rejection chips + learning panel.
 - **P4 — Apply + verification:** prefill-in-browser (hard rule); approval cards + rule engine; email layer + content gate + translation previews; send-hours + kill-switch + "doing now" panel; **Verification Center + OTP entry + take-control handoff**; credential manager UI; minimal vault; **PC start-on-boot (Windows/Linux), missed-run-on-wake offer, backup restore test.**
-- **P5 — Polish:** skills toggles; reply tracking + modes 1–2; interview handoff; unmatched-reply lane; follow-ups; export/delete (this PC); Android push tiers; analytics; log retention/rotation polish; diagnostic bundle export. **P6 deferred:** full skills runtime, networking, referral emails, compensation researcher, full-auto apply, auto account creation, any VPS/remote-host packaging.
+- **P5 — Polish:** skills toggles; reply tracking + modes 1–2; interview handoff; unmatched-reply lane; follow-ups; export/delete (this PC); Android push tiers; analytics; log retention/rotation polish; diagnostic bundle export. **P6 deferred:** full skills runtime, networking, referral emails, compensation researcher, full-auto apply, auto account creation, any remote-host packaging.
 
 ## 13. Known risks & mitigations
 - **Account bans:** risk accepted ("middle" appetite) — prefill-only hard rule, owned/isolated agent browser, human pacing, no auto-submit, per-site risk badges + plain-language onboarding notice ("automation can breach ToS; bans can be permanent"), content gate. Caps removed; pacing + approval gate carry the discipline.
 - **Browser/CDP breakage:** Brave only if W0 passes; Chrome = config fallback; pinned versions; UI pin-repair flow; Firefox/extension-assist fallback remains possible via driver abstraction.
 - **Trust score misuse:** it is a heuristic, not a guarantee — labeled as such everywhere; a high score never promises immunity; low score warns, and the user can still choose to run (logged).
-- **VPS/local-machine change:** if the app is ever installed on another machine, it is a separate local install with its own data; moving means stop → copy `data/` or Export → start there. No sync, no merge, no conflict cards.
+- **Machine change:** if the app is ever installed on another machine, it is a separate local install with its own data; moving means stop → copy `data/` or Export → start there. No sync, no merge, no conflict cards.
 - **PC asleep/off:** scheduled runs can be missed. The app offers the missed scan once on wake (never a burst); push only works while the PC is on.
 - **Local disk loss/corruption:** WAL + `VACUUM INTO` backups on by default; Doctor shows backup age; restore is tested. A single PC is a single point of failure by design.
 - **LLM downtime/cost:** pause + notify (never mid-batch downgrade); draft-tier tagging; cost tracking.
@@ -205,16 +205,15 @@ Export/delete everything (profile, jobs, applications, resume versions, memory, 
 - **Scraping treadmill:** adapters for validated sites only; everything else → paste-URL (no false "any site" promise).
 - **Over-complication:** single-user; no companion extension; no Composio; no background scraping daemon; no full-internet crawler.
 
-## 14. v6 doc-sync checklist (must land before the next code slice)
-PLAN.md is now v6, but the downstream docs still describe the v5.2 dual-host design. PRD.md says "where they conflict, PLAN wins", so this is a required cleanup, not an optional edit.
+## 14. v6 doc sync — complete (2026-10-22)
+The downstream docs now match this PC-only plan. What changed:
 
-- **PRD.md:** delete J7 (PC↔VPS); remove FR-SYN-01..09; rewrite FR-DEP-01..04 as "PC install/start-on-boot, no remote host"; change FR-BRW-02 to "Chromium-family fallback on the PC" and delete FR-BRW-07 (cookie import); fix FR-ONB-04/FR-BRW-03 to the three session-survival prefs (no global Forgetful toggle); change G5, the DoD, and §15 Q1/Q8.
-- **MILESTONES.md:** P1 exit #1 (onboarding on the PC), #2 (session-survival gate), #6 (PC status, not "PC pill"); drop P4 sync/VPS items and the P4b split; drop "both hosts" from the DoD, P5, and the timeline.
-- **ADRs:** mark ADR-0010 Superseded (no Host Link); amend ADR-0012 (PC + LAN/Tailscale for the phone, no VPS path); remove the run-host decision from ADR-0018 §3; add ADR-0020 "PC is the only run host" and ADR-0021 "Browser session-survival gate + no v1 cookie import".
-- **README.md / DESIGN-DECISION.md:** replace the VPS/deployment language, the two-host data screen, and the "Forgetful Browsing" copy with the PC-only + session-survival versions.
+- **PRD.md:** removed the two-machine journey and all sync/deployment requirements; the run target is the PC, the phone is a client, and moving installs is copy/export → start.
+- **MILESTONES.md:** P1 uses the session-survival gate, P4 is apply/verification/phone access, and P5 is PC-only.
+- **ADRs:** ADR-0010 is Superseded; ADR-0012 and ADR-0018 are PC-only; ADR-0020 records “PC is the only run host”; ADR-0021 records the session-survival gate.
+- **README.md / DESIGN-DECISION.md / design mockups:** no remote-host, sync, conflict-card, cookie-import, or “Forgetful Browsing” UI remains.
 
 ## 15. Open blockers for the next slice
-- **[USER] PC OS:** Windows or Linux? This decides browser paths (`brave.exe` vs `brave-browser`), process/lease handling, start-on-boot (Task Scheduler vs systemd user unit), and whether the W0 Chrome column can finally be tested.
-- **[USER] Phone access:** same LAN only, or Tailscale `*.ts.net`? Drives the TLS/auth requirement.
+- **[USER] Phone access:** same LAN only, or Tailscale `*.ts.net`? Drives the TLS/auth requirement. Default recommendation: Tailscale Serve, tailnet-only, no public tunnel.
 - **[AGENT] Auth before remote access:** the current server is loopback-only with no auth; if the phone reaches it over LAN/Tailscale, add token auth + Trusted Host allowlist + CSRF first.
-- **[AGENT] Next code slice:** onboarding, or the browser session-survival gate first? Recommendation: the gate first (it is the only P1 unknown with a measured failure mode), then onboarding can use it.
+- **[AGENT] Next code slice — decided:** the browser session-survival gate first (M1). Onboarding then uses the real gate instead of a fake checkbox.
