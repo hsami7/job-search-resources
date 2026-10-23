@@ -163,7 +163,7 @@ verification:()=>`
       push delivered in 1.4 s<br>no timeout auto-continue</div></div>
   </div></div>
   <div class="panel"><h2>History</h2><table><tr><th>When</th><th>Site</th><th>Type</th><th>Host</th><th>Resolved</th></tr>
-    <tr><td>today 14:04</td><td>rekrute.com</td><td>security challenge</td><td>VPS</td><td>open</td></tr>
+    <tr><td>today 14:04</td><td>rekrute.com</td><td>security challenge</td><td>PC</td><td>open</td></tr>
     <tr><td>yesterday 09:12</td><td>linkedin.com</td><td>email OTP</td><td>PC</td><td>1m 20s</td></tr></table></div>`,
 
 doctor:()=>`
@@ -216,7 +216,7 @@ agent:()=>`
       <div style="margin-top:10px;display:flex;gap:6px"><button data-act="Restart browser">Restart</button>
       <button data-act="Switch to Chrome">Chrome instead</button></div></div>
     <div class="panel"><h2>Logins survive restart</h2>
-      <div style="font-size:13px">Brave desktop has no global “Forgetful Browsing”. These are the settings that matter:</div>
+      <div style="font-size:13px">Brave desktop has no single keep-cookies switch. These are the settings that matter:</div>
       <div style="margin-top:8px;font-size:13px">
         <div><span class="badge ok">PASS</span> cookies survive close</div>
         <div><span class="badge ok">PASS</span> history survives close</div>
@@ -242,20 +242,15 @@ credentials:()=>`
 data:()=>`
   <div class="grid2">${D.hosts.map(h=>`<div class="panel"><h2>${h.id} · ${h.label}</h2>
     <div class="stat">${h.events}<small>events · ${h.db} · heartbeat ${h.heartbeat}</small></div>
-    <div style="color:var(--dim);font-size:12.5px;margin-top:4px">last merge ${h.lastSync}</div></div>`).join('')}</div>
-  <div class="panel" style="border-color:#fde68a;background:#fffbeb"><h2 style="color:#96500a">Conflict · ${D.sync.conflict.field}</h2>
-    <div style="font-size:13px;margin-bottom:10px">${D.sync.conflict.asked}</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button data-act="Keep PC value">PC · ${D.sync.conflict.pc}</button>
-      <button data-act="Keep VPS value">VPS · ${D.sync.conflict.vps}</button>
-      <span style="color:var(--dim);font-size:12.5px;align-self:center">never resolved silently</span></div></div>
-  <div class="panel"><h2>Sync</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <span class="badge warn">SYNCING</span><span>${D.sync.lastDelta}</span>
-    <span style="color:var(--dim);font-size:12.5px">${D.sync.hash}</span>
-    <button class="primary" style="margin-left:auto" data-act="Sync now">Sync now</button></div></div>
+    <div style="color:var(--dim);font-size:12.5px;margin-top:4px">last backup ${h.lastBackup}</div></div>`).join('')}</div>
+  <div class="panel"><h2>Backup</h2><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span class="badge ok">${D.backup.state.toUpperCase()}</span><span>${D.backup.lastBackup} · ${D.backup.size}</span>
+    <span style="color:var(--dim);font-size:12.5px">${D.backup.hash}</span>
+    <button class="primary" style="margin-left:auto" data-act="Back up now">Back up now</button></div>
+    <div style="color:var(--dim);font-size:12.5px;margin-top:8px">${D.backup.note}</div></div>
   <div class="panel"><h2>Your data</h2><div style="display:flex;gap:8px;flex-wrap:wrap">
     <button data-act="Export everything">Export everything</button>
-    <button class="danger" data-act="Delete everything on both hosts">Delete on both hosts</button></div></div>`,
+    <button class="danger" data-act="Delete everything on this PC">Delete on this PC</button></div></div>`,
 
 onboarding:()=>`
   <div class="panel"><h2>Setup · 3 of 5 done</h2>
@@ -274,7 +269,7 @@ onboarding:()=>`
 
 pwa:()=>`
   <div class="phone"><div class="scr">
-    <div class="hd"><span><i class="dot"></i> VPS synced</span><span style="color:var(--dim)">76</span></div>
+    <div class="hd"><span><i class="dot"></i> PC saved</span><span style="color:var(--dim)">76</span></div>
     <div class="it" style="background:#fff5f5">
       <b style="color:#b91c1c;font-size:13.5px">Frozen · rekrute.com</b>
       <div style="color:var(--dim);font-size:12.5px">security challenge · 2m ago</div>
@@ -318,7 +313,7 @@ settings: () => `
       <tr><td>Pacing</td><td>2.4 s</td></tr></table></div>
     <div><table><tr><th>Preferences</th><th></th></tr>
       <tr><td>Interface</td><td>English</td></tr><tr><td>Letters</td><td>French</td></tr>
-      <tr><td>Run host</td><td>VPS <span class="badge warn">restart</span></td></tr>
+      <tr><td>Run host</td><td>PC <span class="badge">local only</span></td></tr>
       <tr><td>Push</td><td>walls + approvals</td></tr><tr><td>Quiet</td><td>22:00 – 07:00</td></tr></table>
       <div style="display:flex;gap:6px;margin-top:12px"><button class="primary" data-act="Save settings">Save</button>
         <button data-act="Discard">Discard</button></div></div>

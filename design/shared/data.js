@@ -5,7 +5,7 @@ window.JOBPILOT = {
 
   run: {
     state: 'discovering',
-    host: 'VPS',
+    host: 'PC',
     site: 'rekrute.com',
     page: 'offres-emploi-maroc.html',
     action: 'reading listing 1 of 3',
@@ -15,8 +15,7 @@ window.JOBPILOT = {
   },
 
   hosts: [
-    { id: 'PC', state: 'yellow', label: 'Connecting', heartbeat: '12s ago', db: '38 MB', events: 1204, lastSync: 'yesterday 21:10' },
-    { id: 'VPS', state: 'green', label: 'Synced', heartbeat: '1s ago', db: '41 MB', events: 1288, lastSync: 'just now' },
+    { id: 'PC', state: 'green', label: 'Ready', heartbeat: '1s ago', db: '41 MB', events: 1288, lastBackup: '4h ago' },
   ],
 
   trust: {
@@ -78,7 +77,7 @@ window.JOBPILOT = {
     site: 'rekrute.com',
     url: 'https://www.rekrute.com/offres-emploi-maroc.html?page=2',
     type: 'security challenge',
-    host: 'VPS',
+    host: 'PC',
     run: 'run 41 · job “Technicien Laboratoire”',
     at: '14:04:12',
     age: '2m 10s',
@@ -91,7 +90,7 @@ window.JOBPILOT = {
   },
 
   doctor: [
-    { name: 'Node.js 20.20.2', state: 'PASS', why: 'runtime version is supported', fix: null },
+    { name: 'Node.js 26.12.0', state: 'PASS', why: 'runtime version is supported', fix: null },
     { name: 'SQLite integrity_check', state: 'PASS', why: 'database is consistent, WAL enabled', fix: null },
     { name: 'Disk space', state: 'PASS', why: '120 GB free', fix: null },
     { name: 'Brave 1.98.60 + Playwright 1.64.1', state: 'PASS', why: 'versions pinned and matching', fix: null },
@@ -101,10 +100,9 @@ window.JOBPILOT = {
     { name: 'Tectonic + LaTeX smoke test', state: 'WARN', why: 'not installed; PDF falls back to Markdown', fix: 'Install Tectonic before P3' },
     { name: 'OpenRouter key', state: 'PASS', why: 'valid, 412 credits remaining', fix: null },
     { name: 'Ollama', state: 'WARN', why: 'not installed; no local fallback', fix: 'Optional: install Ollama' },
-    { name: 'Tailscale + certificate', state: 'PASS', why: 'server1.tail9f2.ts.net valid for 71 days', fix: null },
+    { name: 'Tailscale + certificate', state: 'PASS', why: 'neger7lost-archlinux.tail9f2.ts.net valid for 71 days', fix: null },
     { name: 'VAPID push keys', state: 'PASS', why: 'keys present, 1 device subscribed', fix: null },
     { name: 'Backup freshness', state: 'PASS', why: 'last backup 4h ago', fix: null },
-    { name: 'Pending sync conflicts', state: 'PASS', why: 'none', fix: null },
   ],
 
   logs: [
@@ -117,7 +115,7 @@ window.JOBPILOT = {
     { t: '14:04:12', lvl: 'ALERT', agent: 'scout', site: 'rekrute.com', msg: 'verification wall detected: security challenge. Agent frozen. push sent in 1.4s', dur: '1.4s' },
     { t: '14:04:11', lvl: 'INFO', agent: 'scout', site: 'rekrute.com', msg: 'clicked “page 2”', dur: '180ms' },
     { t: '14:03:40', lvl: 'INFO', agent: 'llm', site: '—', msg: 'openrouter/claude-haiku: 1 call, 812 tokens, $0.0004, 1.9s', dur: '1.9s' },
-    { t: '14:02:00', lvl: 'INFO', agent: 'lease', site: '—', msg: 'run 41 started on VPS (lease 30m, heartbeat 5s)', dur: '—' },
+    { t: '14:02:00', lvl: 'INFO', agent: 'lease', site: '—', msg: 'run 41 started on PC (lease 30m, heartbeat 5s)', dur: '—' },
   ],
 
   credentials: [
@@ -127,16 +125,12 @@ window.JOBPILOT = {
     { site: 'gmail (OAuth)', user: 'h•••@gmail.com', kind: 'token, read + send', lastUsed: '1h ago', uses: 64 },
   ],
 
-  sync: {
-    state: 'syncing',
-    lastDelta: '14 events pulled from PC',
-    hash: 'match after replay',
-    conflict: {
-      field: 'send hours',
-      pc: '09:00 – 18:00 Africa/Casablanca',
-      vps: '10:00 – 19:00 Europe/Berlin',
-      asked: 'security-relevant setting changed on both hosts while offline',
-    },
+  backup: {
+    state: 'current',
+    lastBackup: '4h ago',
+    size: '41 MB',
+    hash: 'hash verified',
+    note: 'Local backup on this PC; no second copy exists.',
   },
 
   artifacts: [
@@ -147,7 +141,7 @@ window.JOBPILOT = {
 
   learned: [
     { rule: 'Drop listings with no named employer', from: '2 rejections', host: 'PC' },
-    { rule: 'Shorten cover letters to 180 words', from: '4 edits', host: 'VPS' },
+    { rule: 'Shorten cover letters to 180 words', from: '4 edits', host: 'PC' },
     { rule: 'Down-weight “centre d’appels” sector', from: '3 rejections', host: 'PC' },
   ],
 };

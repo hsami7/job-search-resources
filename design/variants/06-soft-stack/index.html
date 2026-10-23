@@ -117,7 +117,7 @@ const shell = (id, inner) => `
 <header>
   <div class="row">
     <div class="brand"><i></i>jobPilot</div>
-    <div class="who"><b>${D.user.name}</b>${D.hosts[1].id} · synced</div>
+    <div class="who"><b>${D.user.name}</b>${D.hosts[0].id} · saved</div>
   </div>
   <div class="pills">${nav.map(([k,l])=>`<button class="pill" data-go="${k}">${l}</button>`).join('')}</div>
 </header>
@@ -225,7 +225,7 @@ verification: () => `
   </div>
   <div class="card"><h2>Past checks</h2>
     <div class="list"><div class="li"><div class="grow"><div class="t">rekrute.com · security challenge</div>
-      <div class="m">today 14:04 · VPS · open</div></div><span class="status bad">open</span></div>
+      <div class="m">today 14:04 · PC · open</div></div><span class="status bad">open</span></div>
       <div class="li"><div class="grow"><div class="t">linkedin.com · email code</div>
       <div class="m">yesterday 09:12 · PC</div></div><span class="status ok">1m 20s</span></div></div></div>`,
 
@@ -313,26 +313,21 @@ credentials: () => `
   </div></div>`,
 
 data: () => `
-  <h1>Backup &amp; sync</h1><p class="sub">Two machines, one history. Nothing is ever overwritten without asking.</p>
+  <h1>Backup</h1><p class="sub">One local history. Nothing leaves this PC unless you export it.</p>
   <div class="tiles" style="margin-bottom:12px">
     ${D.hosts.map(h=>`<div class="tile"><div class="k">${h.id} · ${h.label}</div>
       <div class="v num" style="margin:4px 0 2px">${h.events}</div><div class="k">events · ${h.db}</div>
       <div class="k">heartbeat ${h.heartbeat}</div></div>`).join('')}
   </div>
-  <div class="card"><h2>Sync</h2>
-    <div class="row" style="justify-content:space-between"><span>${D.sync.lastDelta}</span>
-      <span class="status info">${D.sync.state}</span></div>
-    <div style="font-size:12.5px;color:var(--dim);margin-top:4px">${D.sync.hash}</div>
-    <div class="actions"><button class="primary" data-act="Sync now">Sync now</button>
+  <div class="card"><h2>Backup</h2>
+    <div class="row" style="justify-content:space-between"><span>${D.backup.lastBackup} · ${D.backup.size}</span>
+      <span class="status info">${D.backup.state}</span></div>
+    <div style="font-size:12.5px;color:var(--dim);margin-top:4px">${D.backup.hash} · ${D.backup.note}</div>
+    <div class="actions"><button class="primary" data-act="Back up now">Back up now</button>
       <button data-act="Export everything">Export everything</button></div></div>
-  <div class="banner" style="border-color:#f8d8a8;background:var(--amber-wash)">
-    <h2 style="color:#8a5a08">A conflict needs you · ${D.sync.conflict.field}</h2>
-    <p style="margin:0 0 8px;font-size:13px;color:#7a5208">${D.sync.conflict.asked}</p>
-    <div class="actions" style="margin-top:0"><button data-act="Keep PC value">PC · ${D.sync.conflict.pc}</button>
-      <button data-act="Keep VPS value">VPS · ${D.sync.conflict.vps}</button></div></div>
   <div class="card"><h2>Danger zone</h2>
-    <p style="font-size:13px;color:var(--dim);margin:0 0 10px">Deletes the database and every generated letter on both machines. Cannot be undone.</p>
-    <button class="danger" data-act="Delete everything on both hosts">Delete everything</button></div>`,
+    <p style="font-size:13px;color:var(--dim);margin:0 0 10px">Deletes the database and every generated letter on this PC. Cannot be undone.</p>
+    <button class="danger" data-act="Delete everything on this PC">Delete everything</button></div>`,
 
 onboarding: () => `
   <h1>Let's set up</h1><p class="sub">Three of five done — about two minutes left.</p>
@@ -357,7 +352,7 @@ onboarding: () => `
 pwa: () => `
   <h1>On your phone</h1><p class="sub">Two things worth doing from a phone: unblock the agent, approve a letter.</p>
   <div class="phone"><div class="scr">
-    <div class="hd"><span>VPS · synced</span><span>trust 76</span></div>
+    <div class="hd"><span>PC · saved</span><span>trust 76</span></div>
     <div class="it" style="border-color:#f6ccd5;background:var(--rose-wash)">
       <div class="row" style="justify-content:space-between"><b style="color:#a92b42">Frozen · rekrute.com</b>
         <span class="status bad">2m</span></div>
@@ -406,7 +401,7 @@ settings: () => `
     <dt>Pacing</dt><dd>2.4 s between actions</dd></div></div>
   <div class="card"><h2>Preferences</h2><div class="kv">
     <dt>Interface</dt><dd>English</dd><dt>Letters</dt><dd>French</dd>
-    <dt>Run host</dt><dd>VPS <span class="status warn">restart to move</span></dd>
+    <dt>Run host</dt><dd>PC <span class="status">local only</span></dd>
     <dt>Push</dt><dd>walls + approvals</dd><dt>Quiet</dt><dd>22:00 – 07:00</dd></div>
     <div class="actions"><button class="primary" data-act="Save settings">Save</button>
       <button data-act="Discard changes">Discard</button></div></div>`,

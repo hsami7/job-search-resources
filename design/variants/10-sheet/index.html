@@ -102,13 +102,13 @@ const sheets = [['dashboard','Today'],['jobs','Jobs'],['job','Job'],['triage','T
 const shell = (id, ref, formula, body, footer) => `
 <div class="titlebar"><span class="logo"></span>
   <span class="doc">jobpilot.xlsx <span>· ${sheets.find(s=>s[0]===id)[1]} · read-only mockup</span></span>
-  <span class="save">run 41 · <b>synced to VPS</b></span></div>
+  <span class="save">run 41 · <b>saved to PC</b></span></div>
 <div class="menus">
   <span>File</span><span>Edit</span><span>View</span><span>Insert</span><span>Data</span><span>Run</span><span>Help</span>
   <span class="sep"></span>
   ${footer?.[0]||''}
   <span style="margin-left:auto"></span>
-  <span class="pill b">${D.hosts[1].id} ${D.hosts[1].label}</span>
+  <span class="pill b">${D.hosts[0].id} ${D.hosts[0].label}</span>
   <span class="pill">trust ${D.trust.score}</span>
 </div>
 <div class="fbar"><div class="cellref">${ref}</div><div class="fx">fx</div>
@@ -131,7 +131,7 @@ dashboard: () => shell('dashboard','B4','=COUNTIF(Jobs!G2:G9,"high")',
   cols(['A · signal','B · job','C · employer','D · city','E · source','F · match','G · state','H · action'],[80,300,180,110,150,70,130,100]) +
   rows([
     ['1','jobPilot — today, 22 October 2026','','','','','',''],
-    ['2','<span class="pill r">BLOCKED</span>','rekrute.com · security challenge','frozen 2m 10s','VPS','verification',88,'<button class="cellbtn p" data-go="verification">Resolve</button>'],
+    ['2','<span class="pill r">BLOCKED</span>','rekrute.com · security challenge','frozen 2m 10s','PC','verification',88,'<button class="cellbtn p" data-go="verification">Resolve</button>'],
     ['3','<span class="pill g">READY</span>','Conseiller de service','Auto Hall','Casablanca','rekrute.com',88,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
     ['4','<span class="pill g">READY</span>','Business développeur','Alten Maroc','Rabat','rekrute.com',84,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
     ['5','<span class="pill g">READY</span>','Technicien Laboratoire','AKDITAL','Mohammédia','rekrute.com',81,'<button class="cellbtn p" data-act="Approve">Approve</button>'],
@@ -178,7 +178,7 @@ verification: () => shell('verification','C3','=IF(Verification!B3="open","FROZE
   rows([
     ['1','<span class="b">Verification event</span>','rekrute.com','security challenge',''],
     ['2','state','<span class="pill r">FROZEN</span>','agent paused, no retry',''],
-    ['3','detected','2026-10-22 14:04:12','host VPS',''],
+    ['3','detected','2026-10-22 14:04:12','host PC',''],
     ['4','elapsed','2m 10s','push delivered in 1.4s',''],
     ['5','url','<span class="mono">https://www.rekrute.com/offres-emploi-maroc.html?page=2</span>','','<button class="cellbtn" data-act="Open in browser">Open</button>'],
     ['6','run','run 41 · job “Technicien Laboratoire”','',''],
@@ -192,7 +192,7 @@ verification: () => shell('verification','C3','=IF(Verification!B3="open","FROZE
     ['14','<span class="b">Resolve</span>','<input class="sheetin" placeholder="000000" aria-label="code">','','<button class="cellbtn p" data-act="Submit code and resume">Submit + resume</button>'],
     ['15','','','','<button class="cellbtn" data-act="I finished — resume">I finished it</button> <button class="cellbtn d" data-act="Abandon run">Abandon</button>'],
     ['16','<span class="b">History</span>','','',''],
-    ['17','today 14:04','rekrute.com','security challenge · VPS','<span class="pill r">open</span>'],
+    ['17','today 14:04','rekrute.com','security challenge · PC','<span class="pill r">open</span>'],
     ['18','yesterday 09:12','linkedin.com','email code · PC','<span class="pill g">1m 20s</span>'],
   ], 2),
   ['<button data-go="pwa">Take control on phone</button>','']),
@@ -211,10 +211,10 @@ doctor: () => shell('doctor','C8','=COUNTIF(Doctor!C2:C16,"FAIL")',
     ['9','<span class="pill a">WARN</span>','Tectonic + LaTeX','not installed','PDF falls back to Markdown','Install Tectonic','—'],
     ['10','<span class="pill g">PASS</span>','OpenRouter key','valid','412 credits','',''],
     ['11','<span class="pill a">WARN</span>','Ollama','not installed','no local fallback','Optional','—'],
-    ['12','<span class="pill g">PASS</span>','Tailscale certificate','valid 71 days','server1.tail9f2.ts.net','',''],
+    ['12','<span class="pill g">PASS</span>','Tailscale certificate','valid 71 days','neger7lost-archlinux.tail9f2.ts.net','',''],
     ['13','<span class="pill g">PASS</span>','VAPID push keys','1 device','','',''],
     ['14','<span class="pill g">PASS</span>','Backup freshness','4h ago','','',''],
-    ['15','<span class="pill g">PASS</span>','Sync conflicts','none','','',''],
+    ['15','<span class="pill g">PASS</span>','Backup freshness','4h ago','','',''],
     ['16','','<span class="b">TOTAL</span>','11 pass · 2 warn · 2 fail','<span class="pill a">trust 76 · caution</span>','estimate, not a guarantee',''],
     ['17','','','','<button class="cellbtn" data-act="Re-run checks">Re-run all</button> <button class="cellbtn d" data-act="Run anyway (logged)">Run anyway</button>',''],
   ], 6),
@@ -257,7 +257,7 @@ agent: () => shell('agent','B3','=Brave.Version()',
     ['6','cookies_on_exit','false','chrome.settingsPrivate.getAllPrefs()','<span class="pill g">logins survive</span>'],
     ['7','browsing_history_on_exit','false','same','<span class="pill g">history survives</span>'],
     ['8','restore_on_startup','1','same','<span class="pill g">continue where you left off</span>'],
-    ['9','','<span class="g">Brave desktop has no global “Forgetful Browsing” toggle — these three are the real gate</span>','',''],
+    ['9','','<span class="g">Brave desktop has no single keep-cookies switch — these three are the real gate</span>','',''],
     ['10','<span class="b">Signed out</span>','','',''],
     ['11','rekrute.com','needs sign-in','vault entry present','<span class="pill r">signed out</span>'],
     ['12','linkedin.com','manual login','no password stored','<span class="pill r">signed out</span>'],
@@ -278,21 +278,17 @@ credentials: () => shell('credentials','C2','=COUNTA(Vault!A2:E5)',
   ], 1),
   ['<button data-act="Rotate passphrase">Rotate passphrase</button><button data-act="Export audit">Export audit</button>','']),
 
-data: () => shell('data','B2','=SUM(PC.Events, VPS.Events)',
-  cols(['A · host','B · state','C · heartbeat','D · database','E · events','F · last merge','G · note'],[110,110,110,100,90,130,300]) +
+data: () => shell('data','B2','=SUM(PC.Events)',
+  cols(['A · host','B · state','C · heartbeat','D · database','E · events','F · last backup','G · note'],[110,110,110,100,90,130,300]) +
   rows([
-    ['1','<span class="b">Host</span>','State','Heartbeat','DB','Events','Last merge','Note'],
-    ['2','PC','<span class="pill a">connecting</span>','12s ago','38 MB','1204','yesterday 21:10','offline overnight'],
-    ['3','VPS','<span class="pill g">synced</span>','1s ago','41 MB','1288','just now','lease holder'],
-    ['4','','','','','','',''],
-    ['5','<span class="b">Conflict</span>','send hours','','','','',''],
-    ['6','PC value','09:00 – 18:00 Africa/Casablanca','','','','','<button class="cellbtn" data-act="Keep PC value">Keep</button>'],
-    ['7','VPS value','10:00 – 19:00 Europe/Berlin','','','','','<button class="cellbtn" data-act="Keep VPS value">Keep</button>'],
-    ['8','note','<span class="pill a">security-relevant</span>','changed on both while offline','','','','last-writer-wins disabled'],
-    ['9','','','','','','',''],
-    ['10','<span class="b">Sync</span>',D.sync.state,D.sync.lastDelta,'','','<span class="pill g">hash match</span>','<button class="cellbtn p" data-act="Sync now">Sync now</button>'],
-    ['11','export','jsonl + files','','','','','<button class="cellbtn" data-act="Export everything">Export</button>'],
-    ['12','delete','both hosts','','','','','<button class="cellbtn d" data-act="Delete everything on both hosts">Delete</button>'],
+    ['1','<span class="b">Host</span>','State','Heartbeat','DB','Events','Last backup','Note'],
+    ['2','PC','<span class="pill g">saved</span>','1s ago','41 MB','1288','4h ago','one local writer'],
+    ['3','','','','','','',''],
+    ['4','<span class="b">Backup</span>',D.backup.state,D.backup.size,'','',D.backup.hash,'<button class="cellbtn p" data-act="Back up now">Back up now</button>'],
+    ['5','note',D.backup.note,'','','','',''],
+    ['6','','','','','','',''],
+    ['7','export','jsonl + files','','','','','<button class="cellbtn" data-act="Export everything">Export</button>'],
+    ['8','delete','this PC','','','','','<button class="cellbtn d" data-act="Delete everything on this PC">Delete</button>'],
   ], 1),
   ['<button data-act="Verify hashes">Verify hashes</button>','']),
 
@@ -315,7 +311,7 @@ pwa: () => shell('pwa','A2','=PHONE(390,844)',
   cols(['A · phone screen','B · content'],[220,560]) +
   rows([
     ['1','<span class="b">PWA · 390 × 844</span>','<span class="g">two jobs only: unblock, approve</span>'],
-    ['2','status bar','VPS · synced · trust 76 · 14:06'],
+    ['2','status bar','PC · saved · trust 76 · 14:06'],
     ['3','<span class="pill r">FROZEN</span>','rekrute.com · security challenge · 2m ago'],
     ['4','action','<button class="cellbtn p" data-go="verification">Take control</button> <button class="cellbtn" data-act="Enter code">Enter code</button>'],
     ['5','job 1','Conseiller de service · Auto Hall · Casablanca · match 88'],
@@ -356,7 +352,7 @@ settings: () => shell('settings','B2','=CONFIG()',
     ['6','','pacing.ms','2400','human pace'],
     ['7','<span class="b">Preferences</span>','ui.language','English',''],
     ['8','','letters.language','French','posting language'],
-    ['9','','run.host','VPS','<span class="pill a">restart to move</span>'],
+    ['9','','run.host','PC','<span class="pill g">local only</span>'],
     ['10','','notify.push','walls, approvals',''],
     ['11','','notify.quiet','22:00 – 07:00',''],
     ['12','','logs.retention','30 days',''],

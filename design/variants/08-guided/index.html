@@ -117,7 +117,7 @@ const shell = (id, inner, opts={}) => {
   return `
 <header class="top">
   <div class="in"><div class="mark">job<span>Pilot</span></div>
-    <div class="where">${D.user.name} · ${D.hosts[1].id} synced · step <b>${i+1}</b> of ${order.length} · <b>${label}</b></div></div>
+    <div class="where">${D.user.name} · ${D.hosts[0].id} saved · step <b>${i+1}</b> of ${order.length} · <b>${label}</b></div></div>
   <div class="ticks">${order.map(([sk],j)=>`<a href="#${sk}" data-go="${sk}" class="${j<i?'done':''}"></a>`).join('')}</div>
 </header>
 <main>${inner}</main>
@@ -136,7 +136,7 @@ dashboard: () => `<div class="narrow">
   <div class="stepno">Step 1 · today</div>
   <h1>Good morning. Four things need a human.</h1>
   <p class="lede">The agent found six listings overnight. One site is holding it up with a security check. Nothing is sent until you say so.</p>
-  <a href="#verification" data-go="verification" style="display:block;color:inherit">${choice('!','Resolve the check on rekrute.com','Frozen for 2m 10s on the VPS. The run cannot continue until you look.','primary danger')}</a>
+  <a href="#verification" data-go="verification" style="display:block;color:inherit">${choice('!','Resolve the check on rekrute.com','Frozen for 2m 10s on the PC. The run cannot continue until you look.','primary danger')}</a>
   <a href="#triage" data-go="triage" style="display:block;color:inherit">${choice('3','Approve three applications','Auto Hall, Alten Maroc and AKDITAL scored 81 or better.')}</a>
   <a href="#triage" data-go="triage" style="display:block;color:inherit">${choice('2','Decide on two unclear listings','One has no named employer; the other used all three review rounds.','warn')}</a>
   <a href="#jobs" data-go="jobs" style="display:block;color:inherit">${choice('6','Look at what was found','Six valid listings, two dropped as noise.')}</a>
@@ -178,7 +178,7 @@ triage: () => `<div class="narrow">
 verification: () => `<div class="narrow">
   <div class="stepno">Step 5 · verification</div>
   <h1>The agent is stuck on a security check.</h1>
-  <p class="lede">rekrute.com asked for a human check at 14:04 on the VPS. Everything stopped. It will not guess, retry, or move on.</p>
+  <p class="lede">rekrute.com asked for a human check at 14:04 on the PC. Everything stopped. It will not guess, retry, or move on.</p>
   <div class="shot">screenshot of the paused tab · one-time values redacted</div>
   <div class="kv">
     <div><span>Went to</span><b>${D.verification.guidance.account}</b></div>
@@ -256,7 +256,7 @@ agent: () => `<div class="narrow">
     <div><span>History survives close</span><b style="color:var(--teal)">verified</b></div>
     <div><span>Continue where you left off</span><b style="color:var(--teal)">verified</b></div>
   </div>
-  <div class="note">The plan called this a “Forgetful Browsing” gate. Brave desktop has no global toggle by that name; these three preferences are what actually decide whether logins survive a restart.</div>
+  <div class="note">Brave desktop has no single keep-cookies switch; these three preferences are what actually decide whether logins survive a restart.</div>
   <div class="row"><button class="primary" data-act="Re-check now">Re-check now</button>
     <button data-act="Restart browser">Restart the browser</button>
     <button class="ghost" data-go="credentials">Open passwords</button></div>
@@ -281,21 +281,18 @@ credentials: () => `<div class="narrow">
 
 data: () => `<div class="narrow">
   <div class="stepno">Step 11 · backup</div>
-  <h1>Two machines disagree about one thing.</h1>
-  <p class="lede">Both changed the send hours while offline. Because it decides when the agent may act, it will not resolve itself.</p>
+  <h1>One local copy, backed up.</h1>
+  <p class="lede">The PC holds the only database. A backup keeps it recoverable; moving machines is stop → copy → start, never a merge.</p>
   <div class="grid2" style="margin-bottom:18px">
     ${D.hosts.map(h=>`<div class="card"><h3>${h.id} · ${h.label}</h3>
-      <p>${h.events} events · ${h.db} · heartbeat ${h.heartbeat}<br>last merge ${h.lastSync}</p></div>`).join('')}
+      <p>${h.events} events · ${h.db} · heartbeat ${h.heartbeat}<br>last backup ${h.lastBackup}</p></div>`).join('')}
   </div>
-  <div class="choice primary" style="cursor:default"><div class="ic">?</div>
-    <div><div class="t">${D.sync.conflict.field}</div>
-      <div class="d">PC: ${D.sync.conflict.pc}<br>VPS: ${D.sync.conflict.vps}</div></div></div>
-  <div class="row"><button class="primary" data-act="Keep PC value">Keep the PC value</button>
-    <button data-act="Keep VPS value">Keep the VPS value</button></div>
-  <h2>Everything else</h2>
-  <div class="row"><button data-act="Sync now">Sync now</button>
+  <div class="choice primary" style="cursor:default"><div class="ic">✓</div>
+    <div><div class="t">Backup ${D.backup.state}</div>
+      <div class="d">${D.backup.lastBackup} · ${D.backup.size} · ${D.backup.hash}</div></div></div>
+  <div class="row"><button class="primary" data-act="Back up now">Back up now</button>
     <button data-act="Export everything">Export everything</button>
-    <button class="danger" data-act="Delete everything on both hosts">Delete everything</button></div>
+    <button class="danger" data-act="Delete everything on this PC">Delete everything</button></div>
 </div>`,
 
 onboarding: () => `<div class="narrow">
@@ -319,7 +316,7 @@ pwa: () => `<div class="narrow">
   <h1>Two jobs for the phone.</h1>
   <p class="lede">Unblock the agent, and approve or skip a letter. Everything else is better on a bigger screen.</p>
   <div class="phone"><div class="scr">
-    <div class="hd"><span>VPS · synced</span><span>trust 76</span></div>
+    <div class="hd"><span>PC · saved</span><span>trust 76</span></div>
     <div class="it" style="background:var(--red-wash)">
       <div class="t" style="color:var(--red)">Frozen · rekrute.com</div>
       <div class="m">security check · 2m ago</div>
@@ -362,7 +359,7 @@ settings: () => `<div class="narrow">
   ${choice('{}','Model','claude-haiku via OpenRouter · key valid · no fallback')}
   ${choice('⏱','Schedule','scan 08:00–20:00 · send 09:00–18:00 Casablanca · 2.4 s pacing')}
   ${choice('A','Language','interface English · letters French, the language of the posting')}
-  ${choice('▣','Run host','VPS · moving to the PC needs a restart and a sync first')}
+  ${choice('▣','Run host','PC · the agent runs here; the phone is only a client')}
   ${choice('!','Notifications','walls and approvals · quiet 22:00–07:00')}
   <div class="row" style="margin-top:18px"><button class="primary" data-act="Save settings">Save</button>
     <button data-act="Discard changes">Discard</button></div>

@@ -113,7 +113,7 @@
 const D = window.JOBPILOT;
 const nav = [['dashboard','Today'],['jobs','Jobs'],['job','Job'],['triage','Approve'],['verification','Verify'],
   ['doctor','Health'],['logs','Activity'],['scope','Sites'],['agent','Browser'],
-  ['credentials','Vault'],['data','Sync'],['onboarding','Setup'],['pwa','Phone'],['settings','Settings']];
+  ['credentials','Vault'],['data','Data'],['onboarding','Setup'],['pwa','Phone'],['settings','Settings']];
 
 const shell = (id, inner, drawer) => `
 <div class="navwrap"><nav class="seg" aria-label="sections">
@@ -140,7 +140,7 @@ dashboard: () => [`
     <div class="stat red"><div class="k">blocked</div><div class="v">1</div><div class="d">security check</div></div>
   </div>
   <div class="alert"><h2><span class="pulse red" style="display:inline-block;margin-right:8px"></span>rekrute.com is waiting on you</h2>
-    <p>A security challenge appeared 2m 10s ago on the VPS. Every action is frozen.</p>
+    <p>A security challenge appeared 2m 10s ago on the PC. Every action is frozen.</p>
     <div class="row" style="margin-top:10px"><button class="btn p" data-go="verification">Take a look</button>
       <button class="btn d" data-act="Abandon run">Abandon</button></div></div>
   <div class="grid2">
@@ -220,7 +220,7 @@ verification: () => [`
     <div class="m" style="margin-top:8px">No auto-retry. No timer. No solving service. The run waits for you.</div></div>
   <div class="card"><h2>Earlier</h2>
     <div class="item"><div class="score r">!</div><div style="flex:1"><div class="t">rekrute.com · security challenge</div>
-      <div class="m">today 14:04 · VPS · open</div></div></div>
+      <div class="m">today 14:04 · PC · open</div></div></div>
     <div class="item"><div class="score">✓</div><div style="flex:1"><div class="t">linkedin.com · email code</div>
       <div class="m">yesterday 09:12 · PC · resolved in 1m 20s</div></div></div></div>`,
   `<h3>Where it went</h3><div class="m">Check these before asking for a new code.</div>
@@ -267,7 +267,7 @@ logs: () => [`
     <td class="m" style="width:60px">${l.agent}</td><td>${l.msg}</td>
     <td class="m" style="width:44px">${l.dur}</td></tr>`).join('')}</table>
   <div class="row" style="margin-top:10px"><button class="btn" data-act="Explain last error">Explain last error</button></div></div>`,
-  `<h3>Run 41</h3><div class="m">Lease on the VPS, heartbeat every 5 seconds.</div>
+  `<h3>Run 41</h3><div class="m">Lease on the PC, heartbeat every 5 seconds.</div>
   <div class="m" style="line-height:1.9;margin-top:10px">
     14:02 lease acquired<br>14:02 browser attached<br>14:06 page one parsed<br>14:04 wall detected<br>--:-- waiting for you</div>
   <div style="margin-top:14px"><button class="btn" data-act="Copy run id">Copy run id</button></div>`],
@@ -309,7 +309,7 @@ agent: () => [`
     <span class="tag r">rekrute.com</span><span class="tag r">linkedin.com</span>
     <button class="btn" style="margin-left:auto" data-go="credentials">Open vault</button></div></div>`,
   `<h3>Why these three</h3>
-  <div class="m" style="line-height:1.7">Brave desktop has no global “Forgetful Browsing” switch. These three preferences are the real gate, read back through Brave's settings API before every run.</div>
+  <div class="m" style="line-height:1.7">Brave desktop has no single keep-cookies switch. These three preferences are the real gate, read back through Brave's settings API before every run.</div>
   <dl class="dl" style="margin-top:12px"><dt>checked</dt><dd>14:06 · 1.1s</dd><dt>next</dt><dd>before each run</dd>
     <dt>source</dt><dd>brave://settings/shields</dd></dl>`],
 
@@ -330,25 +330,21 @@ credentials: () => [`
     <dt>backup</dt><dd>included in export</dd></dl>`],
 
 data: () => [`
-  <h1>Sync</h1><p class="sub">Two hosts, one event history. Conflicts stop and ask.</p>
+  <h1>Data</h1><p class="sub">One PC, one local event history. Backups keep it recoverable.</p>
   <div class="grid2">
     ${D.hosts.map(h=>`<div class="card"><h2><span class="pulse ${h.state==='green'?'':'amber'}"></span>${h.id} · ${h.label}</h2>
       <div class="v" style="font-size:32px;font-weight:600;letter-spacing:-.03em">${h.events}</div>
-      <div class="m">events · ${h.db} · heartbeat ${h.heartbeat}<br>last merge ${h.lastSync}</div></div>`).join('')}
+      <div class="m">events · ${h.db} · heartbeat ${h.heartbeat}<br>last backup ${h.lastBackup}</div></div>`).join('')}
   </div>
-  <div class="card"><h2>Pending conflict</h2>
-    <div class="t">${D.sync.conflict.field}</div>
-    <div class="m" style="margin-bottom:10px">${D.sync.conflict.asked}</div>
-    <div class="row"><button class="btn" data-act="Keep PC value">PC · ${D.sync.conflict.pc}</button>
-      <button class="btn" data-act="Keep VPS value">VPS · ${D.sync.conflict.vps}</button></div>
-    <div class="m" style="margin-top:8px">Last-writer-wins is disabled for security settings.</div></div>
-  <div class="card"><h2>Actions</h2><div class="row">
-    <button class="btn p" data-act="Sync now">Sync now</button>
-    <button class="btn" data-act="Export everything">Export everything</button>
-    <button class="btn d" data-act="Delete everything on both hosts">Delete on both hosts</button></div></div>`,
-  `<h3>${D.sync.lastDelta}</h3><div class="m">${D.sync.hash}</div>
-  <dl class="dl" style="margin-top:12px"><dt>state</dt><dd>${D.sync.state}</dd><dt>queue</dt><dd>0 events</dd>
-    <dt>backup</dt><dd>4 hours ago</dd></dl>
+  <div class="card"><h2>Backup</h2>
+    <div class="t">${D.backup.state} · ${D.backup.lastBackup}</div>
+    <div class="m" style="margin-bottom:10px">${D.backup.size} · ${D.backup.hash}. ${D.backup.note}</div>
+    <div class="row"><button class="btn p" data-act="Back up now">Back up now</button>
+      <button class="btn" data-act="Export everything">Export everything</button>
+      <button class="btn d" data-act="Delete everything on this PC">Delete on this PC</button></div></div>`,
+  `<h3>${D.backup.lastBackup}</h3><div class="m">${D.backup.hash}</div>
+  <dl class="dl" style="margin-top:12px"><dt>state</dt><dd>${D.backup.state}</dd><dt>size</dt><dd>${D.backup.size}</dd>
+    <dt>scope</dt><dd>this PC</dd></dl>
   <div style="margin-top:14px"><button class="btn" data-go="logs">Event log</button></div>`],
 
 onboarding: () => [`
@@ -375,7 +371,7 @@ onboarding: () => [`
 pwa: () => [`
   <h1>Phone</h1><p class="sub">Two jobs only: unblock the agent, approve a letter.</p>
   <div class="phone"><div class="scr">
-    <div class="hd"><span>VPS · synced</span><span>76</span></div>
+    <div class="hd"><span>PC · saved</span><span>76</span></div>
     <div class="it" style="background:rgba(248,81,73,.08)">
       <div style="display:flex;justify-content:space-between"><b style="color:#ffa198">Frozen · rekrute.com</b>
         <span class="tag r">2m</span></div>
@@ -427,7 +423,7 @@ settings: () => [`
       <dt>pacing</dt><dd>2.4 s</dd></dl></div>
     <div class="card"><h2>Preferences</h2><dl class="dl">
       <dt>interface</dt><dd>English</dd><dt>letters</dt><dd>French</dd>
-      <dt>run host</dt><dd>VPS <span class="tag a">restart</span></dd></dl></div>
+      <dt>run host</dt><dd>PC <span class="tag a">local only</span></dd></dl></div>
     <div class="card"><h2>Notifications</h2><dl class="dl">
       <dt>push</dt><dd>walls + approvals</dd><dt>quiet</dt><dd>22:00 – 07:00</dd>
       <dt>devices</dt><dd>1</dd></dl></div>

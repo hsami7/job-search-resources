@@ -126,7 +126,7 @@ dashboard: () => `
       <div class="lbl">2 low signal dropped</div></div></div>
   </div>
   ${pane('! blocked', D.verification.age, `
-    <pre style="color:var(--bad)">FROZEN  verification wall · rekrute.com · host VPS
+    <pre style="color:var(--bad)">FROZEN  verification wall · rekrute.com · host PC
         ${D.verification.url}
         agent will not click until you resolve</pre>
     <div class="act"><button class="p" data-go="verification">[ F4 ] resolve</button>
@@ -224,7 +224,7 @@ logs: () => `
     <button data-act="Explain last error">explain last error</button>
     <button data-act="Copy run id">copy run id</button></div>`)}
   ${pane('run 41 · timeline', 'started 14:02 · lease 30m', `<pre class="tree">
-14:02:00  <b>lease</b>      acquired on VPS, heartbeat 5s
+14:02:00  <b>lease</b>      acquired on PC, heartbeat 5s
 14:02:03  <b>browser</b>    brave 1.98.60 attached, profile writable
 14:04:12  <b>alert</b>      verification wall — agent frozen
 14:04:13  <b>push</b>       phone + desktop, delivered
@@ -254,9 +254,8 @@ agent: () => `
       <dt>yours</dt><dd>never attached</dd></dl>
     <div class="act"><button data-act="Restart browser">restart</button>
       <button data-act="Switch to Chrome">use chrome</button><button data-go="settings">settings</button></div>`)}
-    ${pane('session survival', 'required', `<pre class="tree">the plan said “forgetful browsing”.
-brave desktop has no global toggle.
-these decide it:</pre>
+    ${pane('session survival', 'required', `<pre class="tree">brave desktop has no single keep-cookies switch.
+these three preferences decide it:</pre>
     <table style="margin-top:6px">
       <tr><td>cookies_on_exit</td><td><span class="st ok">survive</span></td></tr>
       <tr><td>history_on_exit</td><td><span class="st ok">survive</span></td></tr>
@@ -284,17 +283,14 @@ credentials: () => `
 data: () => `
   <div class="cols c2">
     ${D.hosts.map(h=>pane(`${h.id}`, h.label, `<div class="big">${h.events}</div>
-      <div class="lbl">events · db ${h.db} · heartbeat ${h.heartbeat} · last merge ${h.lastSync}</div>`)).join('')}
+      <div class="lbl">events · db ${h.db} · heartbeat ${h.heartbeat} · last backup ${h.lastBackup}</div>`)).join('')}
   </div>
-  ${pane('sync', D.sync.state, `<pre class="tree">${D.sync.lastDelta}
-${D.sync.hash}</pre>
-  <div class="act"><button class="p" data-act="Sync now">sync now</button><button data-act="Export everything">export</button></div>`)}
-  ${pane('conflict · '+D.sync.conflict.field, 'needs a human', `<pre class="tree">${D.sync.conflict.asked}</pre>
-  <table style="margin-top:6px">
-    <tr><td style="width:60px" class="lbl">pc</td><td>${D.sync.conflict.pc}</td><td><button data-act="Keep PC value">keep pc</button></td></tr>
-    <tr><td class="lbl">vps</td><td>${D.sync.conflict.vps}</td><td><button data-act="Keep VPS value">keep vps</button></td></tr>
-  </table>
-  <pre class="tree" style="margin-top:8px;color:var(--bad)">last-writer-wins is disabled for security settings.</pre>`)}`,
+  ${pane('backup', D.backup.state, `<pre class="tree">last backup ${D.backup.lastBackup} · ${D.backup.size}
+${D.backup.hash}</pre>
+  <div class="act"><button class="p" data-act="Back up now">back up now</button><button data-act="Export everything">export</button></div>`)}
+  ${pane('export', 'local only', `<pre class="tree">${D.backup.note}
+Moving machines: stop → copy data/ → start. No merge.</pre>
+  <div class="act"><button class="d" data-act="Delete everything on this PC">delete everything</button></div>`)}`,
 
 onboarding: () => `
   ${pane('first run', '3 of 5 · ~2 min left', `
@@ -312,7 +308,7 @@ reads listings, scores them against your resume, writes a letter
 fills the form in a real browser; <b>you press submit</b></pre>`)}`,
 
 pwa: () => `
-  ${pane('phone · pwa', '390×844', `<div class="phone"><div class="hd"><span>● vps synced</span><span>trust 76</span></div>
+  ${pane('phone · pwa', '390×844', `<div class="phone"><div class="hd"><span>● pc saved</span><span>trust 76</span></div>
     <div class="it" style="border-color:var(--bad)"><span class="st flip">FROZEN</span>
       <div style="margin-top:4px">rekrute.com · challenge</div>
       <div class="lbl">2m ago · push delivered</div>
@@ -353,7 +349,7 @@ settings: () => `
   <tr><td>schedule.pacing_ms</td><td>2400</td><td></td></tr>
   <tr><td>ui.language</td><td>en</td><td></td></tr>
   <tr><td>letters.language</td><td>fr</td><td></td></tr>
-  <tr><td>run.host</td><td>vps</td><td><span class="st warn">restart</span></td></tr>
+  <tr><td>run.host</td><td>pc</td><td><span class="st">local only</span></td></tr>
   <tr><td>notify.push</td><td>walls,approvals</td><td></td></tr>
   <tr><td>notify.quiet</td><td>22:00 – 07:00</td><td></td></tr>
   </table><div class="act"><button class="p" data-act="Save settings">save</button>

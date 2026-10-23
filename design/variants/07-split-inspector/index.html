@@ -146,7 +146,7 @@ const shell = (id, main, aside) => `
 <div class="statusbar">
   <span>⎇ run 41 · ${D.run.state}</span><span>${D.run.site} · page 1/3</span>
   <span>trust 76 · caution</span><span>db 41 MB</span>
-  <span class="r"><span>sync ${D.hosts[1].lastSync}</span><span>P0 mockup</span></span>
+  <span class="r"><span>backup ${D.hosts[0].lastBackup}</span><span>P0 mockup</span></span>
 </div>`;
 
 const asideHead = (t, sub) => `<div style="padding:10px 12px 8px;border-bottom:1px solid var(--line2)">
@@ -301,7 +301,7 @@ doctor: () => [`
   <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">
     <p style="margin:0 0 6px">No GL context on this host. Websites that fingerprint rendering see an unusual machine.</p>
     <p style="margin:0 0 8px;color:var(--dim)">Forcing SwiftShader would produce a recognisable software renderer — a different tell, not a fix.</p>
-    <div class="kv"><dt>host</dt><dd>VPS · aarch64</dd><dt>fix</dt><dd>Mesa llvmpipe (apt)</dd><dt>needs</dt><dd>a restart</dd></div>
+    <div class="kv"><dt>host</dt><dd>PC · aarch64</dd><dt>fix</dt><dd>Mesa llvmpipe (apt)</dd><dt>needs</dt><dd>a restart</dd></div>
     <div style="margin-top:8px"><button data-act="Open install instructions">Open instructions</button></div>
   </div>
   <div style="border-top:1px solid var(--line2)">${asideHead('Trust breakdown','')}
@@ -326,10 +326,10 @@ logs: () => [`
   <div style="padding:10px 12px">
     <div class="kv"><dt>level</dt><dd style="color:var(--red)">ALERT</dd><dt>agent</dt><dd>scout</dd>
       <dt>site</dt><dd>rekrute.com</dd><dt>run</dt><dd>41</dd><dt>duration</dt><dd>1.4s</dd>
-      <dt>host</dt><dd>VPS</dd></div>
+      <dt>host</dt><dd>PC</dd></div>
     <div style="margin-top:10px;font-size:11.5px">Verification wall detected at 14:04:12. Agent frozen, push sent to one device in 1.4 s.</div>
     <div class="mono" style="margin-top:10px;background:#f6f8fa;border:1px solid var(--line);border-radius:5px;padding:8px;font-size:10.5px;line-height:1.6">
-      { "event": "verification.detected",<br>"site": "rekrute.com",<br>"host": "vps",<br>"action": "freeze" }</div>
+      { "event": "verification.detected",<br>"site": "rekrute.com",<br>"host": "pc",<br>"action": "freeze" }</div>
     <div class="dim" style="font-size:11px;margin-top:8px">Screenshot and URL are attached to the event; cookies and codes are stripped.</div>
   </div>`],
 
@@ -371,7 +371,7 @@ agent: () => [`
     </tbody></table></div></div>`,
   `${asideHead('Why these three','')}
   <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">
-    <p style="margin:0 0 8px">The plan called this a “Forgetful Browsing” gate. Brave desktop 1.98.60 has no global switch by that name.</p>
+    <p style="margin:0 0 8px">Brave desktop 1.98.60 has no single keep-cookies switch.</p>
     <p style="margin:0 0 8px">These are the preferences that actually decide whether a session outlives the window — read back through Brave's settings API, not assumed.</p>
     <div class="kv"><dt>checked</dt><dd>14:06, 1.1s</dd><dt>next</dt><dd>before every run</dd></div>
     <div style="margin-top:8px"><button class="p" data-act="Re-check now">Re-check now</button></div>
@@ -405,31 +405,25 @@ credentials: () => [`
 
 data: () => [`
   <div class="crumb"><b>Account</b><span>/</span><span>Data</span></div>
-  <div class="h"><h1>Sync</h1><div class="r"><button class="p" data-act="Sync now">Sync now</button></div></div>
+  <div class="h"><h1>Data</h1><div class="r"><button class="p" data-act="Back up now">Back up now</button></div></div>
   <div class="stat">
     ${D.hosts.map(h=>`<div><div class="k">${h.id} · ${h.label}</div><div class="v">${h.events}</div>
-      <div class="k">${h.db} · ${h.lastSync}</div></div>`).join('')}
-    <div><div class="k">pending</div><div class="v" style="color:var(--amber)">1</div><div class="k">conflict</div></div>
+      <div class="k">${h.db} · ${h.lastBackup}</div></div>`).join('')}
+    <div><div class="k">backup</div><div class="v" style="color:var(--green)">ok</div><div class="k">${D.backup.lastBackup}</div></div>
   </div>
-  <div class="alert" style="border-color:#f8d8a8;background:#fff8e6">
-    <h2 style="color:var(--amber)">Conflict · ${D.sync.conflict.field}</h2>
-    <p style="color:#7d4e00">${D.sync.conflict.asked}</p>
-    <div style="display:flex;gap:6px;margin-top:6px"><button data-act="Keep PC value">Keep PC · ${D.sync.conflict.pc}</button>
-      <button data-act="Keep VPS value">Keep VPS · ${D.sync.conflict.vps}</button></div>
-  </div>
-  <div class="panel"><header><b>Event stream</b><span class="dim">${D.sync.lastDelta}</span></header>
+  <div class="panel"><header><b>Event stream</b><span class="dim">one local writer</span></header>
     <div class="c tight"><table><tbody>
-      <tr><td class="mono dim" style="width:56px">14:06</td><td>run.started</td><td class="dim">vps · run 41</td></tr>
-      <tr><td class="mono dim">14:04</td><td>verification.detected</td><td class="dim">vps · rekrute.com</td></tr>
+      <tr><td class="mono dim" style="width:56px">14:06</td><td>run.started</td><td class="dim">pc · run 41</td></tr>
+      <tr><td class="mono dim">14:04</td><td>verification.detected</td><td class="dim">pc · rekrute.com</td></tr>
       <tr><td class="mono dim">13:58</td><td>credential.revealed</td><td class="dim">pc · marocannonces</td></tr>
     </tbody></table></div></div>`,
-  `${asideHead('Merge rule','')}
+  `${asideHead('Backup','')}
   <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">
-    <p style="margin:0 0 8px">Events are append-only and replay deterministically. ${D.sync.hash}.</p>
-    <p style="margin:0 0 8px">Security-relevant settings never use last-writer-wins — they stop and ask, even when one host is offline for a week.</p>
-    <div class="kv"><dt>database</dt><dd>SQLite, WAL</dd><dt>backup</dt><dd>4 hours ago</dd><dt>export</dt><dd>jsonl + files</dd></div>
+    <p style="margin:0 0 8px">Events are append-only and replay deterministically. ${D.backup.hash}.</p>
+    <p style="margin:0 0 8px">${D.backup.note} Moving machines is stop → copy data/ → start; nothing is merged.</p>
+    <div class="kv"><dt>database</dt><dd>SQLite, WAL</dd><dt>backup</dt><dd>${D.backup.lastBackup}</dd><dt>export</dt><dd>jsonl + files</dd></div>
     <div style="margin-top:8px;display:flex;gap:6px"><button data-act="Export everything">Export</button>
-      <button class="d" data-act="Delete everything on both hosts">Delete</button></div>
+      <button class="d" data-act="Delete everything on this PC">Delete</button></div>
   </div>`],
 
 onboarding: () => [`
@@ -462,7 +456,7 @@ pwa: () => [`
   <div class="crumb"><b>Account</b><span>/</span><span>Phone</span></div>
   <div class="h"><h1>PWA</h1><div class="r"><span class="tag">390 × 844</span></div></div>
   <div class="phone">
-    <div class="hd"><span>VPS · synced</span><span>trust 76</span></div>
+    <div class="hd"><span>PC · saved</span><span>trust 76</span></div>
     <div class="it" style="background:#fff5f6">
       <div style="display:flex;justify-content:space-between"><b style="color:var(--red)">Frozen · rekrute.com</b>
         <span class="tag" style="color:var(--red);border-color:#ffcdd2">2m</span></div>
@@ -535,12 +529,12 @@ settings: () => [`
     <div class="c tight"><table><tbody>
       <tr><td class="dim">interface</td><td>English</td><td></td></tr>
       <tr><td class="dim">letters</td><td>French</td><td class="dim">posting language</td></tr>
-      <tr><td class="dim">run host</td><td>VPS</td><td><span class="tag">restart to move</span></td></tr>
+      <tr><td class="dim">run host</td><td>PC</td><td><span class="tag">local only</span></td></tr>
       <tr><td class="dim">push</td><td>walls + approvals</td><td class="dim">1 device</td></tr>
       <tr><td class="dim">quiet hours</td><td>22:00 – 07:00</td><td></td></tr>
     </tbody></table></div></div>`,
   `${asideHead('Effect','what happens on save')}
-  <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">Values apply to the next run. Moving the run host needs a restart and a sync first — the agent will not do it silently.
+  <div style="padding:10px 12px;font-size:11.5px;line-height:1.6">Values apply to the next run. The agent runs on this PC only; there is no second host to move to.
     <div class="dim" style="margin-top:8px">last change · send hours, yesterday, from the PC</div></div>
   <div style="border-top:1px solid var(--line2)">${asideHead('Reset','danger zone')}
     <div style="padding:10px 12px"><button class="d" data-act="Reset settings to defaults">Reset to defaults</button>

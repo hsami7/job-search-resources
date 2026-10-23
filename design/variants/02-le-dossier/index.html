@@ -86,7 +86,7 @@ const shell = (id, inner) => `
     <div class="side-foot">
       <b>Run 41 · ${D.run.host}</b>
       ${D.run.site}, ${D.run.action}<br>
-      PC ${D.hosts[0].label.toLowerCase()} · VPS ${D.hosts[1].label.toLowerCase()}<br>
+      PC ${D.hosts[0].label.toLowerCase()} · PC ${D.hosts[0].label.toLowerCase()}<br>
       trust ${D.trust.score}, ${D.trust.band.toLowerCase()}
     </div>
   </aside>
@@ -127,7 +127,7 @@ dashboard: () => `
       <div class="note"><b>Trust score</b>76 of 100, caution. Two causes: no WebGL on this host, and the clock says UTC while the connection geolocates to Berlin.</div>
       <div class="note"><b>Yesterday</b>Two replies arrived; one needs a human sentence about availability. The other is an acknowledgement.</div>
       <div class="note"><b>Learned</b>“Drop listings with no named employer” came from your last two rejections.</div>
-      <div class="note"><b>Archive</b>${D.hosts[1].events} events on the VPS, ${D.hosts[0].events} on the laptop. Last merge four minutes ago.</div>
+      <div class="note"><b>Archive</b>${D.hosts[0].events} events on the PC, ${D.hosts[0].events} on the laptop. Last backup four minutes ago.</div>
     </div>
   </div>`,
 
@@ -242,8 +242,8 @@ agent: () => `
         <tr><td style="color:var(--dim)">Mode</td><td>headed, under Xvfb on this host</td></tr>
       </table>
       <h2>Session survival</h2>
-      <p style="font-size:14px;margin:0 0 10px">The plan called this “Forgetful Browsing”. On Brave desktop that
-      toggle does not exist globally; these three settings are what actually decide whether your logins survive a restart.</p>
+      <p style="font-size:14px;margin:0 0 10px">Brave desktop has no single keep-cookies switch;
+      these three settings are what actually decide whether your logins survive a restart.</p>
       <table>
         <tr><td>Cookies survive close</td><td class="st ok">verified</td></tr>
         <tr><td>History survives close</td><td class="st ok">verified</td></tr>
@@ -275,24 +275,23 @@ credentials: () => `
 
 data: () => `
   <h1>Archive</h1>
-  <p class="deck">Two copies, one history. The event log is the record; both machines replay it.</p>
+  <p class="deck">One local history. The event log is the record; this PC replays it.</p>
   <table>
-    <tr><th>Host</th><th>State</th><th>Heartbeat</th><th>Database</th><th>Events</th><th>Last merge</th></tr>
+    <tr><th>Host</th><th>State</th><th>Heartbeat</th><th>Database</th><th>Events</th><th>Last backup</th></tr>
     ${D.hosts.map(h=>`<tr><td>${h.id}</td>
       <td class="st ${h.state==='green'?'ok':'warn'}">${h.label.toLowerCase()}</td>
-      <td>${h.heartbeat}</td><td class="mono">${h.db}</td><td>${h.events}</td><td style="color:var(--dim)">${h.lastSync}</td></tr>`).join('')}
+      <td>${h.heartbeat}</td><td class="mono">${h.db}</td><td>${h.events}</td><td style="color:var(--dim)">${h.lastBackup}</td></tr>`).join('')}
   </table>
   <div class="letter" style="margin-top:20px;border-color:#c9a86a">
-    <div class="who" style="color:#8a6a1f">Conflict · ${D.sync.conflict.field}</div>
-    <p style="margin:0 0 10px">Both machines changed this while apart. It decides when the agent may act, so you choose.</p>
+    <div class="who" style="color:#8a6a1f">Backup · ${D.backup.lastBackup}</div>
+    <p style="margin:0 0 10px">${D.backup.note} Restore is a stop → copy → start; files are never merged.</p>
     <table>
-      <tr><td style="width:70px">PC</td><td>${D.sync.conflict.pc}</td><td><button data-act="Keep PC value">keep this</button></td></tr>
-      <tr><td>VPS</td><td>${D.sync.conflict.vps}</td><td><button data-act="Keep VPS value">keep this</button></td></tr>
+      <tr><td style="width:70px">size</td><td>${D.backup.size}</td><td><span style="color:var(--dim)">${D.backup.hash}</span></td></tr>
     </table>
   </div>
-  <p style="margin-top:18px"><button class="solid" data-act="Sync now">Merge now</button>
+  <p style="margin-top:18px"><button class="solid" data-act="Back up now">Back up now</button>
     <button data-act="Export everything">Export everything</button>
-    <button class="warn" data-act="Delete everything on both hosts">Delete on both machines</button></p>`,
+    <button class="warn" data-act="Delete everything on this PC">Delete on this PC</button></p>`,
 
 onboarding: () => `
   <h1>First run</h1>
@@ -311,14 +310,14 @@ onboarding: () => `
       <p><button class="solid" data-act="Run first scan">Run the first scan</button></p>
     </div>
     <div><div class="note"><b>Nothing is submitted</b>Every application is a form the agent fills and you send.</div>
-      <div class="note"><b>Change your mind later</b>All of this lives in the settings, and can move to a VPS without starting over.</div></div>
+      <div class="note"><b>Change your mind later</b>All of this lives in the settings, and can move to a PC without starting over.</div></div>
   </div>`,
 
 pwa: () => `
   <h1>Phone</h1>
   <p class="deck">The two things you actually do from a phone: unblock the agent, sign off on a letter.</p>
   <div class="phone">
-    <div class="hd"><span>VPS, synced</span><span>76</span></div>
+    <div class="hd"><span>PC, saved</span><span>76</span></div>
     <div class="it"><strong style="font-weight:400;color:var(--alert)">Frozen · rekrute.com</strong>
       <div style="font-size:13px;color:var(--dim)">security challenge, two minutes ago</div>
       <div class="flex" style="margin-top:8px"><button class="solid" data-go="verification">Take control</button>
@@ -391,7 +390,7 @@ settings: () => `
     </div>
     <div>
       <div class="note"><b>Language</b>Interface in English, letters in French, the language of the posting.</div>
-      <div class="note"><b>Run host</b>VPS. Moving to the PC requires a restart and a sync first.</div>
+      <div class="note"><b>Run host</b>PC. The agent runs here; the phone is only a client.</div>
       <div class="note"><b>Notifications</b>Verification walls and approvals only. Quiet 22:00 – 07:00.</div>
       <div class="note"><b>Retention</b>Logs 30 days, backups every 6 hours.</div>
     </div>

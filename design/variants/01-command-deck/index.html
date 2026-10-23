@@ -239,7 +239,7 @@ const kpi = (n, label, tone='') => `<div class="panel"><div class="body"><div cl
 
 window.VARIANT = { id:'01-command-deck', name:'Command Deck', screens:{
 dashboard: () => `
-  <h1>Overview <span>· run 41 on VPS · started 14:02</span></h1>
+  <h1>Overview <span>· run 41 on PC · started 14:02</span></h1>
   <div class="grid c4" style="margin-bottom:10px">
     ${kpi('3','ready to approve')}${kpi('2','need a decision','color:var(--warn)')}${kpi('1','frozen · verification','color:var(--bad)')}${kpi('6','new today')}
   </div>
@@ -261,7 +261,7 @@ dashboard: () => `
       <h2>Verification waiting</h2>
       <div class="body">
         <div class="frozen" style="margin:0">
-          <h2>frozen 2m 10s · VPS</h2>
+          <h2>frozen 2m 10s · PC</h2>
           <div>rekrute.com — security challenge</div>
           <div class="muted" style="font-size:11px;margin:4px 0 8px">${D.verification.url}</div>
           <button class="btn primary" data-go="verification">Take control</button>
@@ -317,7 +317,7 @@ triage: () => `
 verification: () => `
   <h1>Verification <span>· agent frozen, nothing else is running</span></h1>
   <div class="frozen">
-    <h2>security challenge · rekrute.com · host VPS · 2m 10s</h2>
+    <h2>security challenge · rekrute.com · host PC · 2m 10s</h2>
     <div class="muted" style="font-size:11px">${D.verification.url}<br>${D.verification.run}</div>
     <div class="shot">screenshot of the paused tab (value-redacted)</div>
     <div class="form">
@@ -338,7 +338,7 @@ verification: () => `
     </div>
   </div>
   <div class="panel"><h2>History</h2><div class="body muted">
-    today 14:04 · rekrute.com · challenge · resolved in 41s (VPS)<br>
+    today 14:04 · rekrute.com · challenge · resolved in 41s (PC)<br>
     yesterday 09:12 · linkedin.com · email OTP · resolved in 1m 20s (PC)
   </div></div>`,
 
@@ -366,7 +366,7 @@ doctor: () => `
     <button class="btn danger" data-act="Run anyway (logged)">Run anyway (logged)</button></div></div>`,
 
 logs: () => `
-  <h1>Logs <span>· live tail · VPS</span></h1>
+  <h1>Logs <span>· live tail · PC</span></h1>
   <div class="row" style="margin-bottom:10px">
     <span class="chip">level: all</span><span class="chip">agent: all</span><span class="chip">site: all</span>
     <span class="chip">run 41 ×</span><span class="muted" style="margin-left:auto">1 s latency</span>
@@ -434,24 +434,19 @@ credentials: () => `
   </div></div>`,
 
 data: () => `
-  <h1>Data &amp; sync <span>· append-only, never a silent overwrite</span></h1>
+  <h1>Data &amp; backup <span>· append-only, one local store</span></h1>
   <div class="grid c2">
     ${D.hosts.map(h=>`<div class="panel"><h2>${h.id} · ${h.label}</h2><div class="body">
       <div class="row"><i class="g ${h.state==='green'?'':'y'}"></i><b>${h.id}</b><span class="muted">heartbeat ${h.heartbeat}</span></div>
-      <div class="muted" style="font-size:11px;margin-top:6px">DB ${h.db} · ${h.events} events · last sync ${h.lastSync}</div>
+      <div class="muted" style="font-size:11px;margin-top:6px">DB ${h.db} · ${h.events} events · last backup ${h.lastBackup}</div>
     </div></div>`).join('')}
   </div>
-  <div class="panel" style="margin-top:10px"><h2>Sync</h2><div class="body">
-    <div class="row"><span class="chip warn">SYNCING</span><span>${D.sync.lastDelta}</span><span class="muted" style="margin-left:auto">${D.sync.hash}</span></div>
-    <div style="margin-top:10px;border:1px solid #4a3f28;background:#2a2418;border-radius:4px;padding:10px">
-      <b style="color:var(--warn)">Conflict · ${D.sync.conflict.field}</b>
-      <div class="muted" style="font-size:11px;margin:4px 0 8px">${D.sync.conflict.asked}</div>
-      <div class="row"><button class="btn" data-act="Keep PC value">PC ${D.sync.conflict.pc}</button>
-      <button class="btn" data-act="Keep VPS value">VPS ${D.sync.conflict.vps}</button></div>
-    </div>
-    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="Sync now">Sync now</button>
+  <div class="panel" style="margin-top:10px"><h2>Backup</h2><div class="body">
+    <div class="row"><span class="chip ok">${D.backup.state.toUpperCase()}</span><span>${D.backup.lastBackup} · ${D.backup.size}</span><span class="muted" style="margin-left:auto">${D.backup.hash}</span></div>
+    <div class="muted" style="font-size:11px;margin-top:8px">${D.backup.note}</div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" data-act="Back up now">Back up now</button>
       <button class="btn" data-act="Export everything">Export</button>
-      <button class="btn danger" data-act="Delete everything on both hosts">Delete everything</button></div>
+      <button class="btn danger" data-act="Delete everything on this PC">Delete everything</button></div>
   </div></div>`,
 
 onboarding: () => `
@@ -472,9 +467,9 @@ onboarding: () => `
 pwa: () => `
   <h1>Phone <span>· PWA · approvals and verification</span></h1>
   <div class="phone"><div class="scr">
-    <div class="hd"><span><i class="g"></i> VPS · synced</span><span class="muted">76</span></div>
+    <div class="hd"><span><i class="g"></i> PC · saved</span><span class="muted">76</span></div>
     <div class="it"><span class="chip bad">FROZEN</span> <b>rekrute.com</b>
-      <div class="muted" style="font-size:11px;margin:4px 0 8px">security challenge · VPS · 2m ago</div>
+      <div class="muted" style="font-size:11px;margin:4px 0 8px">security challenge · PC · 2m ago</div>
       <div class="row"><button class="btn primary" data-go="verification">Take control</button>
         <button class="btn" data-act="Enter code">Code</button></div></div>
     <div class="it"><b>Auto Hall</b> — Conseiller de service<div class="muted" style="font-size:11px">Casablanca · CDI · match 88</div>
@@ -533,7 +528,7 @@ settings: () => `
     <div class="panel"><h2>Language &amp; host</h2><div class="body">
       <table><tr><td class="muted">interface</td><td>English</td></tr>
       <tr><td class="muted">letters</td><td>French</td></tr>
-      <tr><td class="muted">run on</td><td>VPS <span class="chip warn">restart to move</span></td></tr></table>
+      <tr><td class="muted">run on</td><td>PC <span class="chip">local only</span></td></tr></table>
     </div></div>
     <div class="panel"><h2>Notifications</h2><div class="body">
       <table><tr><td class="muted">push</td><td>walls + approvals</td></tr>
