@@ -1,15 +1,17 @@
 # P0 — Design decision record
 
-**Status:** BUILT, awaiting your review · **Date:** 2026-10-22 · **Gate:** P0 (blocking P1)
-**Decision needed:** pick one direction (or name a mix) and sign at the bottom. P1 does not start until this is signed.
+**Status:** CHOSEN 2026-10-22 — 01 Command Deck · **Date:** 2026-10-22 · **Gate:** P0 (blocking P1)
+**Decision:** 01 Command Deck. P1 builds it.
+
+**Retained mockup:** only 01 Command Deck. The other nine variants were removed after selection; §2 and the review checklist remain as the P0 comparison record.
 
 ---
 
 ## 1. What was built
 
-Ten clickable mockups, each covering the **fourteen** drawing units that cover all fifteen P0 screens (PRD #3 job detail and #5 employer preview are one screen) with its own layout, navigation model, density and visual language. **01 Command Deck is the chosen direction** and carries the extra screen 16 (Profile). All ten render the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
+The P0 review produced ten clickable mockups, each covering the **fourteen** drawing units that cover all fifteen P0 screens (PRD #3 job detail and #5 employer preview are one screen) with its own layout, navigation model, density and visual language. **01 Command Deck is the chosen direction**, the only variant retained in the repo, and it carries the extra screen 16 (Profile). It renders the **same real records** captured during the W0 spike (`spike/fixtures/golden` → `design/shared/data.js`): Auto Hall, Alten Maroc, AKDITAL, the unnamed MarocAnnonces classifieds, the banner-ad row with no title, the frozen `rekrute.com` challenge, and the real trust score of 76 (no WebGL, UTC vs Berlin).
 
-Open `design/index.html` in a browser, or a single direction directly:
+Open `design/index.html` (it redirects to the chosen direction), or the mockup directly:
 
 ```
 design/variants/01-command-deck/index.html
@@ -18,11 +20,11 @@ design/variants/01-command-deck/index.html
 Screens are hash routes: `#dashboard #jobs #job #triage #verification #doctor #logs #scope #agent #profile #credentials #data #onboarding #pwa #settings`.
 Every screen works at 390 px. Buttons are deliberately inert — they raise a "not wired in P0" toast — except the Profile form, which saves locally. P1 rebuilds the chosen direction properly.
 
-Screenshots: `design/shots/<variant>-<screen>.png` and `<variant>-mobile.png` (regenerate with `node design/shoot.js`).
+Screenshots: `design/shots/01-command-deck-<screen>.png` and `01-command-deck-mobile.png` (regenerate with `node design/shoot.js`).
 
 ---
 
-## 2. The ten directions
+## 2. The ten directions (P0 review record)
 
 | # | Direction | Navigation model | Density | Type | Palette | Signature | Main trade-off |
 |---|---|---|---|---|---|---|---|
@@ -91,7 +93,7 @@ Hard rules carried into P1, from the PRD: colour is never the only signal (every
 
 ## 5. Component inventory — mapped to PRD §7
 
-Drawn in all ten directions unless stated.
+The inventory below records the original ten-direction review. The retained 01 mockup includes every component shown; “all ten” in the last column means P0 review coverage.
 
 | PRD §7 screen | Components | Seen in |
 |---|---|---|
@@ -112,13 +114,13 @@ Drawn in all ten directions unless stated.
 | 15 PWA mirror | PhoneFrame, BottomTabs, CompactApprovalCard, FreezeCard, OTPEntry, TrustPill, PushTest | all ten |
 | 16 Profile / my data | ProfileForm (identity, links), RoleChips (add/remove), TargetSelects, ResumeDrop, ParsedFactTable, VersionTable, SaveBar (save / revert / export JSON / reset) | **01 only** — added after sign-off, at the product owner's request |
 
-**Coverage:** all 15 PRD §7 screens, in 14 screens per direction (job detail and employer preview are one screen), plus **screen 16 Profile** drawn in 01 at the owner's request. All 141 variant/screen pairs render without a JS error (`node design/check.js`).
-`job` is reached from a listing row; `settings` from the nav, or from the Browser screen in 04 and 05 where the fixed F-key / numbered-section model has no spare slot. That is an IA decision, not a gap: a detail view is a drill-down, and 04's twelve function keys are the point of 04.
+**Coverage:** all 15 PRD §7 screens, in 14 screens (job detail and employer preview are one screen), plus **screen 16 Profile** drawn in 01 at the owner's request. The retained 01 mockup renders without a JS error (`node design/check.js`).
+`job` is reached from a listing row; `settings` from the nav. A detail view is a drill-down, not a missing top-level screen.
 `profile` is the only screen with behaviour: in the mockup, edits save to `localStorage` (this browser), Export downloads the JSON, Reset clears it. The real page now lives in `web/` (P1, 2026-10-22): same layout and tokens, writes through the event log, stores the resume under its SHA-256, and returns 409 instead of overwriting a newer version. Parsing is still not implemented.
 
 ---
 
-## 6. Review checklist — result
+## 6. Review checklist — P0 result
 
 | Check | Result |
 |---|---|
@@ -135,7 +137,7 @@ Drawn in all ten directions unless stated.
 
 ---
 
-## 7. Known limits of the mockups
+## 7. Known limits of the retained mockup
 
 - Data is a fixture; nothing reads or writes a database.
 - "Take control" is a still frame — in the product it is a CDP screencast with forwarded input (see `SPIKE-REPORT.md` §5).

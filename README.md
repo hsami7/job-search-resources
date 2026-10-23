@@ -67,6 +67,6 @@ decisions taken so far.
 
 ## Design
 
-The P0 mockups live in `design/` (`design/index.html`), with 01 Command Deck
-chosen. `web/` implements screen 16 (Profile) using the frozen tokens from
+The chosen P0 mockup lives in `design/variants/01-command-deck/`; `design/index.html`
+opens it. `web/` implements screen 16 (Profile) using the frozen tokens from
 `DESIGN-DECISION.md` §4.

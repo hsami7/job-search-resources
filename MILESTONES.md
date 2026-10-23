@@ -61,11 +61,11 @@
 - User picks one (or a mix); resulting **design tokens + component inventory** documented.
 
 **Deliverables**
-- `design/variants/01..10/` clickable mockups.
+- `design/variants/01-command-deck/` clickable mockup, the chosen direction. The other nine variants were removed after selection.
 - `DESIGN-DECISION.md`: chosen direction, tokens (color/type/spacing), navigation model, accessibility notes.
 - Component inventory mapped to PRD screens.
 
-**Status: CHOSEN 2026-10-22 — 01 Command Deck, by the product owner.** Ten directions in `design/` (gallery at `design/index.html`, 01 marked chosen), shared real fixtures, screenshots in `design/shots/`, decision record in `DESIGN-DECISION.md` (frozen tokens, component inventory, comparison matrix kept for the record). All 15 PRD §7 screens are drawn in every direction (14 screens each; job detail and employer preview share one), plus screen 16 **Profile / my data** in 01; all 141 variant/screen pairs pass `node design/check.js`.
+**Status: CHOSEN 2026-10-22 — 01 Command Deck, by the product owner.** The ten-direction review is recorded in `DESIGN-DECISION.md`; only 01 is retained under `design/` (`design/index.html` opens it), with its screenshots in `design/shots/` and shared real fixtures. All 15 PRD §7 screens are drawn (14 screens; job detail and employer preview share one), plus screen 16 **Profile / my data**. The retained mockup passes `node design/check.js`.
 
 **Exit criteria**
 - [x] 10 variants genuinely distinct (review checklist).
