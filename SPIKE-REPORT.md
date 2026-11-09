@@ -145,8 +145,6 @@ npm run spike:trust             # trust score + Brave prefs (HEADLESS=1 for the 
 npm run spike:arbeitnow         # L2 API -> 300 normalized records
 npm run spike:generic           # generic extraction across 6 postings
 npm run spike:freeze            # freeze guard vs fixture + false-positive check
-npm run spike:takecontrol       # remote take-control panel (prints a tokenized URL)
-npm run spike:takecontrol:test  # end-to-end: click mapping, typing, submit
 npm run spike:rekrute           # 3 runs, selector stability
 npm run spike:marocannonces     # 3 runs, selector stability
 ```
