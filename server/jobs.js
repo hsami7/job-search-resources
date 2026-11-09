@@ -59,7 +59,7 @@ const MONTHS = {
 export function extractDeadline(description) {
   const text = String(description ?? '');
   if (!text) return null;
-  const trigger = /(applications? (?:close|closes|closing)|closing date|deadline|apply (?:by|before)|applications? due)[^\n]{0,40}?/gi;
+  const trigger = /(applications? (?:close|closes|closing)|closing date|deadline|apply (?:by|before)|applications? due|bewerbungsfrist|anmeldeschluss|bewerben bis|date limite|candidatures? (?:closes?|jusqu)|cl[oô]ture des candidatures)[^\n]{0,40}?/gi;
   let match;
   while ((match = trigger.exec(text)) !== null) {
     const tail = text.slice(match.index + match[0].length, match.index + match[0].length + 60);

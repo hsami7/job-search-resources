@@ -37,6 +37,8 @@ const SKILL_ALIASES = {
   ai: 'artificial intelligence',
   pentest: 'penetration testing', pentesting: 'penetration testing', 'penetration-testing': 'penetration testing',
   infosec: 'cybersecurity', 'cyber security': 'cybersecurity', cybersecurity: 'cybersecurity',
+  cybersecurite: 'cybersecurity', 'securite informatique': 'cybersecurity',
+  'sécurité informatique': 'cybersecurity',
   soc: 'security operations',
   docker: 'docker', containers: 'docker',
 };
@@ -108,18 +110,22 @@ function fold(text) {
 
 // Profile skills are canonicalized ("K8s" becomes "kubernetes"), so the job
 // text has to be expanded the same way or an identical skill never matches.
-// Longest alias first so "nodejs" is not eaten by "node".
+// One combined alternation, longest alias first: sequential replaces cascade
+// ("node.js" -> "node.javascript" once "js" is applied to its own output).
 const EXPANSIONS = Object.entries(SKILL_ALIASES)
   .filter(([alias, canonical]) => alias !== canonical)
   .sort((a, b) => b[0].length - a[0].length);
 
+const EXPANSION_MAP = new Map(EXPANSIONS);
+const EXPANSION_RE = EXPANSIONS.length
+  ? new RegExp(`(?<![a-z0-9])(${EXPANSIONS
+    .map(([alias]) => alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|')})(?![a-z0-9])`, 'g')
+  : null;
+
 function expandAliases(text) {
-  let out = text;
-  for (const [alias, canonical] of EXPANSIONS) {
-    const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    out = out.replace(new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'g'), canonical);
-  }
-  return out;
+  if (!EXPANSION_RE) return text;
+  return text.replace(EXPANSION_RE, (match) => EXPANSION_MAP.get(match) ?? match);
 }
 
 export function scoreJob(profile, job) {
