@@ -18,7 +18,9 @@ export function normalizeJob(input) {
   if (url && !URL_SCHEME.test(url)) throw new Error('invalid_url_scheme');
   const source = String(j.source ?? 'manual').trim() || 'manual';
   const requestedState = String(j.state ?? '');
-  const state = JOB_STATES.includes(requestedState) ? requestedState : (source === 'manual' ? 'saved' : 'new');
+  // Everything new lands in 'new' so it shows up in the default triage view;
+  // the migration backfills pre-existing manual rows to 'saved'.
+  const state = JOB_STATES.includes(requestedState) ? requestedState : 'new';
   return {
     id: j.id ?? randomUUID(),
     url,
@@ -128,12 +130,12 @@ export function clampOffset(offset) {
 function jobFilter({ state, country, contract, q } = {}) {
   const clauses = [];
   const params = [];
-  if (state) {
+  if (state && state !== 'all') {
     clauses.push('state = ?');
     params.push(String(state));
-  } else {
+  } else if (!state) {
     // Dismissed and archived jobs stay out of the default list; an explicit
-    // ?state= brings them back.
+    // ?state= brings them back, and ?state=all includes everything.
     clauses.push("state NOT IN ('dismissed', 'archived')");
   }
   if (country) {
@@ -149,7 +151,7 @@ function jobFilter({ state, country, contract, q } = {}) {
     clauses.push('(LOWER(title) LIKE ? OR LOWER(company) LIKE ? OR LOWER(location) LIKE ? OR LOWER(description) LIKE ?)');
     params.push(like, like, like, like);
   }
-  return { where: `WHERE ${clauses.join(' AND ')}`, params };
+  return { where: clauses.length ? `WHERE ${clauses.join(' AND ')}` : '', params };
 }
 
 function rowToJob(row) {
