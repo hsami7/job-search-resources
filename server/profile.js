@@ -5,13 +5,17 @@ import { transaction } from './db.js';
 export const EMPTY_PROFILE = Object.freeze({
   name: '', headline: '', email: '', phone: '', city: '', country: '',
   links: '', titles: [], contract: '', seniority: '', salary: '', remote: '',
-  languages: '', resume: null,
+  languages: '', skills: [], experience: [], education: [], certifications: [],
+  workAuthorization: '', availableFrom: '', letterLanguage: 'en', targetCountries: [],
+  resume: null,
 });
 
 const TEXT_LIMITS = {
   name: 120, headline: 120, email: 160, phone: 40, city: 80, country: 80,
   links: 500, contract: 40, seniority: 60, salary: 60, remote: 60, languages: 160,
+  workAuthorization: 160, availableFrom: 40,
 };
+export const LETTER_LANGUAGES = Object.freeze(['en', 'fr']);
 const MULTILINE = new Set(['links']);
 const CONTROL = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/;
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -73,13 +77,133 @@ export function validateProfile(input) {
     if (!errors.titles) value.titles = list;
   }
 
+  // skills: list of short strings
+  const skills = input.skills ?? [];
+  if (!Array.isArray(skills)) {
+    errors.skills = 'must be a list';
+  } else if (skills.length > 40) {
+    errors.skills = 'max 40 skills';
+  } else {
+    const seen = new Set();
+    const list = [];
+    for (const entry of skills) {
+      if (typeof entry !== 'string') { errors.skills = 'each skill must be text'; break; }
+      const s = entry.trim();
+      if (!s) continue;
+      if (s.length > 40) { errors.skills = 'each skill is at most 40 characters'; break; }
+      if (CONTROL.test(s)) { errors.skills = 'contains control characters'; break; }
+      const key = s.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push(s);
+    }
+    if (!errors.skills) value.skills = list;
+  }
+
+  // certifications: list of short strings
+  const certs = input.certifications ?? [];
+  if (!Array.isArray(certs)) {
+    errors.certifications = 'must be a list';
+  } else if (certs.length > 20) {
+    errors.certifications = 'max 20 certifications';
+  } else {
+    const list = [];
+    for (const entry of certs) {
+      if (typeof entry !== 'string') { errors.certifications = 'each certification must be text'; break; }
+      const s = entry.trim();
+      if (!s) continue;
+      if (s.length > 80) { errors.certifications = 'each certification is at most 80 characters'; break; }
+      if (CONTROL.test(s)) { errors.certifications = 'contains control characters'; break; }
+      list.push(s);
+    }
+    if (!errors.certifications) value.certifications = list;
+  }
+
+  // experience: list of objects
+  const exp = input.experience ?? [];
+  if (!Array.isArray(exp)) {
+    errors.experience = 'must be a list';
+  } else if (exp.length > 20) {
+    errors.experience = 'max 20 entries';
+  } else {
+    const list = [];
+    for (const e of exp) {
+      if (!e || typeof e !== 'object' || Array.isArray(e)) { errors.experience = 'each entry must be an object'; break; }
+      const title = String(e.title ?? '').trim();
+      const company = String(e.company ?? '').trim();
+      const start = String(e.start ?? '').trim();
+      const end = String(e.end ?? '').trim();
+      const current = Boolean(e.current);
+      const description = String(e.description ?? '').trim();
+      if (title.length > 80 || company.length > 80 || start.length > 20 || end.length > 20 || description.length > 500) {
+        errors.experience = 'field too long'; break;
+      }
+      if (CONTROL.test(title + company + start + end + description)) { errors.experience = 'contains control characters'; break; }
+      list.push({ title, company, start, end: current ? '' : end, current, description });
+    }
+    if (!errors.experience) value.experience = list;
+  }
+
+  // education: list of objects
+  const edu = input.education ?? [];
+  if (!Array.isArray(edu)) {
+    errors.education = 'must be a list';
+  } else if (edu.length > 20) {
+    errors.education = 'max 20 entries';
+  } else {
+    const list = [];
+    for (const e of edu) {
+      if (!e || typeof e !== 'object' || Array.isArray(e)) { errors.education = 'each entry must be an object'; break; }
+      const degree = String(e.degree ?? '').trim();
+      const school = String(e.school ?? '').trim();
+      const year = String(e.year ?? '').trim();
+      if (degree.length > 80 || school.length > 80 || year.length > 10) {
+        errors.education = 'field too long'; break;
+      }
+      if (CONTROL.test(degree + school + year)) { errors.education = 'contains control characters'; break; }
+      list.push({ degree, school, year });
+    }
+    if (!errors.education) value.education = list;
+  }
+
+  // letterLanguage: en (default) | fr — the Moroccan market writes in French.
+  const language = input.letterLanguage ?? 'en';
+  if (typeof language !== 'string' || !LETTER_LANGUAGES.includes(language)) {
+    errors.letterLanguage = `must be one of ${LETTER_LANGUAGES.join(', ')}`;
+  } else {
+    value.letterLanguage = language;
+  }
+
+  // targetCountries: countries the candidate will work in. Drives the location term.
+  const countries = input.targetCountries ?? [];
+  if (!Array.isArray(countries)) {
+    errors.targetCountries = 'must be a list';
+  } else if (countries.length > 10) {
+    errors.targetCountries = 'max 10 countries';
+  } else {
+    const seen = new Set();
+    const list = [];
+    for (const entry of countries) {
+      if (typeof entry !== 'string') { errors.targetCountries = 'each country must be text'; break; }
+      const s = entry.trim();
+      if (!s) continue;
+      if (s.length > 40) { errors.targetCountries = 'each country is at most 40 characters'; break; }
+      if (CONTROL.test(s)) { errors.targetCountries = 'contains control characters'; break; }
+      const key = s.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      list.push(s);
+    }
+    if (!errors.targetCountries) value.targetCountries = list;
+  }
+
   return { ok: Object.keys(errors).length === 0, errors, value };
 }
 
 function changedFields(before, after) {
-  return Object.keys(TEXT_LIMITS).concat('titles').filter(
-    (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]),
-  );
+  return Object.keys(TEXT_LIMITS)
+    .concat('titles', 'skills', 'certifications', 'experience', 'education', 'letterLanguage', 'targetCountries')
+    .filter((key) => JSON.stringify(before[key]) !== JSON.stringify(after[key]));
 }
 
 function writeRow(db, profile, version, updatedAt) {
@@ -170,4 +294,28 @@ export function rebuildProfile(db) {
   }
   writeRow(db, profile, version, updatedAt);
   return { profile, version, updatedAt };
+}
+
+export function doctorProfile(profile, updatedAt) {
+  const issues = [];
+  const p = profile ?? {};
+  if (!p.name || p.name.length < 2) issues.push({ level: 'error', field: 'name', message: 'Full name is required.' });
+  if (!p.email) issues.push({ level: 'warn', field: 'email', message: 'No email — most applications need one.' });
+  if (!p.phone) issues.push({ level: 'warn', field: 'phone', message: 'No phone number.' });
+  if (!p.city && !p.country) issues.push({ level: 'warn', field: 'city', message: 'No location set.' });
+  if (!p.links) issues.push({ level: 'warn', field: 'links', message: 'No links (LinkedIn/GitHub/portfolio).' });
+  if (!Array.isArray(p.titles) || p.titles.length === 0) issues.push({ level: 'error', field: 'titles', message: 'No target roles — scoring cannot run.' });
+  if (!Array.isArray(p.skills) || p.skills.length === 0) issues.push({ level: 'warn', field: 'skills', message: 'No skills listed.' });
+  if (!Array.isArray(p.experience) || p.experience.length === 0) issues.push({ level: 'warn', field: 'experience', message: 'No experience entries.' });
+  if (!Array.isArray(p.education) || p.education.length === 0) issues.push({ level: 'info', field: 'education', message: 'No education entries.' });
+  if (!p.workAuthorization) issues.push({ level: 'warn', field: 'workAuthorization', message: 'No work authorization stated — letters cannot address sponsorship.' });
+  if (!p.resume) issues.push({ level: 'warn', field: 'resume', message: 'No resume uploaded.' });
+  if (updatedAt) {
+    const ageDays = (Date.now() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24);
+    if (ageDays > 90) issues.push({ level: 'warn', field: 'updatedAt', message: `Profile last updated ${Math.floor(ageDays)} days ago — review for freshness.` });
+  } else {
+    issues.push({ level: 'error', field: 'updatedAt', message: 'Profile has never been saved.' });
+  }
+  const score = Math.max(0, 100 - issues.reduce((acc, i) => acc + (i.level === 'error' ? 25 : i.level === 'warn' ? 10 : 3), 0));
+  return { score, issues, updatedAt };
 }

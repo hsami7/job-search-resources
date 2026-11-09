@@ -5,6 +5,9 @@ import { scoreJob } from './scoring.js';
 
 export const JOB_STATES = Object.freeze(['new', 'saved', 'dismissed', 'applied', 'archived']);
 
+// Allowlist, never a caller-supplied ORDER BY.
+export const JOB_SORTS = Object.freeze(['score', 'newest', 'company']);
+
 const DEFAULT_LIMIT = 200;
 const MAX_LIMIT = 1000;
 const URL_SCHEME = /^(https?|manual):\/\//i;
@@ -27,6 +30,7 @@ export function normalizeJob(input) {
     title: String(j.title ?? '').trim(),
     company: String(j.company ?? '').trim(),
     location: String(j.location ?? '').trim(),
+    country: String(j.country ?? '').trim(),
     contract: String(j.contract ?? '').trim(),
     seniority: String(j.seniority ?? '').trim(),
     salary: String(j.salary ?? '').trim(),
@@ -37,10 +41,60 @@ export function normalizeJob(input) {
     state,
     stateAt: j.stateAt ?? null,
     postedAt: j.postedAt ?? null,
-    deadline: j.deadline ?? null,
+    deadline: j.deadline ?? extractDeadline(j.description),
     firstSeenAt: j.firstSeenAt ?? null,
     contactEmail: j.contactEmail ?? null,
   };
+}
+
+const MONTHS = {
+  january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
+  july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
+  jan: 1, feb: 2, mar: 3, apr: 4, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12,
+};
+
+// A wrong deadline is worse than none, so this only fires on an explicit
+// closing phrase followed by a date it can parse unambiguously. Everything
+// else stays null.
+export function extractDeadline(description) {
+  const text = String(description ?? '');
+  if (!text) return null;
+  const trigger = /(applications? (?:close|closes|closing)|closing date|deadline|apply (?:by|before)|applications? due)[^\n]{0,40}?/gi;
+  let match;
+  while ((match = trigger.exec(text)) !== null) {
+    const tail = text.slice(match.index + match[0].length, match.index + match[0].length + 60);
+    const iso = parseDate(tail);
+    if (iso) return iso;
+  }
+  return null;
+}
+
+function parseDate(chunk) {
+  const text = String(chunk);
+  // 2026-12-30 or 2026/12/30
+  let m = text.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  if (m) return isoDate(Number(m[1]), Number(m[2]), Number(m[3]));
+  // 30 November 2026 / 30 Nov 2026
+  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\.?,?\s+(20\d{2})\b/);
+  if (m) {
+    const month = MONTHS[m[2].toLowerCase()];
+    if (month) return isoDate(Number(m[3]), month, Number(m[1]));
+  }
+  // November 30, 2026
+  m = text.match(/\b([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(20\d{2})\b/);
+  if (m) {
+    const month = MONTHS[m[1].toLowerCase()];
+    if (month) return isoDate(Number(m[3]), month, Number(m[2]));
+  }
+  return null;
+}
+
+function isoDate(year, month, day) {
+  if (!(year >= 2000 && year <= 2100)) return null;
+  if (!(month >= 1 && month <= 12)) return null;
+  if (!(day >= 1 && day <= 31)) return null;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${year}-${pad(month)}-${pad(day)}`;
 }
 
 export function upsertJob(db, job) {
@@ -51,19 +105,20 @@ export function upsertJob(db, job) {
   transaction(db, () => {
     db.prepare(`
       INSERT INTO jobs (
-        id, url, title, company, location, contract, seniority, salary, remote,
+        id, url, title, company, location, country, contract, seniority, salary, remote,
         skills, description, source, state, state_at, posted_at, deadline,
         first_seen_at, contact_email, created_at, updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (url) DO UPDATE SET
         title=excluded.title, company=excluded.company, location=excluded.location,
+        country=excluded.country,
         contract=excluded.contract, seniority=excluded.seniority, salary=excluded.salary,
         remote=excluded.remote, skills=excluded.skills, description=excluded.description,
         source=excluded.source, posted_at=excluded.posted_at, deadline=excluded.deadline,
         contact_email=excluded.contact_email, updated_at=excluded.updated_at
     `).run(
-      j.id, j.url, j.title, j.company, j.location, j.contract, j.seniority, j.salary, j.remote,
+      j.id, j.url, j.title, j.company, j.location, j.country, j.contract, j.seniority, j.salary, j.remote,
       JSON.stringify(j.skills), j.description, j.source, j.state, j.stateAt ?? now,
       j.postedAt, j.deadline, j.firstSeenAt ?? now, j.contactEmail, now, now,
     );
@@ -81,11 +136,12 @@ export function getJob(db, id) {
   return row ? rowToJob(row) : null;
 }
 
-export function listJobs(db, { limit = DEFAULT_LIMIT, offset = 0, state, country, contract, q } = {}) {
+export function listJobs(db, { limit = DEFAULT_LIMIT, offset = 0, state, country, contract, q, sort = 'newest' } = {}) {
   const { where, params } = jobFilter({ state, country, contract, q });
   const capped = clampLimit(limit);
   const off = clampOffset(offset);
-  return db.prepare(`SELECT * FROM jobs ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+  const order = sort === 'company' ? 'LOWER(company) ASC, created_at DESC' : 'created_at DESC';
+  return db.prepare(`SELECT * FROM jobs ${where} ORDER BY ${order} LIMIT ? OFFSET ?`)
     .all(...params, capped, off)
     .map(rowToJob);
 }
@@ -103,20 +159,44 @@ export function deleteJob(db, id) {
   db.prepare('DELETE FROM jobs WHERE id = ?').run(id);
 }
 
-// Scores the whole filtered set, then returns it sorted by score. Pagination is
+// Scores the whole filtered set, then returns it sorted. Pagination is
 // applied by the caller so `total` can be reported before slicing.
-export function scoreJobsForProfile(db, profile, { state, country, contract, q, minScore } = {}) {
+// minScore is applied here, after scoring — never as a SQL filter, because the
+// score does not exist in the database.
+export function scoreJobsForProfile(db, profile, { state, country, contract, q, minScore, sort } = {}) {
   const { where, params } = jobFilter({ state, country, contract, q });
   const rows = db.prepare(`SELECT * FROM jobs ${where} ORDER BY created_at DESC`).all(...params);
   let scored = rows.map((row) => {
     const job = rowToJob(row);
     return { job, ...scoreJob(profile, job) };
   });
-  if (minScore !== undefined && minScore !== null && Number.isFinite(Number(minScore))) {
+  if (minScore !== undefined && minScore !== null && minScore !== '' && Number.isFinite(Number(minScore))) {
     const floor = Number(minScore);
     scored = scored.filter((entry) => entry.score >= floor);
   }
-  return scored.sort((a, b) => b.score - a.score);
+  return sortScored(scored, sort);
+}
+
+export function sortScored(entries, sort) {
+  const order = JOB_SORTS.includes(sort) ? sort : 'score';
+  if (order === 'newest') {
+    return entries.sort((a, b) => stamp(b.job) - stamp(a.job));
+  }
+  if (order === 'company') {
+    return entries.sort((a, b) => {
+      const left = String(a.job.company ?? '').toLowerCase();
+      const right = String(b.job.company ?? '').toLowerCase();
+      if (left !== right) return left < right ? -1 : 1;
+      return b.score - a.score;
+    });
+  }
+  return entries.sort((a, b) => b.score - a.score || stamp(b.job) - stamp(a.job));
+}
+
+function stamp(job) {
+  const value = job.firstSeenAt ?? job.createdAt ?? job.postedAt ?? null;
+  const at = value ? new Date(value).getTime() : 0;
+  return Number.isFinite(at) ? at : 0;
 }
 
 export function clampLimit(limit) {
@@ -139,7 +219,8 @@ function jobFilter({ state, country, contract, q } = {}) {
     clauses.push("state NOT IN ('dismissed', 'archived')");
   }
   if (country) {
-    clauses.push('LOWER(location) LIKE ?');
+    // jobs.country is authoritative when set; older rows only have location.
+    clauses.push("LOWER(COALESCE(NULLIF(country, ''), location)) LIKE ?");
     params.push(`%${String(country).toLowerCase()}%`);
   }
   if (contract) {
@@ -160,7 +241,7 @@ function rowToJob(row) {
   if (!Array.isArray(skills)) skills = [];
   return {
     id: row.id, url: row.url, title: row.title, company: row.company,
-    location: row.location, contract: row.contract, seniority: row.seniority,
+    location: row.location, country: row.country ?? '', contract: row.contract, seniority: row.seniority,
     salary: row.salary, remote: row.remote, skills, description: row.description,
     source: row.source, state: row.state ?? 'new', stateAt: row.state_at ?? null,
     postedAt: row.posted_at ?? null, deadline: row.deadline ?? null,

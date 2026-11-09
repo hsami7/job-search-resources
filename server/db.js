@@ -104,6 +104,29 @@ const MIGRATIONS = [
       CREATE UNIQUE INDEX IF NOT EXISTS submissions_job ON submissions(job_id);
     `,
   },
+  {
+    version: 4,
+    sql: `
+      -- Country is its own column so a filter does not have to guess from a
+      -- free-text location ("Casablanca, Morocco" vs "Berlin, Germany").
+      ALTER TABLE jobs ADD COLUMN country TEXT NOT NULL DEFAULT '';
+
+      CREATE TABLE submission_events (
+        id            INTEGER PRIMARY KEY AUTOINCREMENT,
+        submission_id TEXT NOT NULL,
+        from_status   TEXT,
+        to_status     TEXT NOT NULL,
+        at            TEXT NOT NULL,
+        note          TEXT NOT NULL DEFAULT '',
+        FOREIGN KEY (submission_id) REFERENCES submissions(id)
+      );
+      CREATE INDEX submission_events_sub ON submission_events(submission_id, at);
+
+      -- One backfilled row per existing submission so the history starts somewhere.
+      INSERT INTO submission_events (submission_id, from_status, to_status, at, note)
+      SELECT id, NULL, status, COALESCE(sent_at, created_at), 'backfilled' FROM submissions;
+    `,
+  },
 ];
 
 export function openDb(file = 'data/jobpilot.db') {
