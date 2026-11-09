@@ -72,10 +72,13 @@ export function extractDeadline(description) {
 function parseDate(chunk) {
   const text = String(chunk);
   // 2026-12-30 or 2026/12/30
-  let m = text.match(/\b(20\d{2})[-/](\d{1,2})[-/](\d{1,2})\b/);
+  let m = text.match(/\b(20\d{2})[-/]([0-1]?\d)[-/]([0-3]?\d)\b/);
   if (m) return isoDate(Number(m[1]), Number(m[2]), Number(m[3]));
-  // 30 November 2026 / 30 Nov 2026
-  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\.?,?\s+(20\d{2})\b/);
+  // 30.11.2026 — the dot is unambiguous in practice: US postings write 11/30.
+  m = text.match(/\b([0-3]?\d)\.([01]?\d)\.(20\d{2})\b/);
+  if (m) return isoDate(Number(m[3]), Number(m[2]), Number(m[1]));
+  // 30 November 2026 / 30. November 2026 / 30 Nov 2026
+  m = text.match(/\b(\d{1,2})(?:st|nd|rd|th)?\.?\s+([A-Za-z]{3,9})\.?,?\s+(20\d{2})\b/);
   if (m) {
     const month = MONTHS[m[2].toLowerCase()];
     if (month) return isoDate(Number(m[3]), month, Number(m[1]));

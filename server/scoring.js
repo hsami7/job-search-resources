@@ -106,6 +106,22 @@ function fold(text) {
   return out;
 }
 
+// Profile skills are canonicalized ("K8s" becomes "kubernetes"), so the job
+// text has to be expanded the same way or an identical skill never matches.
+// Longest alias first so "nodejs" is not eaten by "node".
+const EXPANSIONS = Object.entries(SKILL_ALIASES)
+  .filter(([alias, canonical]) => alias !== canonical)
+  .sort((a, b) => b[0].length - a[0].length);
+
+function expandAliases(text) {
+  let out = text;
+  for (const [alias, canonical] of EXPANSIONS) {
+    const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`, 'g'), canonical);
+  }
+  return out;
+}
+
 export function scoreJob(profile, job) {
   const p = profile ?? {};
   const j = job ?? {};
@@ -133,7 +149,7 @@ export function scoreJob(profile, job) {
 
 function skillTerm(profile, job, jobSkills) {
   const profileSkills = [...new Set((profile.skills ?? []).map(canonicalSkill).filter(Boolean))];
-  const haystack = fold([job.title, job.description, jobSkills.join(' ')].filter(Boolean).join(' \n '));
+  const haystack = expandAliases(fold([job.title, job.description, jobSkills.join(' ')].filter(Boolean).join(' \n ')));
   const matched = profileSkills.filter((skill) => mentions(haystack, skill));
   // A profile with 40 skills should not be rewarded for matching 2 of them;
   // the denominator is capped at the 8 skills a posting realistically names.

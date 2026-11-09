@@ -12,10 +12,10 @@ export function buildDigest({ jobs = [], submissions = [], now = new Date() } = 
     .map((job) => ({ id: job.id, title: job.title, company: job.company, deadline: job.deadline }))
     .filter((job) => {
       if (!job.deadline) return false;
-      const at = new Date(job.deadline);
-      return Number.isFinite(at.getTime()) && at >= today && at <= weekAhead;
+      const at = dayValue(job.deadline);
+      return Number.isFinite(at) && at >= today.getTime() && at <= weekAhead.getTime();
     })
-    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+    .sort((a, b) => dayValue(a.deadline) - dayValue(b.deadline));
 
   const followUpsDue = submissions
     .filter((sub) => {
@@ -47,6 +47,16 @@ function stamp(job) {
   const raw = job.firstSeenAt ?? job.createdAt ?? null;
   const at = raw ? new Date(raw) : NaN;
   return Number.isFinite(at.getTime()) ? at : new Date(0);
+}
+
+// A deadline is a calendar day, not an instant. `new Date('2026-11-15')` is UTC
+// midnight, which lands on the wrong local day anywhere west of Greenwich.
+function dayValue(raw) {
+  const text = String(raw ?? '');
+  const m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  const at = new Date(text);
+  return Number.isFinite(at.getTime()) ? at.getTime() : NaN;
 }
 
 function startOfDay(date) {

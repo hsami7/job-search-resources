@@ -39,6 +39,7 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
 
     try {
       if (url.pathname.startsWith('/api/')) {
+        requireLoopbackHost(req);
         return await api(req, res, url);
       }
       return serveStatic(res, webDir, url.pathname);
@@ -215,10 +216,18 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
         return sendJson(res, 409, { error: 'job_has_submissions', submissionIds });
       }
       transaction(db, () => {
-        if (submissionIds.length > 0) db.prepare('DELETE FROM submissions WHERE job_id = ?').run(id);
+        if (submissionIds.length > 0) {
+          // submission_events has a foreign key to submissions and SQLite has
+          // no ON DELETE CASCADE here, so the children go first or the delete
+          // fails with a constraint error and the job can never be removed.
+          const placeholders = submissionIds.map(() => '?').join(', ');
+          db.prepare(`DELETE FROM submission_events WHERE submission_id IN (${placeholders})`).run(...submissionIds);
+          db.prepare('DELETE FROM submissions WHERE job_id = ?').run(id);
+        }
         deleteJob(db, id);
       });
-      return sendJson(res, 204, {});
+      res.writeHead(204);
+      return res.end();
     }
 
     if (pathname === '/api/letters' && req.method === 'POST') {
@@ -326,9 +335,19 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
       if (!parsed?.loginUrl || !parsed?.successUrl) {
         return sendJson(res, 422, { error: 'loginUrl and successUrl are required' });
       }
+      // page.goto would happily follow file:// or javascript:; only real web
+      // URLs are allowed to reach the browser launcher.
+      let loginUrl;
+      let successUrl;
+      try {
+        loginUrl = requireHttpUrl(parsed.loginUrl, 'loginUrl');
+        successUrl = requireHttpUrl(parsed.successUrl, 'successUrl');
+      } catch (error) {
+        return sendJson(res, error.status ?? 422, { error: error.message });
+      }
       const profileDir = path.join(path.dirname(artifactsDir), 'browser-profile');
       // Fire and return immediately; the operator logs in and status is polled.
-      startLogin({ loginUrl: parsed.loginUrl, successUrl: parsed.successUrl, profileDir }).catch(() => {});
+      startLogin({ loginUrl, successUrl, profileDir }).catch(() => {});
       return sendJson(res, 202, { status: 'launching' });
     }
 
@@ -405,6 +424,30 @@ function requireSameOrigin(req) {
     throw httpError(403, 'bad_origin');
   }
   if (originHost !== req.headers.host) throw httpError(403, 'cross_origin');
+}
+
+// DNS rebinding makes Origin == Host meaningless (evil.com resolves to
+// 127.0.0.1, so the browser sends Origin: evil.com and Host: evil.com). The
+// only hosts this app is ever legitimately served from are loopback names.
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]', '::1']);
+
+function requireLoopbackHost(req) {
+  const raw = String(req.headers.host ?? '');
+  if (!raw) throw httpError(403, 'missing_host');
+  // Strip the port; keep IPv6 brackets intact.
+  const host = raw.startsWith('[')
+    ? raw.slice(0, raw.indexOf(']') + 1)
+    : raw.split(':')[0];
+  if (!LOOPBACK_HOSTS.has(host.toLowerCase())) throw httpError(403, 'bad_host');
+}
+
+function requireHttpUrl(value, field) {
+  let parsed;
+  try { parsed = new URL(String(value)); } catch { throw httpError(422, `invalid_${field}`); }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw httpError(422, `invalid_${field}`);
+  }
+  return parsed.toString();
 }
 
 function defaultLog(entry) {

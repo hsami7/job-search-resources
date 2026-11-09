@@ -150,14 +150,24 @@ function ageLabel(iso) {
 }
 
 // "closes in 5d", red inside a week; "closed" once the date has passed.
+// A date-only deadline is a calendar day, so it is parsed in local time.
 function deadlineLabel(iso) {
   if (!iso) return null;
-  const at = new Date(iso).getTime();
+  const at = localDay(iso);
   if (!Number.isFinite(at)) return null;
-  const days = Math.ceil((at - Date.now()) / 86_400_000);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((at - today.getTime()) / 86_400_000);
   if (days < 0) return { text: 'closed', soon: true };
   if (days === 0) return { text: 'closes today', soon: true };
   return { text: `closes in ${days}d`, soon: days <= 7 };
+}
+
+function localDay(value) {
+  const text = String(value ?? '');
+  const m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  return new Date(text).getTime();
 }
 
 function flash(message, tone = 'warn') {
@@ -659,6 +669,7 @@ document.querySelectorAll('[data-view]').forEach((btn) => {
     if (state.view === 'jobs') loadJobs();
     if (state.view === 'tracker') loadTracker();
     if (state.view === 'settings') pollLogin();
+    else clearInterval(loginTimer);
   });
 });
 
@@ -1068,20 +1079,27 @@ function jobCard({ job, score, reasons, confidence }) {
   remove.addEventListener('click', async () => {
     if (!confirm(`Remove "${job.title ?? 'this job'}" from the list?`)) return;
     clearJobError(card);
-    const result = await api(`/api/jobs/${encodeURIComponent(job.id)}`, { method: 'DELETE' });
-    if (result.status === 204) {
-      state.jobs = state.jobs.filter((entry) => entry.job.id !== job.id);
-      card.remove();
-      applyJobFilter();
-      refreshJobCounts();
-      return;
+    remove.disabled = true;
+    try {
+      let result = await api(`/api/jobs/${encodeURIComponent(job.id)}`, { method: 'DELETE' });
+      if (result.status === 409) {
+        const count = result.body?.submissionIds?.length ?? 0;
+        if (!confirm(`This job has ${count} submission${count === 1 ? '' : 's'} and their notes. Remove all of it?`)) return;
+        result = await api(`/api/jobs/${encodeURIComponent(job.id)}?cascade=1`, { method: 'DELETE' });
+      }
+      if (result.status === 204) {
+        state.jobs = state.jobs.filter((entry) => entry.job.id !== job.id);
+        card.remove();
+        applyJobFilter();
+        refreshJobCounts();
+        return;
+      }
+      showJobError(card, `Could not remove this job (${result.status}).`);
+    } catch {
+      showJobError(card, 'Could not reach the server.');
+    } finally {
+      remove.disabled = false;
     }
-    if (result.status === 409) {
-      const count = result.body?.submissionIds?.length ?? 0;
-      showJobError(card, `This job has ${count} submission${count === 1 ? '' : 's'}; it was not removed.`);
-      return;
-    }
-    showJobError(card, `Could not remove this job (${result.status}).`);
   });
   actions.append(remove);
 

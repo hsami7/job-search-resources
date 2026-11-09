@@ -31,8 +31,11 @@ export function createSubmission(db, { jobId, letter, status = 'drafted', notes 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (job_id) DO UPDATE SET
         letter = excluded.letter,
-        notes = excluded.notes,
+        -- A re-draft must not silently wipe tracker notes the user typed.
+        notes = CASE WHEN excluded.notes = '' THEN submissions.notes ELSE excluded.notes END,
         status = CASE WHEN submissions.status = 'drafted' THEN excluded.status ELSE submissions.status END,
+        -- Keep the first send date: it is what age and follow-up are measured from.
+        sent_at = COALESCE(submissions.sent_at, excluded.sent_at),
         follow_up_at = COALESCE(submissions.follow_up_at, excluded.follow_up_at),
         updated_at = excluded.updated_at
     `).run(id, jobId ?? null, nextStatus, letter ?? '', sentAt, followUpAt, notes, now, now);

@@ -24,8 +24,11 @@ export function loginStatus() {
 function notify(title, body) {
   try {
     const child = spawn('notify-send', ['-u', 'normal', '-a', 'jobPilot', title, body], { stdio: 'ignore', detached: true });
+    // A missing notify-send surfaces asynchronously as an 'error' event; without
+    // a listener it becomes an uncaught exception and takes the server down.
+    child.on('error', () => { /* notification is best-effort */ });
     child.unref();
-  } catch { /* notification is best-effort */ }
+  } catch { /* spawn failed synchronously; nothing to do */ }
 }
 
 export async function startLogin({ loginUrl, successUrl, profileDir }) {
