@@ -298,6 +298,25 @@
             <span id="jobs-msg" class="muted small" role="status" aria-live="polite"></span>
           </div>
 
+          <div class="import-bar mt6">
+            <label class="sr" for="import-url">Job posting URL</label>
+            <input id="import-url" type="url" placeholder="paste a job posting URL…" autocomplete="off" spellcheck="false">
+            <button type="button" class="btn" id="import-url-go">import URL</button>
+            <details class="board-import">
+              <summary>company board</summary>
+              <div class="board-import-body">
+                <label class="sr" for="board-source">Board</label>
+                <select id="board-source">
+                  <option value="greenhouse">Greenhouse</option>
+                  <option value="lever">Lever</option>
+                </select>
+                <label class="sr" for="board-token">Board token</label>
+                <input id="board-token" placeholder="board token (e.g. stripe)" autocomplete="off" spellcheck="false" maxlength="64">
+                <button type="button" class="btn" id="board-go">ingest board</button>
+              </div>
+            </details>
+          </div>
+
           <form id="job-form" class="entry mt10" hidden autocomplete="off">
             <div class="f2">
               <div class="field">

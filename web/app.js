@@ -1161,6 +1161,72 @@ $('ingest-remotive').addEventListener('click', () => {
   ingest('remotive', $('ingest-remotive'), 'Ingest Remotive (20)');
 });
 
+$('import-url-go').addEventListener('click', async () => {
+  const input = $('import-url');
+  const url = input.value.trim();
+  if (!url) { input.focus(); return; }
+  const button = $('import-url-go');
+  button.disabled = true;
+  button.textContent = 'importing…';
+  try {
+    const result = await api('/api/jobs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'import-url', url }),
+    });
+    if (result.ok) {
+      setJobsMsg(`Imported “${result.body.job?.title ?? 'job'}”.`, 'ok');
+      input.value = '';
+      await loadJobs();
+    } else {
+      setJobsMsg(importMessage(result.body?.error), 'error');
+    }
+  } catch {
+    setJobsMsg('Import failed: could not reach the server.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'import URL';
+  }
+});
+
+$('board-go').addEventListener('click', async () => {
+  const board = $('board-token').value.trim();
+  const source = $('board-source').value;
+  if (!board) { $('board-token').focus(); return; }
+  const button = $('board-go');
+  button.disabled = true;
+  button.textContent = 'ingesting…';
+  try {
+    const result = await api('/api/jobs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action: 'ingest', source, board }),
+    });
+    if (result.ok) {
+      setJobsMsg(`Ingested ${result.body.ingested ?? 0} jobs from ${source}:${board}.`, 'ok');
+      $('board-token').value = '';
+      await loadJobs();
+    } else {
+      setJobsMsg(result.body?.error === 'invalid_board'
+        ? 'That board token does not look valid.'
+        : `Board ingest failed (${result.status}).`, 'error');
+    }
+  } catch {
+    setJobsMsg('Board ingest failed: could not reach the server.', 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ingest board';
+  }
+});
+
+function importMessage(code) {
+  if (code === 'no_jobposting') return 'That page has no schema.org JobPosting — paste the details instead.';
+  if (code === 'invalid_url') return 'Only http(s) URLs can be imported.';
+  if (code === 'too_large') return 'That page is too large to import.';
+  if (code === 'fetch_failed') return 'Could not fetch that URL.';
+  return `Import failed (${code ?? 'unknown'}).`;
+}
+
 $('add-job-manual').addEventListener('click', () => {
   const form = $('job-form');
   form.hidden = !form.hidden;

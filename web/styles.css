@@ -170,6 +170,15 @@ td code{color:#c3cad6}
 .attention-item strong { font-size: 1.05em; color: var(--accent); }
 .attention-item span { color: var(--muted); font-size: 0.85em; }
 .attention-item:hover, .attention-item:focus-visible { border-color: var(--accent); outline: none; }
+.import-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.import-bar #import-url { flex: 1 1 320px; min-width: 220px; background: #0e1013; border: 1px solid #3a4048;
+  color: var(--ink); border-radius: 8px; padding: 6px 9px; font: inherit; }
+.import-bar #import-url:focus { outline: none; border-color: var(--accent); }
+.board-import { color: var(--muted); font-size: 0.9em; }
+.board-import summary { cursor: pointer; }
+.board-import-body { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.board-import-body input, .board-import-body select { background: #0e1013; border: 1px solid #3a4048;
+  color: var(--ink); border-radius: 8px; padding: 5px 8px; font: inherit; }
 .tracker td { vertical-align: middle; }
 .tracker select, .tracker textarea { background: #0e1013; border: 1px solid #3a4048; color: var(--ink);
   border-radius: 3px; font: 11px var(--mono); padding: 3px 5px; width: 100%; }

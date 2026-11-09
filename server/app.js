@@ -10,6 +10,7 @@ import {
   listJobs, JOB_STATES, JOB_SORTS, clampLimit, clampOffset,
 } from './jobs.js';
 import { ingestArbeitnow, ingestRemotive } from './jobs.js';
+import { importJobFromUrl, ingestGreenhouse, ingestLever, ImportError } from './import-url.js';
 import { buildLetter } from './letters.js';
 import {
   createSubmission, getSubmission, listSubmissions, updateSubmission,
@@ -173,6 +174,29 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
         const stored = [];
         for (const it of items) { try { stored.push(upsertJob(db, it)); } catch { /* skip bad */ } }
         return sendJson(res, 200, { ingested: stored.length, jobs: stored });
+      }
+      if (parsed?.action === 'ingest' && (parsed?.source === 'greenhouse' || parsed?.source === 'lever')) {
+        const run = parsed.source === 'greenhouse' ? ingestGreenhouse : ingestLever;
+        let items;
+        try {
+          items = await run({ board: parsed.board, limit: parsed.limit ?? 25 });
+        } catch (error) {
+          if (error instanceof ImportError) return sendJson(res, 422, { error: error.code, message: error.message });
+          throw error;
+        }
+        const stored = [];
+        for (const it of items) { try { stored.push(upsertJob(db, it)); } catch { /* skip bad */ } }
+        return sendJson(res, 200, { ingested: stored.length, jobs: stored });
+      }
+      if (parsed?.action === 'import-url') {
+        let imported;
+        try {
+          imported = await importJobFromUrl(String(parsed.url ?? ''));
+        } catch (error) {
+          if (error instanceof ImportError) return sendJson(res, 422, { error: error.code, message: error.message });
+          throw error;
+        }
+        return sendJson(res, 200, { job: upsertJob(db, imported) });
       }
       if (parsed?.job !== undefined) {
         const job = parsed.job;
