@@ -54,6 +54,11 @@ function shutdown(signal) {
   closing = true;
   log({ level: 'info', msg: 'shutting down', signal });
   server.close(() => {
+    try {
+      // Fold the WAL back into the main database so a copy/backup of the file
+      // is complete after shutdown.
+      db.exec('PRAGMA wal_checkpoint(TRUNCATE)');
+    } catch { /* checkpoint is best-effort */ }
     try { db.close(); } catch { /* already closed */ }
     process.exit(0);
   });

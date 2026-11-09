@@ -1,8 +1,21 @@
 // HTTP surface. One user, loopback by default: no sessions, no cookies, no
 // ambient credentials. Mutations require a same-origin request.
 import os from 'node:os';
+import path from 'node:path';
 import { countEvents, listEvents, verifyChain } from './events.js';
-import { getProfile, saveProfile } from './profile.js';
+import { getProfile, saveProfile, doctorProfile } from './profile.js';
+import { transaction } from './db.js';
+import {
+  upsertJob, deleteJob, getJob, scoreJobsForProfile, setJobState,
+  JOB_STATES, clampLimit, clampOffset,
+} from './jobs.js';
+import { ingestArbeitnow, ingestRemotive } from './jobs.js';
+import { buildLetter } from './letters.js';
+import {
+  createSubmission, getSubmission, listSubmissions, updateSubmission,
+  updateSubmissionStatus, submissionIdsForJob, SUBMISSION_STATUSES,
+} from './submissions.js';
+import { startLogin, loginStatus, cancelLogin } from './login.js';
 import { MAX_RESUME_BYTES, resumeFile, storeResume } from './resume.js';
 import { httpError, readBody, sendFile, sendJson, serveStatic } from './http.js';
 
@@ -115,6 +128,201 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
       return sendFile(res, artifact.path, { filename: artifact.filename, contentType: artifact.content_type });
     }
 
+    if (pathname === '/api/doctor' && req.method === 'GET') {
+      const { profile, updatedAt } = getProfile(db);
+      return sendJson(res, 200, doctorProfile(profile, updatedAt));
+    }
+
+    if (pathname === '/api/jobs' && req.method === 'GET') {
+      const profile = getProfile(db).profile;
+      const filters = {
+        state: url.searchParams.get('state') || undefined,
+        country: url.searchParams.get('country') || undefined,
+        contract: url.searchParams.get('contract') || undefined,
+        q: url.searchParams.get('q') || undefined,
+        minScore: url.searchParams.get('minScore') ?? undefined,
+      };
+      const scored = scoreJobsForProfile(db, profile, filters);
+      const limit = clampLimit(url.searchParams.get('limit') ?? undefined);
+      const offset = clampOffset(url.searchParams.get('offset') ?? undefined);
+      return sendJson(res, 200, {
+        jobs: scored.slice(offset, offset + limit),
+        total: scored.length,
+        limit,
+        offset,
+      });
+    }
+
+    if (pathname === '/api/jobs' && req.method === 'POST') {
+      requireSameOrigin(req);
+      const parsed = await readJson(req, JSON_LIMIT);
+      if (parsed?.action === 'ingest' && parsed?.source === 'arbeitnow') {
+        const items = await ingestArbeitnow({ limit: parsed.limit ?? 20 });
+        const stored = [];
+        for (const it of items) { try { stored.push(upsertJob(db, it)); } catch { /* skip bad */ } }
+        return sendJson(res, 200, { ingested: stored.length, jobs: stored });
+      }
+      if (parsed?.action === 'ingest' && parsed?.source === 'remotive') {
+        const items = await ingestRemotive({ limit: parsed.limit ?? 20, category: parsed.category ?? '' });
+        const stored = [];
+        for (const it of items) { try { stored.push(upsertJob(db, it)); } catch { /* skip bad */ } }
+        return sendJson(res, 200, { ingested: stored.length, jobs: stored });
+      }
+      if (parsed?.job !== undefined) {
+        const job = parsed.job;
+        if (!job || typeof job !== 'object' || Array.isArray(job)) {
+          return sendJson(res, 422, { error: 'invalid_job' });
+        }
+        if (typeof job.title !== 'string' || !job.title.trim()) {
+          return sendJson(res, 422, { error: 'title_required' });
+        }
+        let stored;
+        try {
+          stored = upsertJob(db, job);
+        } catch (error) {
+          if (error?.message === 'invalid_url_scheme') return sendJson(res, 422, { error: 'invalid_url_scheme' });
+          throw error;
+        }
+        return sendJson(res, 200, { job: stored });
+      }
+      return sendJson(res, 400, { error: 'expected_job_or_ingest' });
+    }
+
+    const jobStateMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/state$/);
+    if (jobStateMatch && req.method === 'PUT') {
+      requireSameOrigin(req);
+      const parsed = await readJson(req, JSON_LIMIT);
+      const state = parsed?.state;
+      if (typeof state !== 'string' || !JOB_STATES.includes(state)) {
+        return sendJson(res, 422, { error: 'invalid_state', allowed: JOB_STATES });
+      }
+      const job = setJobState(db, safeDecode(jobStateMatch[1]), state);
+      if (!job) return sendJson(res, 404, { error: 'job_not_found' });
+      return sendJson(res, 200, { job });
+    }
+
+    const jobMatch = pathname.match(/^\/api\/jobs\/(.+)$/);
+    if (jobMatch && req.method === 'DELETE') {
+      requireSameOrigin(req);
+      const id = safeDecode(jobMatch[1]);
+      const submissionIds = submissionIdsForJob(db, id);
+      if (submissionIds.length > 0 && url.searchParams.get('cascade') !== '1') {
+        return sendJson(res, 409, { error: 'job_has_submissions', submissionIds });
+      }
+      transaction(db, () => {
+        if (submissionIds.length > 0) db.prepare('DELETE FROM submissions WHERE job_id = ?').run(id);
+        deleteJob(db, id);
+      });
+      return sendJson(res, 204, {});
+    }
+
+    if (pathname === '/api/letters' && req.method === 'POST') {
+      requireSameOrigin(req);
+      const parsed = await readJson(req, JSON_LIMIT);
+      const jobId = parsed?.jobId;
+      if (typeof jobId !== 'string' || !jobId.trim()) {
+        return sendJson(res, 422, { error: 'jobId_required' });
+      }
+      const job = getJob(db, jobId);
+      if (!job) return sendJson(res, 404, { error: 'job_not_found' });
+      const profile = getProfile(db).profile;
+      const letter = buildLetter(profile, job, { tone: parsed?.tone ?? 'formal' });
+      const sub = createSubmission(db, { jobId, letter: letter.text, status: 'drafted' });
+      return sendJson(res, 200, { letter, submission: sub });
+    }
+
+    const letterFileMatch = pathname.match(/^\/api\/letters\/([^/]+)\.txt$/);
+    if (letterFileMatch && req.method === 'GET') {
+      const sub = getSubmission(db, safeDecode(letterFileMatch[1]));
+      if (!sub) return sendJson(res, 404, { error: 'submission_not_found' });
+      const text = String(sub.letter ?? '');
+      res.writeHead(200, {
+        'content-type': 'text/plain; charset=utf-8',
+        'content-length': Buffer.byteLength(text),
+        'content-disposition': `attachment; filename="letter-${sub.id}.txt"`,
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+      });
+      return res.end(text);
+    }
+
+    if (pathname === '/api/submissions' && req.method === 'GET') {
+      const status = url.searchParams.get('status') || undefined;
+      if (status && !SUBMISSION_STATUSES.includes(status)) {
+        return sendJson(res, 400, { error: 'invalid_status', allowed: SUBMISSION_STATUSES });
+      }
+      return sendJson(res, 200, { submissions: listSubmissions(db, { status }) });
+    }
+
+    const subStatusMatch = pathname.match(/^\/api\/submissions\/([^/]+)\/status$/);
+    if (subStatusMatch && req.method === 'PUT') {
+      requireSameOrigin(req);
+      const parsed = await readJson(req, JSON_LIMIT);
+      if (typeof parsed?.status !== 'string' || !parsed.status) {
+        return sendJson(res, 400, { error: 'invalid_status', allowed: SUBMISSION_STATUSES });
+      }
+      const result = updateSubmissionStatus(db, safeDecode(subStatusMatch[1]), parsed.status);
+      return sendSubmissionResult(res, result);
+    }
+
+    const subMatch = pathname.match(/^\/api\/submissions\/([^/]+)$/);
+    if (subMatch && req.method === 'GET') {
+      const sub = getSubmission(db, safeDecode(subMatch[1]));
+      if (!sub) return sendJson(res, 404, { error: 'submission_not_found' });
+      return sendJson(res, 200, { submission: sub });
+    }
+
+    if (subMatch && req.method === 'PATCH') {
+      requireSameOrigin(req);
+      const parsed = await readJson(req, JSON_LIMIT);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return sendJson(res, 400, { error: 'invalid_body' });
+      }
+      if (parsed.status !== undefined && (typeof parsed.status !== 'string' || !parsed.status)) {
+        return sendJson(res, 400, { error: 'invalid_status', allowed: SUBMISSION_STATUSES });
+      }
+      if (parsed.notes !== undefined && typeof parsed.notes !== 'string') {
+        return sendJson(res, 400, { error: 'invalid_notes' });
+      }
+      const result = updateSubmission(db, safeDecode(subMatch[1]), { status: parsed.status, notes: parsed.notes });
+      return sendSubmissionResult(res, result);
+    }
+
+    if (pathname === '/api/digest' && req.method === 'GET') {
+      const cutoff = new Date(Date.now() - 7 * 86_400_000).toISOString();
+      const newSince = Number(
+        db.prepare("SELECT COUNT(*) AS n FROM jobs WHERE state = 'new' AND created_at >= ?").get(cutoff).n,
+      );
+      return sendJson(res, 200, { newSince, closingSoon: [], followUpsDue: [] });
+    }
+
+    if (pathname === '/api/login/status' && req.method === 'GET') {
+      return sendJson(res, 200, loginStatus());
+    }
+
+    if (pathname === '/api/login/start' && req.method === 'POST') {
+      requireSameOrigin(req);
+      if (!String(req.headers['content-type'] ?? '').startsWith('application/json')) {
+        return sendJson(res, 415, { error: 'expected_json' });
+      }
+      const body = await readBody(req, JSON_LIMIT);
+      let parsed;
+      try { parsed = JSON.parse(body.toString('utf8')); } catch { return sendJson(res, 400, { error: 'invalid_json' }); }
+      if (!parsed?.loginUrl || !parsed?.successUrl) {
+        return sendJson(res, 422, { error: 'loginUrl and successUrl are required' });
+      }
+      const profileDir = path.join(path.dirname(artifactsDir), 'browser-profile');
+      // Fire and return immediately; the operator logs in and status is polled.
+      startLogin({ loginUrl: parsed.loginUrl, successUrl: parsed.successUrl, profileDir }).catch(() => {});
+      return sendJson(res, 202, { status: 'launching' });
+    }
+
+    if (pathname === '/api/login/cancel' && req.method === 'POST') {
+      requireSameOrigin(req);
+      await cancelLogin();
+      return sendJson(res, 200, loginStatus());
+    }
+
     return sendJson(res, 404, { error: 'not_found' });
   }
 
@@ -141,6 +349,34 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
       events: { count: events, chain: chain.ok ? 'ok' : 'broken', brokenAt: chain.brokenAt ?? null },
       now: new Date().toISOString(),
     });
+  }
+}
+
+async function readJson(req, limit = JSON_LIMIT) {
+  if (!String(req.headers['content-type'] ?? '').startsWith('application/json')) {
+    throw httpError(415, 'expected_json');
+  }
+  const body = await readBody(req, limit);
+  try {
+    return JSON.parse(body.toString('utf8'));
+  } catch {
+    throw httpError(400, 'invalid_json');
+  }
+}
+
+function sendSubmissionResult(res, result) {
+  if (result.error === 'not_found') return sendJson(res, 404, { error: 'submission_not_found' });
+  if (result.error === 'invalid_status') {
+    return sendJson(res, 400, { error: 'invalid_status', allowed: SUBMISSION_STATUSES });
+  }
+  return sendJson(res, 200, { submission: result.submission });
+}
+
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
   }
 }
 
