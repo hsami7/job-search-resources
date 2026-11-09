@@ -153,3 +153,29 @@ td code{color:#c3cad6}
 .job-err:empty { display: none; }
 .job-card[hidden] { display: none; }
 .job-card.is-dismissed { opacity: .55; }
+
+/* Phase 2/3 — filters, confidence, tracker */
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.filters input[type="range"] { padding: 0; accent-color: var(--accent); }
+.filters output { color: var(--accent); }
+.chip.low { color: var(--warn); border-color: #4a3f28; }
+.job-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.age { color: var(--dim); font-size: 11px; }
+.deadline { color: var(--dim); font-size: 11px; }
+.deadline.soon { color: var(--bad); }
+.banner.due { border-color: #63313a; background: #2a1a1e; color: #ffc9d2; }
+.attention { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.attention-item { display: flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid #3a4048; background: #16191e; color: var(--ink); cursor: pointer; font: inherit; }
+.attention-item strong { font-size: 1.05em; color: var(--accent); }
+.attention-item span { color: var(--muted); font-size: 0.85em; }
+.attention-item:hover, .attention-item:focus-visible { border-color: var(--accent); outline: none; }
+.tracker td { vertical-align: middle; }
+.tracker select, .tracker textarea { background: #0e1013; border: 1px solid #3a4048; color: var(--ink);
+  border-radius: 3px; font: 11px var(--mono); padding: 3px 5px; width: 100%; }
+.tracker textarea { resize: vertical; min-height: 26px; }
+.tracker select:focus, .tracker textarea:focus { outline: none; border-color: var(--accent); }
+.job-link { background: none; border: 0; color: var(--accent); font: inherit; cursor: pointer; padding: 0; text-align: left; }
+.job-link:hover { text-decoration: underline; }
+@media (max-width: 900px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .filters { grid-template-columns: 1fr; } }

@@ -14,7 +14,7 @@
     <button type="button" data-view="profile" class="is-active" aria-current="page" title="Profile">◉<span class="sr">Profile</span></button>
     <button type="button" data-view="doctor" title="Doctor">+<span class="sr">Doctor</span></button>
     <button type="button" data-view="jobs" title="Jobs">≡<span class="sr">Jobs</span></button>
-    <button type="button" disabled title="Logs — not built yet">»<span class="sr">Logs</span></button>
+    <button type="button" data-view="tracker" title="Tracker">▤<span class="sr">Tracker</span></button>
     <button type="button" data-view="settings" title="Settings">⚙<span class="sr">Settings</span></button>
     <div class="rail-note">P1</div>
   </nav>
@@ -126,6 +126,31 @@
                 <label for="f-languages">Languages</label>
                 <input id="f-languages" name="languages" maxlength="160" placeholder="French, English, Arabic">
               </div>
+              <div class="f2 mt10">
+                <div class="field">
+                  <label for="f-workAuthorization">Work authorization</label>
+                  <input id="f-workAuthorization" name="workAuthorization" maxlength="160" placeholder="Moroccan citizen, no sponsorship needed">
+                  <span class="err" data-err="workAuthorization" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-availableFrom">Available from</label>
+                  <input id="f-availableFrom" name="availableFrom" maxlength="40" placeholder="Immediately">
+                  <span class="err" data-err="availableFrom" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-letterLanguage">Letter language</label>
+                  <select id="f-letterLanguage" name="letterLanguage">
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                  </select>
+                  <span class="err" data-err="letterLanguage" aria-live="polite"></span>
+                </div>
+                <div class="field">
+                  <label for="f-targetCountries">Target countries · comma separated</label>
+                  <input id="f-targetCountries" name="targetCountries" maxlength="300" placeholder="Morocco, France, Canada">
+                  <span class="err" data-err="targetCountries" aria-live="polite"></span>
+                </div>
+              </div>
             </div>
           </section>
         </div>
@@ -216,12 +241,55 @@
       <section class="panel mt10" id="jobs-view" hidden aria-labelledby="h-jobs">
         <h2 id="h-jobs">Jobs <span id="jobs-count" class="chip">0</span></h2>
         <div class="body">
+          <div class="attention" id="attention" hidden aria-label="Needs attention">
+            <button type="button" class="attention-item" data-attention="new">
+              <strong id="attention-new">0</strong><span>new this week</span>
+            </button>
+            <button type="button" class="attention-item" data-attention="closing">
+              <strong id="attention-closing">0</strong><span>closing this week</span>
+            </button>
+            <button type="button" class="attention-item" data-attention="followups">
+              <strong id="attention-followups">0</strong><span>follow-ups due</span>
+            </button>
+          </div>
           <div class="segmented" id="job-states" role="group" aria-label="Filter jobs by state">
             <button type="button" data-state-filter="new" class="is-active" aria-pressed="true">New <span class="seg-count" id="count-new">0</span></button>
             <button type="button" data-state-filter="saved" aria-pressed="false">Saved <span class="seg-count" id="count-saved">0</span></button>
             <button type="button" data-state-filter="applied" aria-pressed="false">Applied <span class="seg-count" id="count-applied">0</span></button>
             <button type="button" data-state-filter="all" aria-pressed="false">All <span class="seg-count" id="count-all">0</span></button>
           </div>
+          <div class="filters mt10" id="job-filters">
+            <div class="field">
+              <label for="filter-country">Country</label>
+              <input id="filter-country" type="search" placeholder="e.g. Morocco" maxlength="60" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="filter-contract">Contract</label>
+              <select id="filter-contract">
+                <option value="">any</option>
+                <option value="internship">Internship</option>
+                <option value="stage">Stage</option>
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="freelance">Freelance</option>
+                <option value="full-time">Full-time</option>
+                <option value="part-time">Part-time</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-score">Min score · <output id="filter-score-value">0</output></label>
+              <input id="filter-score" type="range" min="0" max="100" step="5" value="0">
+            </div>
+            <div class="field">
+              <label for="filter-sort">Sort</label>
+              <select id="filter-sort">
+                <option value="score">Score</option>
+                <option value="newest">Newest</option>
+                <option value="company">Company</option>
+              </select>
+            </div>
+          </div>
+          <div class="chips mt6" id="filter-chips" hidden></div>
           <div class="toolbar mt10">
             <button type="button" class="btn" id="ingest-arbeitnow">Ingest Arbeitnow (20)</button>
             <button type="button" class="btn" id="ingest-remotive">Ingest Remotive (20)</button>
@@ -279,6 +347,30 @@
               <button type="button" class="btn" id="letter-download">Download .txt</button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="panel mt10" id="tracker-view" hidden aria-labelledby="h-tracker">
+        <h2 id="h-tracker">Tracker <span id="tracker-count" class="chip">0</span></h2>
+        <div class="body">
+          <div id="tracker-due" class="banner due" hidden></div>
+          <div class="segmented" id="tracker-status" role="group" aria-label="Filter applications by status">
+            <button type="button" data-tracker-filter="all" class="is-active" aria-pressed="true">All <span class="seg-count" id="tcount-all">0</span></button>
+            <button type="button" data-tracker-filter="drafted" aria-pressed="false">Drafted <span class="seg-count" id="tcount-drafted">0</span></button>
+            <button type="button" data-tracker-filter="sent" aria-pressed="false">Sent <span class="seg-count" id="tcount-sent">0</span></button>
+            <button type="button" data-tracker-filter="replied" aria-pressed="false">Replied <span class="seg-count" id="tcount-replied">0</span></button>
+            <button type="button" data-tracker-filter="interviewing" aria-pressed="false">Interviewing <span class="seg-count" id="tcount-interviewing">0</span></button>
+            <button type="button" data-tracker-filter="offer" aria-pressed="false">Offer <span class="seg-count" id="tcount-offer">0</span></button>
+            <button type="button" data-tracker-filter="rejected" aria-pressed="false">Rejected <span class="seg-count" id="tcount-rejected">0</span></button>
+            <button type="button" data-tracker-filter="ghosted" aria-pressed="false">Ghosted <span class="seg-count" id="tcount-ghosted">0</span></button>
+          </div>
+          <p id="tracker-msg" class="muted small mt8" role="status" aria-live="polite"></p>
+          <table class="mt10 tracker" aria-label="Applications">
+            <thead>
+              <tr><th>Job</th><th>Status</th><th>Sent</th><th>Age</th><th>Follow-up</th><th>Notes</th></tr>
+            </thead>
+            <tbody id="tracker-rows"><tr><td colspan="6" class="muted">loading…</td></tr></tbody>
+          </table>
         </div>
       </section>
 

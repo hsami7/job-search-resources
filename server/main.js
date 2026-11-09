@@ -1,5 +1,7 @@
 // Entry point: open the database, rebuild the profile projection if needed,
 // serve web/ + /api on loopback.
+import { spawn } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
@@ -8,6 +10,9 @@ import { openDb } from './db.js';
 import { countEvents } from './events.js';
 import { rebuildProfile } from './profile.js';
 import { createApp } from './app.js';
+import { buildDigest, digestLine } from './digest.js';
+import { listJobs } from './jobs.js';
+import { listSubmissions } from './submissions.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '..');
@@ -46,7 +51,39 @@ server.listen(PORT, HOST, () => {
   if (!loopback) {
     log({ level: 'warn', msg: 'bound to a non-loopback address; there is no authentication yet — put it behind a private network' });
   }
+  notifyDigest();
+  setInterval(notifyDigest, 6 * 60 * 60 * 1000).unref();
 });
+
+// One desktop notification a day, at boot and then every six hours. The date
+// stamp lives next to the database so a restart does not re-notify; the stamp
+// is written before the call so a failing notifier cannot spam retries.
+function notifyDigest() {
+  try {
+    const stampFile = path.join(DATA_DIR, 'digest.json');
+    const today = new Date().toISOString().slice(0, 10);
+    let last = null;
+    try { last = JSON.parse(readFileSync(stampFile, 'utf8')).date ?? null; } catch { /* first run */ }
+    if (last === today) return;
+
+    const digest = buildDigest({
+      jobs: listJobs(db, { limit: 1000, offset: 0, state: 'all' }),
+      submissions: listSubmissions(db),
+    });
+    const line = digestLine(digest);
+    writeFileSync(stampFile, JSON.stringify({ date: today, line }));
+    if (!line) return;
+
+    const child = spawn('notify-send', ['-u', 'normal', '-a', 'jobPilot', 'jobPilot — today', line], {
+      stdio: 'ignore',
+      detached: true,
+    });
+    child.on('error', (error) => log({ level: 'warn', msg: 'digest notification failed', error: String(error?.message ?? error) }));
+    child.unref();
+  } catch (error) {
+    log({ level: 'warn', msg: 'digest failed', error: String(error?.message ?? error) });
+  }
+}
 
 let closing = false;
 function shutdown(signal) {

@@ -3,7 +3,8 @@
 const $ = (id) => document.getElementById(id);
 
 const TEXT_FIELDS = ['name', 'headline', 'email', 'phone', 'city', 'country', 'links',
-  'contract', 'seniority', 'salary', 'remote', 'languages'];
+  'contract', 'seniority', 'salary', 'remote', 'languages', 'workAuthorization',
+  'availableFrom', 'letterLanguage'];
 
 const state = {
   profile: null,
@@ -22,7 +23,11 @@ const state = {
   jobsQuery: '',
   jobs: [],
   jobsAll: [],
+  jobsTotal: 0,
+  filters: { country: '', contract: '', minScore: 0, sort: 'score' },
   letterJob: null,
+  tracker: [],
+  trackerStatus: 'all',
 };
 
 function el(tag, attrs = {}, ...children) {
@@ -61,6 +66,10 @@ const readForm = () => ({
   salary: $('f-salary').value,
   remote: $('f-remote').value,
   languages: $('f-languages').value,
+  workAuthorization: $('f-workAuthorization').value,
+  availableFrom: $('f-availableFrom').value,
+  letterLanguage: $('f-letterLanguage').value || 'en',
+  targetCountries: $('f-targetCountries').value.split(',').map((s) => s.trim()).filter(Boolean),
   titles: [...state.titles],
   skills: [...state.skills],
   certifications: [...state.certifications],
@@ -79,6 +88,7 @@ function setSelect(id, value) {
 
 function setForm(profile) {
   for (const field of TEXT_FIELDS) $(`f-${field}`).value = profile[field] ?? '';
+  $('f-targetCountries').value = (profile.targetCountries ?? []).join(', ');
   state.titles = [...(profile.titles ?? [])];
   state.skills = [...(profile.skills ?? [])];
   state.certifications = [...(profile.certifications ?? [])];
@@ -127,6 +137,27 @@ function shortTime(iso) {
 function kb(bytes) {
   const value = Number(bytes) || 0;
   return value < 1024 ? `${value} B` : `${Math.round(value / 1024)} KB`;
+}
+
+// "new 2d ago" from firstSeenAt; "" when the date is missing or unparseable.
+function ageLabel(iso) {
+  if (!iso) return '';
+  const at = new Date(iso).getTime();
+  if (!Number.isFinite(at)) return '';
+  const days = Math.floor((Date.now() - at) / 86_400_000);
+  if (days <= 0) return 'new today';
+  return `new ${days}d ago`;
+}
+
+// "closes in 5d", red inside a week; "closed" once the date has passed.
+function deadlineLabel(iso) {
+  if (!iso) return null;
+  const at = new Date(iso).getTime();
+  if (!Number.isFinite(at)) return null;
+  const days = Math.ceil((at - Date.now()) / 86_400_000);
+  if (days < 0) return { text: 'closed', soon: true };
+  if (days === 0) return { text: 'closes today', soon: true };
+  return { text: `closes in ${days}d`, soon: days <= 7 };
 }
 
 function flash(message, tone = 'warn') {
@@ -617,13 +648,16 @@ document.querySelectorAll('[data-view]').forEach((btn) => {
     const profileForm = $('form');
     const doctorView = $('doctor-view');
     const jobsView = $('jobs-view');
+    const trackerView = $('tracker-view');
     const settingsView = $('settings-view');
     profileForm.hidden = state.view !== 'profile';
     doctorView.hidden = state.view !== 'doctor';
     jobsView.hidden = state.view !== 'jobs';
+    trackerView.hidden = state.view !== 'tracker';
     settingsView.hidden = state.view !== 'settings';
     if (state.view === 'doctor') loadDoctor();
     if (state.view === 'jobs') loadJobs();
+    if (state.view === 'tracker') loadTracker();
     if (state.view === 'settings') pollLogin();
   });
 });
@@ -706,10 +740,23 @@ function updateJobsCount(shown, total) {
   chip.textContent = shown === total ? `${total} ${noun}` : `${shown} of ${total} jobs`;
 }
 
+// Every server-side filter goes into one query string; text search stays local
+// so typing never waits on a round trip.
+function jobQuery(stateFilter) {
+  const params = new URLSearchParams();
+  params.set('state', stateFilter);
+  params.set('sort', state.filters.sort);
+  params.set('limit', '500');
+  if (state.filters.country.trim()) params.set('country', state.filters.country.trim());
+  if (state.filters.contract) params.set('contract', state.filters.contract);
+  if (state.filters.minScore > 0) params.set('minScore', String(state.filters.minScore));
+  return `/api/jobs?${params.toString()}`;
+}
+
 async function loadJobs() {
   const [listResult, allResult] = await Promise.all([
-    api(`/api/jobs?state=${encodeURIComponent(state.jobsView)}`),
-    api('/api/jobs?state=all'),
+    api(jobQuery(state.jobsView)),
+    api('/api/jobs?state=all&limit=1000&sort=newest'),
   ]);
   if (listResult.status !== 200) {
     $('jobs-count').textContent = 'unavailable';
@@ -717,6 +764,7 @@ async function loadJobs() {
     return;
   }
   state.jobs = listResult.body.jobs ?? [];
+  state.jobsTotal = Number(listResult.body.total ?? state.jobs.length);
   if (state.jobsView !== 'all') {
     // The server filters by state; this guard keeps a segmented view honest
     // while a backend that predates the filter is still answering.
@@ -725,13 +773,97 @@ async function loadJobs() {
   state.jobsAll = allResult.status === 200 ? (allResult.body.jobs ?? []) : state.jobs;
   renderJobCounts(countStates(state.jobsAll));
   renderJobs();
+  renderFilterChips();
+  loadAttention();
 }
 
+// The three numbers worth opening the app for. Hidden when everything is zero
+// so a quiet week does not leave an empty strip on the page.
+async function loadAttention() {
+  const result = await api('/api/digest');
+  const box = $('attention');
+  if (!box) return;
+  if (result.status !== 200) { box.hidden = true; return; }
+  const counts = result.body.counts ?? {};
+  const fresh = Number(counts.newSince ?? 0);
+  const closing = Number(counts.closingSoon ?? 0);
+  const followUps = Number(counts.followUpsDue ?? 0);
+  $('attention-new').textContent = String(fresh);
+  $('attention-closing').textContent = String(closing);
+  $('attention-followups').textContent = String(followUps);
+  box.hidden = fresh + closing + followUps === 0;
+}
+
+document.querySelectorAll('[data-attention]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.attention === 'followups') {
+      state.view = 'tracker';
+      document.querySelectorAll('[data-view]').forEach((b) => b.classList.toggle('is-active', b.dataset.view === 'tracker'));
+      $('jobs-view').hidden = true;
+      $('tracker-view').hidden = false;
+      $('form').hidden = true;
+      $('doctor-view').hidden = true;
+      $('settings-view').hidden = true;
+      loadTracker();
+      return;
+    }
+    if (btn.dataset.attention === 'new') state.jobsView = 'new';
+    if (btn.dataset.attention === 'closing') { state.jobsView = 'all'; state.filters.minScore = 0; }
+    document.querySelectorAll('[data-state-filter]').forEach((b) => {
+      const active = b.dataset.stateFilter === state.jobsView;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    loadJobs();
+  });
+});
+
 async function refreshJobCounts() {
-  const result = await api('/api/jobs?state=all');
+  const result = await api('/api/jobs?state=all&limit=1000&sort=newest');
   if (result.status !== 200) return;
   state.jobsAll = result.body.jobs ?? [];
   renderJobCounts(countStates(state.jobsAll));
+}
+
+function renderFilterChips() {
+  const box = $('filter-chips');
+  box.replaceChildren();
+  const chips = [];
+  const country = state.filters.country.trim();
+  if (country) chips.push(['country', `country: ${country}`]);
+  if (state.filters.contract) chips.push(['contract', `contract: ${state.filters.contract}`]);
+  if (state.filters.minScore > 0) chips.push(['minScore', `score ≥ ${state.filters.minScore}`]);
+  if (chips.length === 0) { box.hidden = true; return; }
+  box.hidden = false;
+  for (const [key, label] of chips) {
+    const chip = el('span', { class: 'chip acc' }, label);
+    const remove = el('button', { type: 'button', 'aria-label': `clear ${label}`, title: 'clear' }, '×');
+    remove.addEventListener('click', () => clearFilter(key));
+    chip.append(remove);
+    box.append(chip);
+  }
+  const clearAll = el('button', { type: 'button', class: 'btn' }, 'Clear all');
+  clearAll.addEventListener('click', clearAllFilters);
+  box.append(clearAll);
+}
+
+function clearFilter(key) {
+  if (key === 'country') { state.filters.country = ''; $('filter-country').value = ''; }
+  if (key === 'contract') { state.filters.contract = ''; $('filter-contract').value = ''; }
+  if (key === 'minScore') { state.filters.minScore = 0; $('filter-score').value = '0'; $('filter-score-value').textContent = '0'; }
+  loadJobs();
+}
+
+function clearAllFilters() {
+  state.filters = { country: '', contract: '', minScore: 0, sort: 'score' };
+  state.jobsQuery = '';
+  $('filter-country').value = '';
+  $('filter-contract').value = '';
+  $('filter-score').value = '0';
+  $('filter-score-value').textContent = '0';
+  $('filter-sort').value = 'score';
+  $('job-search').value = '';
+  loadJobs();
 }
 
 function renderJobs() {
@@ -762,7 +894,7 @@ function applyJobFilter() {
     card.hidden = !match;
     if (match) shown += 1;
   }
-  updateJobsCount(shown, total);
+  updateJobsCount(shown, state.jobsTotal || total);
   const empty = $('jobs-empty');
   if (total > 0 && shown === 0) {
     if (empty) {
@@ -853,7 +985,7 @@ async function setJobState(job, next, card, controls) {
   }
 }
 
-function jobCard({ job, score, reasons }) {
+function jobCard({ job, score, reasons, confidence }) {
   const card = el('div', { class: 'entry job-card' });
   card.dataset.jobId = job.id;
   card.dataset.search = [job.title, job.company, job.location, job.description]
@@ -867,7 +999,17 @@ function jobCard({ job, score, reasons }) {
     stateChip,
   ));
   const reasonList = Array.isArray(reasons) ? reasons.join('; ') : '';
-  card.append(el('div', { class: 'muted small' }, `score ${score}/100 — ${reasonList || 'no reasons'}`));
+  const meta = el('div', { class: 'job-meta' },
+    el('span', { class: `chip ${score >= 70 ? 'ok' : score >= 40 ? 'acc' : ''}` }, `score ${score}/100`),
+  );
+  if (confidence === 'low') meta.append(el('span', { class: 'chip low', title: 'Posting has little data to score' }, 'low confidence'));
+  if (confidence === 'medium') meta.append(el('span', { class: 'chip', title: 'Posting is missing skills or a long description' }, 'medium confidence'));
+  const age = ageLabel(job.firstSeenAt);
+  if (age) meta.append(el('span', { class: 'age' }, age));
+  const closing = deadlineLabel(job.deadline);
+  if (closing) meta.append(el('span', { class: `deadline${closing.soon ? ' soon' : ''}` }, closing.text));
+  card.append(meta);
+  if (reasonList) card.append(el('div', { class: 'muted small' }, reasonList));
   if (job.url && !job.url.startsWith('manual://')) {
     card.append(el('div', { class: 'muted small' }, el('a', { href: job.url, target: '_blank', rel: 'noopener' }, 'open posting')));
   }
@@ -1091,6 +1233,127 @@ $('letter-download').addEventListener('click', () => {
   const link = el('a', { href: url, download: filename });
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 0);
+});
+
+const TRACKER_STATUSES = ['drafted', 'sent', 'replied', 'interviewing', 'offer', 'rejected', 'ghosted'];
+
+async function loadTracker() {
+  const result = await api('/api/submissions');
+  if (result.status !== 200) {
+    $('tracker-msg').textContent = 'Could not load applications.';
+    return;
+  }
+  state.tracker = result.body.submissions ?? [];
+  renderTracker();
+}
+
+function renderTracker() {
+  const rows = $('tracker-rows');
+  const counts = { all: state.tracker.length };
+  for (const status of TRACKER_STATUSES) counts[status] = 0;
+  for (const sub of state.tracker) {
+    if (counts[sub.status] !== undefined) counts[sub.status] += 1;
+  }
+  $('tracker-count').textContent = String(counts.all);
+  for (const key of ['all', ...TRACKER_STATUSES]) {
+    const node = $(`tcount-${key}`);
+    if (node) node.textContent = String(counts[key] ?? 0);
+  }
+  document.querySelectorAll('[data-tracker-filter]').forEach((btn) => {
+    const active = btn.dataset.trackerFilter === state.trackerStatus;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+
+  const today = new Date();
+  const due = state.tracker.filter((sub) => sub.followUpAt
+    && new Date(sub.followUpAt) <= today
+    && (sub.status === 'sent' || sub.status === 'replied'));
+  const dueBox = $('tracker-due');
+  if (due.length) {
+    dueBox.hidden = false;
+    dueBox.textContent = `${due.length} follow-up${due.length === 1 ? '' : 's'} due: ${due.map((s) => s.jobTitle || s.jobCompany || 'application').slice(0, 3).join(', ')}`;
+  } else {
+    dueBox.hidden = true;
+    dueBox.textContent = '';
+  }
+
+  const visible = state.trackerStatus === 'all'
+    ? state.tracker
+    : state.tracker.filter((sub) => sub.status === state.trackerStatus);
+
+  rows.replaceChildren();
+  if (visible.length === 0) {
+    const tr = el('tr', {}, el('td', { colspan: '6', class: 'muted' },
+      state.tracker.length === 0
+        ? 'No applications yet — draft a letter from the Jobs view.'
+        : 'Nothing with this status.'));
+    rows.append(tr);
+    return;
+  }
+
+  for (const sub of visible) {
+    const jobLabel = el('div', {},
+      el('strong', { text: sub.jobTitle || 'Untitled job' }),
+      sub.jobCompany ? el('div', { class: 'muted small', text: sub.jobCompany }) : null);
+
+    const select = el('select', { 'aria-label': `Status for ${sub.jobTitle || 'application'}` });
+    for (const status of TRACKER_STATUSES) {
+      const option = el('option', { value: status, text: status });
+      if (status === sub.status) option.selected = true;
+      select.append(option);
+    }
+    select.addEventListener('change', () => updateSubmission(sub, { status: select.value }, select));
+
+    const notes = el('textarea', { rows: '2', 'aria-label': `Notes for ${sub.jobTitle || 'application'}`, placeholder: 'notes…' });
+    notes.value = sub.notes ?? '';
+    notes.addEventListener('blur', () => {
+      if (notes.value === (sub.notes ?? '')) return;
+      updateSubmission(sub, { notes: notes.value }, notes);
+    });
+
+    const sent = sub.sentAt ? new Date(sub.sentAt).toLocaleDateString() : '—';
+    const age = sub.ageDays === null || sub.ageDays === undefined ? '—' : `${sub.ageDays}d`;
+    const followUp = el('div', {},
+      sub.followUpAt ? new Date(sub.followUpAt).toLocaleDateString() : '—',
+      sub.followUpAt && new Date(sub.followUpAt) <= today && (sub.status === 'sent' || sub.status === 'replied')
+        ? el('span', { class: 'chip bad', text: 'due' })
+        : null);
+
+    rows.append(el('tr', {},
+      el('td', {}, jobLabel),
+      el('td', {}, select),
+      el('td', { text: sent }),
+      el('td', { text: age }),
+      el('td', {}, followUp),
+      el('td', {}, notes)));
+  }
+}
+
+async function updateSubmission(sub, patch, control) {
+  control.disabled = true;
+  const result = await api(`/api/submissions/${encodeURIComponent(sub.id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  control.disabled = false;
+  if (!result.ok) {
+    $('tracker-msg').textContent = result.body?.error === 'invalid_status'
+      ? 'That status is not allowed.'
+      : 'Could not save the change.';
+    return;
+  }
+  Object.assign(sub, result.body.submission ?? {});
+  $('tracker-msg').textContent = 'saved';
+  renderTracker();
+}
+
+document.querySelectorAll('[data-tracker-filter]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    state.trackerStatus = btn.dataset.trackerFilter;
+    renderTracker();
+  });
 });
 
 let loginTimer = null;

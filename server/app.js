@@ -7,14 +7,15 @@ import { getProfile, saveProfile, doctorProfile } from './profile.js';
 import { transaction } from './db.js';
 import {
   upsertJob, deleteJob, getJob, scoreJobsForProfile, setJobState,
-  JOB_STATES, clampLimit, clampOffset,
+  listJobs, JOB_STATES, JOB_SORTS, clampLimit, clampOffset,
 } from './jobs.js';
 import { ingestArbeitnow, ingestRemotive } from './jobs.js';
 import { buildLetter } from './letters.js';
 import {
   createSubmission, getSubmission, listSubmissions, updateSubmission,
-  updateSubmissionStatus, submissionIdsForJob, SUBMISSION_STATUSES,
+  updateSubmissionStatus, submissionIdsForJob, listSubmissionEvents, SUBMISSION_STATUSES,
 } from './submissions.js';
+import { buildDigest } from './digest.js';
 import { startLogin, loginStatus, cancelLogin } from './login.js';
 import { MAX_RESUME_BYTES, resumeFile, storeResume } from './resume.js';
 import { httpError, readBody, sendFile, sendJson, serveStatic } from './http.js';
@@ -135,12 +136,15 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
 
     if (pathname === '/api/jobs' && req.method === 'GET') {
       const profile = getProfile(db).profile;
+      const requestedSort = url.searchParams.get('sort') ?? '';
+      const sort = JOB_SORTS.includes(requestedSort) ? requestedSort : 'score';
       const filters = {
         state: url.searchParams.get('state') || undefined,
         country: url.searchParams.get('country') || undefined,
         contract: url.searchParams.get('contract') || undefined,
         q: url.searchParams.get('q') || undefined,
         minScore: url.searchParams.get('minScore') ?? undefined,
+        sort,
       };
       const scored = scoreJobsForProfile(db, profile, filters);
       const limit = clampLimit(url.searchParams.get('limit') ?? undefined);
@@ -150,6 +154,7 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
         total: scored.length,
         limit,
         offset,
+        sort,
       });
     }
 
@@ -226,7 +231,10 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
       const job = getJob(db, jobId);
       if (!job) return sendJson(res, 404, { error: 'job_not_found' });
       const profile = getProfile(db).profile;
-      const letter = buildLetter(profile, job, { tone: parsed?.tone ?? 'formal' });
+      const letter = buildLetter(profile, job, {
+        tone: parsed?.tone ?? 'formal',
+        language: parsed?.language ?? profile.letterLanguage ?? 'en',
+      });
       const sub = createSubmission(db, { jobId, letter: letter.text, status: 'drafted' });
       return sendJson(res, 200, { letter, submission: sub });
     }
@@ -265,6 +273,13 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
       return sendSubmissionResult(res, result);
     }
 
+    const subEventsMatch = pathname.match(/^\/api\/submissions\/([^/]+)\/events$/);
+    if (subEventsMatch && req.method === 'GET') {
+      const id = safeDecode(subEventsMatch[1]);
+      if (!getSubmission(db, id)) return sendJson(res, 404, { error: 'submission_not_found' });
+      return sendJson(res, 200, { events: listSubmissionEvents(db, id) });
+    }
+
     const subMatch = pathname.match(/^\/api\/submissions\/([^/]+)$/);
     if (subMatch && req.method === 'GET') {
       const sub = getSubmission(db, safeDecode(subMatch[1]));
@@ -289,11 +304,11 @@ export function createApp({ db, artifactsDir, webDir = 'web', hostName = os.host
     }
 
     if (pathname === '/api/digest' && req.method === 'GET') {
-      const cutoff = new Date(Date.now() - 7 * 86_400_000).toISOString();
-      const newSince = Number(
-        db.prepare("SELECT COUNT(*) AS n FROM jobs WHERE state = 'new' AND created_at >= ?").get(cutoff).n,
-      );
-      return sendJson(res, 200, { newSince, closingSoon: [], followUpsDue: [] });
+      const digest = buildDigest({
+        jobs: listJobs(db, { limit: 1000, offset: 0, state: 'all' }),
+        submissions: listSubmissions(db),
+      });
+      return sendJson(res, 200, digest);
     }
 
     if (pathname === '/api/login/status' && req.method === 'GET') {
