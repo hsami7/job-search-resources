@@ -11,11 +11,11 @@
 <div class="app">
   <nav class="rail" aria-label="Sections">
     <div class="brand" title="jobPilot">jp</div>
-    <button type="button" class="is-active" aria-current="page" title="Profile">◉<span class="sr">Profile</span></button>
-    <button type="button" disabled title="Jobs — not built yet">≡<span class="sr">Jobs</span></button>
-    <button type="button" disabled title="Doctor — not built yet">+<span class="sr">Doctor</span></button>
+    <button type="button" data-view="profile" class="is-active" aria-current="page" title="Profile">◉<span class="sr">Profile</span></button>
+    <button type="button" data-view="doctor" title="Doctor">+<span class="sr">Doctor</span></button>
+    <button type="button" data-view="jobs" title="Jobs">≡<span class="sr">Jobs</span></button>
     <button type="button" disabled title="Logs — not built yet">»<span class="sr">Logs</span></button>
-    <button type="button" disabled title="Settings — not built yet">⚙<span class="sr">Settings</span></button>
+    <button type="button" data-view="settings" title="Settings">⚙<span class="sr">Settings</span></button>
     <div class="rail-note">P1</div>
   </nav>
 
@@ -131,6 +131,45 @@
         </div>
 
         <div class="grid c2 mt10">
+          <section class="panel" aria-labelledby="h-skills">
+            <h2 id="h-skills">Skills</h2>
+            <div class="body">
+              <div class="chips" id="skills"></div>
+              <input class="chipin mt6" id="skill-input" placeholder="+ skill" maxlength="40">
+              <span class="err" data-err="skills" aria-live="polite"></span>
+              <p class="muted small mt8">Press Enter to add. Used for fit scoring.</p>
+            </div>
+          </section>
+
+          <section class="panel" aria-labelledby="h-certs">
+            <h2 id="h-certs">Certifications</h2>
+            <div class="body">
+              <div class="chips" id="certs"></div>
+              <input class="chipin mt6" id="cert-input" placeholder="+ certification" maxlength="80">
+              <span class="err" data-err="certifications" aria-live="polite"></span>
+            </div>
+          </section>
+        </div>
+
+        <section class="panel mt10" aria-labelledby="h-experience">
+          <h2 id="h-experience">Experience</h2>
+          <div class="body">
+            <div id="experience-list"></div>
+            <button type="button" class="btn mt6" id="add-experience">+ add experience</button>
+            <span class="err" data-err="experience" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <section class="panel mt10" aria-labelledby="h-education">
+          <h2 id="h-education">Education</h2>
+          <div class="body">
+            <div id="education-list"></div>
+            <button type="button" class="btn mt6" id="add-education">+ add education</button>
+            <span class="err" data-err="education" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <div class="grid c2 mt10">
           <section class="panel" aria-labelledby="h-resume">
             <h2 id="h-resume">Resume</h2>
             <div class="body">
@@ -165,6 +204,103 @@
           <span class="muted" id="save-state" role="status" aria-live="polite">loading…</span>
         </div>
       </form>
+
+      <section class="panel mt10" id="doctor-view" hidden aria-labelledby="h-doctor">
+        <h2 id="h-doctor">Doctor <span id="doctor-score" class="chip">score …</span></h2>
+        <div class="body">
+          <p class="muted small">Profile health check. Fix the errors first, then the warnings.</p>
+          <ul id="doctor-issues" class="issues"></ul>
+        </div>
+      </section>
+
+      <section class="panel mt10" id="jobs-view" hidden aria-labelledby="h-jobs">
+        <h2 id="h-jobs">Jobs <span id="jobs-count" class="chip">0</span></h2>
+        <div class="body">
+          <div class="segmented" id="job-states" role="group" aria-label="Filter jobs by state">
+            <button type="button" data-state-filter="new" class="is-active" aria-pressed="true">New <span class="seg-count" id="count-new">0</span></button>
+            <button type="button" data-state-filter="saved" aria-pressed="false">Saved <span class="seg-count" id="count-saved">0</span></button>
+            <button type="button" data-state-filter="applied" aria-pressed="false">Applied <span class="seg-count" id="count-applied">0</span></button>
+            <button type="button" data-state-filter="all" aria-pressed="false">All <span class="seg-count" id="count-all">0</span></button>
+          </div>
+          <div class="toolbar mt10">
+            <button type="button" class="btn" id="ingest-arbeitnow">Ingest Arbeitnow (20)</button>
+            <button type="button" class="btn" id="ingest-remotive">Ingest Remotive (20)</button>
+            <button type="button" class="btn" id="add-job-manual">+ paste job</button>
+            <input type="search" id="job-search" placeholder="filter jobs…" class="search" aria-label="Filter jobs by text">
+            <span id="jobs-msg" class="muted small" role="status" aria-live="polite"></span>
+          </div>
+
+          <form id="job-form" class="entry mt10" hidden autocomplete="off">
+            <div class="f2">
+              <div class="field">
+                <label for="jf-title">Title <span class="req">*</span></label>
+                <input id="jf-title" maxlength="160">
+              </div>
+              <div class="field">
+                <label for="jf-company">Company</label>
+                <input id="jf-company" maxlength="160">
+              </div>
+              <div class="field">
+                <label for="jf-location">Location</label>
+                <input id="jf-location" maxlength="160">
+              </div>
+              <div class="field">
+                <label for="jf-url">URL</label>
+                <input id="jf-url" type="url" maxlength="500" placeholder="https://…">
+              </div>
+              <div class="field">
+                <label for="jf-contract">Contract</label>
+                <input id="jf-contract" maxlength="60" placeholder="CDI, Freelance, …">
+              </div>
+              <div class="field">
+                <label for="jf-skills">Skills · comma separated</label>
+                <input id="jf-skills" maxlength="300">
+              </div>
+            </div>
+            <div class="field mt6">
+              <label for="jf-description">Description</label>
+              <textarea id="jf-description" rows="3"></textarea>
+            </div>
+            <div class="toolbar mt6">
+              <button type="submit" class="btn primary" id="job-form-save">Save job</button>
+              <button type="button" class="btn" id="job-form-cancel">Cancel</button>
+              <span id="job-form-msg" class="err" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+
+          <div id="jobs-list" class="mt10"></div>
+          <div class="mt10">
+            <h3>Letter draft</h3>
+            <div id="letter-job" class="muted small">No letter drafted yet.</div>
+            <textarea id="letter-output" rows="12" class="w100 mt6" placeholder="Select a job and click 'Draft letter'." aria-label="Draft letter"></textarea>
+            <div class="toolbar mt6">
+              <a id="mailto-link" class="btn" href="#" target="_blank" rel="noopener">Open in mail client</a>
+              <button type="button" class="btn" id="letter-copy">Copy</button>
+              <button type="button" class="btn" id="letter-download">Download .txt</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel mt10" id="settings-view" hidden aria-labelledby="h-settings">
+        <h2 id="h-settings">Settings · connect a job board</h2>
+        <div class="body">
+          <p class="muted small">jobPilot opens a real browser to the login page and sends a desktop notification. Log in yourself — no credentials are stored here. When you reach the success URL, jobPilot continues.</p>
+          <div class="field">
+            <label for="login-url">Login URL</label>
+            <input id="login-url" type="url" placeholder="https://www.linkedin.com/login">
+          </div>
+          <div class="field">
+            <label for="success-url">Success URL (substring)</label>
+            <input id="success-url" type="text" placeholder="/feed/">
+          </div>
+          <div class="toolbar mt6">
+            <button type="button" class="btn primary" id="start-login">Open browser &amp; notify me</button>
+            <button type="button" class="btn" id="cancel-login">Cancel</button>
+            <span id="login-status" class="muted">idle</span>
+          </div>
+        </div>
+      </section>
 
       <section class="panel mt10" aria-labelledby="h-events">
         <h2 id="h-events">Event log <span id="chain" class="chip">chain …</span></h2>
