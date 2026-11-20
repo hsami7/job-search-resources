@@ -5,3 +5,4 @@ spike/out/
 npm-debug.log*
 .DS_Store
 *.zip
+data.bak-*/
